@@ -18,6 +18,10 @@ const ARGS = (() => {
 })()
 // unified target; legacy args (mode/base/changeDir) still map onto it
 const target = ARGS.target || ARGS.changeDir || ARGS.base || 'auto'
+// optional absolute path to the repository root when it is not the session cwd
+const repo = ARGS.repo || null
+const git = repo ? `git -C ${repo}` : 'git'
+const repoNote = repo ? `\nRepository root: ${repo} — file paths are relative to it; run every git command as \`${git} ...\` and Read files under that root.` : ''
 const explicitFiles = Array.isArray(ARGS.files) && ARGS.files.length ? ARGS.files : null
 const focus = ARGS.focus || ''
 const fix = !!ARGS.fix
@@ -128,11 +132,11 @@ const FIX_SCHEMA = {
 
 // ---------- prompts ----------
 function scopePrompt() {
-  return `You resolve the scope of a review. Do NOT review anything yourself.
+  return `You resolve the scope of a review. Do NOT review anything yourself.${repoNote}
 Target spec: "${target}". Resolve it:
-- "auto": run \`git status --porcelain\`; if there are uncommitted changes treat as "working-tree", else diff HEAD against the repo default branch (treat as a ref target).
-- "working-tree": UNCOMMITTED changes only. files = changed/untracked paths. diffCommand = "git diff HEAD && git status --porcelain" plus a note that untracked files must be Read directly. Do NOT widen the scope to the branch diff even if the uncommitted delta is tiny.
-- a git ref: run \`git merge-base <ref> HEAD\`; files from \`git diff --name-status <mb>...HEAD\`; diffCommand = "git diff <mb>...HEAD". If the ref does not exist, fall back to the repo default branch and say so in summary.
+- "auto": run \`${git} status --porcelain\`; if there are uncommitted changes treat as "working-tree", else diff HEAD against the repo default branch (treat as a ref target).
+- "working-tree": UNCOMMITTED changes only. files = changed/untracked paths. diffCommand = "${git} diff HEAD && ${git} status --porcelain" plus a note that untracked files must be Read directly. Do NOT widen the scope to the branch diff even if the uncommitted delta is tiny.
+- a git ref: run \`${git} merge-base <ref> HEAD\`; files from \`${git} diff --name-status <mb>...HEAD\`; diffCommand = "${git} diff <mb>...HEAD". If the ref does not exist, fall back to the repo default branch and say so in summary.
 - a directory or file path(s): files = those files (list a directory recursively; skip binaries and scaffolding like .openspec.yaml). No diffCommand — the files are reviewed as they stand. They may be code or documents (proposals, specs, designs).
 Return empty=true only if nothing resolves. summary = one paragraph on what is under review (skim, do not judge).`
 }
@@ -142,7 +146,7 @@ function reviewInstructions(scope, idPrefix) {
     ? `Changed files: ${scope.files.join(', ')}\nSee the changes: run ${scope.diffCommand}`
     : `Files under review (read every one): ${scope.files.join(', ')}`
   return `You are one of two independent adversarial reviewers. The other works separately; you will cross-examine each other later, so only report findings you can defend.
-
+${repoNote}
 Target: ${scope.summary}
 ${where}
 ${focus ? `Focus: ${focus}\n` : ''}
@@ -159,7 +163,7 @@ Rules:
 
 function critiqueInstructions(scope, criticName, otherName, otherIssues) {
   return `You are cross-examining reviewer "${otherName}" in an adversarial review. Be skeptical BOTH ways: hallucinated findings must die, real ones must survive.
-
+${repoNote}
 Target: ${scope.summary}
 ${scope.diffCommand ? `See the changes: run ${scope.diffCommand}` : `Files: ${scope.files.join(', ')}`}
 
@@ -175,7 +179,7 @@ Then list real issues ${otherName} MISSED — defects AND bad design decisions �
 
 function synthesisInstructions(scope, bundle) {
   return `You are the synthesis judge of an adversarial review between "claude" and "codex". Each finding below carries its critic's verdict. Produce the final verdict.
-
+${repoNote}
 Target: ${scope.summary}
 ${scope.diffCommand ? `See the changes: run ${scope.diffCommand}` : `Files: ${scope.files.join(', ')}`}
 
@@ -201,8 +205,8 @@ function codexRunnerPrompt(innerPrompt, transcribeAs) {
   return `You are a runner for the Codex CLI. Do NOT review anything yourself — run Codex and faithfully transcribe its answer.
 
 1. Write everything between the BEGIN/END markers (markers excluded) verbatim to a temp file (\`mktemp\`), using the Write tool.
-2. From the repository root run, with a 10-minute Bash timeout (timeout: 600000):
-   codex exec --sandbox read-only - < <that temp file> 2>&1
+2. Run, with a 10-minute Bash timeout (timeout: 600000):
+   ${repo ? `cd ${repo} && ` : ''}codex exec --sandbox read-only - < <that temp file> 2>&1
 3. ${transcription}
 4. If the codex binary is missing, unauthenticated, errors, or times out: return an empty result, summary explaining what happened, codexUnavailable = the exact error text. Do NOT substitute your own review.
 
@@ -332,7 +336,7 @@ for (let iter = 1; iter <= maxIterations; iter++) {
 
   const fixResult = await agent(
     `Apply fixes for the confirmed findings of an adversarial review. Edit the files under review (source code or documents) in place.
-
+${repoNote}
 Confirmed findings:
 ${JSON.stringify(synthesis.confirmed)}
 

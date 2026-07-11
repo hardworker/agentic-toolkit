@@ -22,6 +22,7 @@ Call the **Workflow tool** with:
 | `fix` | `fix: true` (debate → apply confirmed fixes → re-review, up to `maxIterations`, default 3) |
 | `iterations <n>` | `maxIterations: n` |
 | `solo` | `solo: true` (skip the Codex leg — cheaper, single-model) |
+| a repo outside the cwd (e.g. reviewing a PR of another repo) | `repo: "<absolute path to its root>"` — checkout/worktree must already be at the right commit |
 | remaining free text | `focus: "<text>"` — extra lens for the reviewers (e.g. "these are OpenSpec artifacts; check tasks cover the specs") |
 
 Runs in the background (~15–25 min, ~300–400k subagent tokens per iteration). Don't block on it if the user has more requests.
