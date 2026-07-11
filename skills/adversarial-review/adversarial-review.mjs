@@ -189,7 +189,7 @@ ${JSON.stringify(bundle)}
 Rules:
 - Same underlying issue found by both sides: confirm once, agreement "both". Merge duplicates under one id, mention merged ids in description.
 - criticVerdict "valid": confirm unless obviously wrong.
-- criticVerdict "invalid" or "uncertain": VERIFY YOURSELF in the actual files before deciding — never confirm or reject a disputed issue unchecked.
+- criticVerdict "invalid", "uncertain", or "uncritiqued": VERIFY YOURSELF in the actual files before deciding — never confirm or reject an unvetted issue unchecked.
 - missedIssues are candidates (agreement = the side that raised them); verify before confirming.
 - design issues: confirm only if the alternative is feasible in this codebase and materially better — then it deserves the same weight as a defect, do not drop it as taste.
 - Reject anything without a concrete failure scenario or concrete better alternative.
@@ -207,6 +207,7 @@ function codexRunnerPrompt(innerPrompt, transcribeAs) {
 1. Write everything between the BEGIN/END markers (markers excluded) verbatim to a temp file (\`mktemp\`), using the Write tool.
 2. Run, with a 10-minute Bash timeout (timeout: 600000):
    ${repo ? `cd ${repo} && ` : ''}codex exec --sandbox read-only - < <that temp file> 2>&1
+   If it fails or Codex reports being blocked with an error mentioning code-mode host / codex-code-mode-host, retry ONCE adding --disable code_mode_host.
 3. ${transcription}
 4. If the codex binary is missing, unauthenticated, errors, or times out: return an empty result, summary explaining what happened, codexUnavailable = the exact error text. Do NOT substitute your own review.
 
@@ -302,9 +303,12 @@ for (let iter = 1; iter <= maxIterations; iter++) {
     () => codexReview.issues.length
       ? agent(critiqueInstructions(scope, 'claude', 'codex', codexReview.issues), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'claude-on-codex' + it })
       : Promise.resolve(emptyCritique),
-    () => codexAvailable && claudeReview.issues.length
-      ? agent(codexRunnerPrompt(critiqueInstructions(scope, 'codex', 'claude', claudeReview.issues) + CODEX_CRITIQUE_FORMAT, 'critique'), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'codex-on-claude' + it, effort: 'low' })
-      : Promise.resolve(emptyCritique),
+    // codex down or solo: a fresh claude critic stands in, so claude's findings never reach synthesis uncontested
+    () => !claudeReview.issues.length
+      ? Promise.resolve(emptyCritique)
+      : codexAvailable
+        ? agent(codexRunnerPrompt(critiqueInstructions(scope, 'codex', 'claude', claudeReview.issues) + CODEX_CRITIQUE_FORMAT, 'critique'), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'codex-on-claude' + it, effort: 'low' })
+        : agent(critiqueInstructions(scope, 'critic', 'claude', claudeReview.issues) + '\n\nYou are a fresh, independent stand-in for the unavailable second model. You share no context with the reviewer — critique with full hostility.', { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'self-critique' + it }),
   ])
   const claudeOnCodex = claudeOnCodexRaw || emptyCritique
   const codexOnClaude = codexOnClaudeRaw || emptyCritique
