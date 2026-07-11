@@ -1,0 +1,13 @@
+{
+  "name": "agentic-toolkit",
+  "owner": {
+    "name": "Igor Sova"
+  },
+  "plugins": [
+    {
+      "name": "agentic-toolkit",
+      "source": "./",
+      "description": "Adversarial Claude-vs-Codex debate review (defects + design challenges, unified for code and documents)"
+    }
+  ]
+}

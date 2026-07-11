@@ -1,0 +1,8 @@
+{
+  "name": "agentic-toolkit",
+  "description": "Igor's agent toolkit: adversarial Claude-vs-Codex debate review and future tools",
+  "version": "1.0.0",
+  "author": {
+    "name": "Igor Sova"
+  }
+}
