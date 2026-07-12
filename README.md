@@ -1,6 +1,6 @@
 # agentic-toolkit
 
-Personal agent toolkit. Currently one skill:
+Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the debate pipeline works and [CHANGELOG.md](CHANGELOG.md) for history. Currently one skill:
 
 ## adversarial-review
 
