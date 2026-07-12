@@ -25,7 +25,7 @@ Call the **Workflow tool** with:
 | a repo outside the cwd (e.g. reviewing a PR of another repo) | `repo: "<absolute path to its root>"` — checkout/worktree must already be at the right commit |
 | remaining free text | `focus: "<text>"` — extra lens for the reviewers (e.g. "these are OpenSpec artifacts; check tasks cover the specs") |
 
-Runs in the background (~15–25 min, ~300–400k subagent tokens per iteration). Don't block on it if the user has more requests.
+Runs in the background (~15–35 min; ~300k subagent tokens per iteration for small/clean diffs, up to ~650k for a large PR with a heavy debate). Don't block on it if the user has more requests.
 
 ## Report
 
