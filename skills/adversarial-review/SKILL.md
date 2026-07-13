@@ -22,6 +22,7 @@ Call the **Workflow tool** with:
 | `fix` | `fix: true` (debate → apply confirmed fixes → re-review, up to `maxIterations`, default 3) |
 | `iterations <n>` | `maxIterations: n` |
 | `solo` | `solo: true` (skip the Codex leg — cheaper, single-model) |
+| `strict` | `strict: true` — only merge-blocking findings survive (low-noise mode, ≤5 issues/reviewer) |
 | a repo outside the cwd (e.g. reviewing a PR of another repo) | `repo: "<absolute path to its root>"` — checkout/worktree must already be at the right commit |
 | remaining free text | `focus: "<text>"` — extra lens for the reviewers (e.g. "these are OpenSpec artifacts; check tasks cover the specs") |
 
@@ -30,8 +31,8 @@ Runs in the background (~15–35 min; ~300k subagent tokens per iteration for sm
 ## Report
 
 When it completes, report:
-- Status (`clean` / `issues-found` / `stagnant` / `max-iterations`), iterations run; if `codexAvailable` is false, note the debate ran single-model (Codex CLI down or unauthenticated; `codex login` restores it).
-- Each confirmed finding: kind (`defect`/`design`), severity, `file:line`, title, agreement (`both`/`claude-only`/`codex-only`), fixRecommendation.
+- Status (`clean` / `issues-found` / `stagnant` / `max-iterations` / `scope-violation`), iterations run; if `codexAvailable` is false, note the debate ran single-model (Codex CLI down or unauthenticated; `codex login` restores it). `scope-violation` = the fixer touched files no finding names; the run stopped so the user can inspect the working tree.
+- Each confirmed finding: kind (`defect`/`design`), severity, `file:line`, title, impact, agreement (`both`/`claude-only`/`codex-only`), fixRecommendation.
 - Fix mode: fixed vs. remaining unfixed.
 
 Do NOT re-review or second-guess the findings — the debate already cross-verified them. Do NOT apply fixes in report-only mode unless the user then asks.

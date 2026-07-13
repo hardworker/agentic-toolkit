@@ -7,6 +7,7 @@ export const meta = {
     { title: 'Review', detail: 'independent Claude + Codex reviews' },
     { title: 'Cross-Review', detail: 'each side attacks the other\'s findings' },
     { title: 'Synthesis', detail: 'judge verifies disputes in the files, confirms/rejects' },
+    { title: 'Panel', detail: '2-vote refute check on uncorroborated high findings' },
     { title: 'Fix', detail: 'apply confirmed fixes (fix mode only)' },
   ],
 }
@@ -26,6 +27,7 @@ const explicitFiles = Array.isArray(ARGS.files) && ARGS.files.length ? ARGS.file
 const focus = ARGS.focus || ''
 const fix = !!ARGS.fix
 const solo = !!ARGS.solo
+const strict = !!ARGS.strict
 const maxIterations = fix ? Math.max(1, ARGS.maxIterations || 3) : 1
 
 // ---------- schemas ----------
@@ -37,8 +39,9 @@ const ISSUE_PROPS = {
   severity: { type: 'string', enum: ['high', 'medium', 'low'] },
   title: { type: 'string' },
   description: { type: 'string', description: 'max 3 sentences. defect: concrete failure scenario (input/state -> wrong outcome). design: the concrete better alternative and why it is materially better' },
+  impact: { type: 'string', description: 'blast radius in one sentence: who/what is affected and how badly' },
 }
-const ISSUE = { type: 'object', properties: ISSUE_PROPS, required: ['id', 'kind', 'file', 'severity', 'title', 'description'] }
+const ISSUE = { type: 'object', properties: ISSUE_PROPS, required: ['id', 'kind', 'file', 'severity', 'title', 'description', 'impact'] }
 
 const SCOPE_SCHEMA = {
   type: 'object',
@@ -73,6 +76,7 @@ const CRITIQUE_SCHEMA = {
           issueId: { type: 'string' },
           verdict: { type: 'string', enum: ['valid', 'invalid', 'uncertain'] },
           reasoning: { type: 'string', description: 'max 2 sentences, cite file:line' },
+          duplicateOf: { type: 'string', description: 'id of YOUR side\'s finding when this is the same underlying issue' },
         },
         required: ['issueId', 'verdict', 'reasoning'],
       },
@@ -125,9 +129,19 @@ const FIX_SCHEMA = {
         required: ['id', 'reason'],
       },
     },
+    changedFiles: { type: 'array', items: { type: 'string' }, description: 'every file modified/created, exactly as git status reports it' },
     notes: { type: 'string' },
   },
-  required: ['fixed', 'skipped'],
+  required: ['fixed', 'skipped', 'changedFiles'],
+}
+
+const PANEL_SCHEMA = {
+  type: 'object',
+  properties: {
+    refuted: { type: 'boolean' },
+    reasoning: { type: 'string', description: 'max 2 sentences, cite file:line' },
+  },
+  required: ['refuted', 'reasoning'],
 }
 
 // ---------- prompts ----------
@@ -141,7 +155,7 @@ Target spec: "${target}". Resolve it:
 Return empty=true only if nothing resolves. summary = one paragraph on what is under review (skim, do not judge).`
 }
 
-function reviewInstructions(scope, idPrefix) {
+function reviewInstructions(scope, idPrefix, prevConfirmed) {
   const where = scope.diffCommand
     ? `Changed files: ${scope.files.join(', ')}\nSee the changes: run ${scope.diffCommand}`
     : `Files under review (read every one): ${scope.files.join(', ')}`
@@ -149,19 +163,24 @@ function reviewInstructions(scope, idPrefix) {
 ${repoNote}
 Target: ${scope.summary}
 ${where}
-${focus ? `Focus: ${focus}\n` : ''}
+${focus ? `Focus: ${focus}\n` : ''}${prevConfirmed && prevConfirmed.length ? `Already confirmed and fixed by earlier review passes — do NOT re-report these unless the fix itself is broken; hunt what was missed instead: ${JSON.stringify(prevConfirmed)}\n` : ''}
 Rules:
 - Read the changes AND enough surrounding code/context to judge. Never judge from a diff alone. For documents, check claims against the actual codebase.
+${scope.diffCommand ? '- Flag ONLY issues these changes introduce or materially worsen. Anything that might pre-date the change: check the merge-base version first, and stay silent if it was already there.' : ''}
 - Hunt TWO kinds of issue:
   * defect — broken behavior: bugs, broken edge cases, races, security, data loss, API misuse; in documents: contradictions, ambiguity an implementer cannot resolve, missing failure behavior, tasks/specs that do not cover the stated intent. Description = concrete failure scenario: input/state -> wrong outcome.
   * design — the decision itself is wrong: needless complexity, wrong abstraction, fights existing codebase patterns, unnecessary dependency, reinvented standard solution, a path that will bite later. Actively challenge the author's decisions — assume every major choice (data flow, abstraction, dependency, algorithm, API shape) is wrong until it survives scrutiny. Description = the concrete better alternative and why it is materially better here.
 - No style nits, no praise, no "could be nicer" without a defensible alternative.
-- severity: high = wrong behavior/data/security or a decision that locks in real damage; medium = real but limited; low = genuine but minor.
-- At most 10 issues, most important first, description max 3 sentences each. Ids "${idPrefix}-<n>".
+- severity anchored to merge impact: high = a maintainer would block the merge (wrong behavior/data/security, or a decision locking in real damage); medium = real defect worth fixing, limited blast radius; low = genuine but minor. impact = the blast radius in one sentence.
+${strict ? '- STRICT MODE: report ONLY findings a maintainer would block the merge over. When unsure a finding clears that bar, drop it.' : ''}
+- At most ${strict ? 5 : 10} issues, most important first, description max 3 sentences each. Ids "${idPrefix}-<n>".
 - exitSignal true ONLY if nothing worth fixing.`
 }
 
-function critiqueInstructions(scope, criticName, otherName, otherIssues) {
+function critiqueInstructions(scope, criticName, otherName, otherIssues, ownIssues) {
+  const dupBlock = ownIssues && ownIssues.length
+    ? `\nYour side independently reviewed the same target and found (context for duplicate-tagging ONLY — do not re-litigate or adopt them): ${JSON.stringify(ownIssues.map((i) => ({ id: i.id, file: i.file, title: i.title })))}\nWhen one of ${otherName}'s issues is the same underlying issue as one of these, set duplicateOf to your side's id in its verdict.\n`
+    : ''
   return `You are cross-examining reviewer "${otherName}" in an adversarial review. Be skeptical BOTH ways: hallucinated findings must die, real ones must survive.
 ${repoNote}
 Target: ${scope.summary}
@@ -169,10 +188,10 @@ ${scope.diffCommand ? `See the changes: run ${scope.diffCommand}` : `Files: ${sc
 
 ${otherName}'s findings:
 ${JSON.stringify(otherIssues)}
-
+${dupBlock}
 For EACH issue id, verify against the actual files — open them; never judge on plausibility.
 - valid: real as described
-- invalid: hallucinated, already handled, or mischaracterized — say exactly why, cite file:line. A design issue is invalid if its alternative is not materially better or not feasible in this codebase.
+- invalid: hallucinated, already handled, pre-existing rather than introduced by the change under review, or mischaracterized — say exactly why, cite file:line. A design issue is invalid if its alternative is not materially better or not feasible in this codebase.
 - uncertain: cannot be decided from the repository alone
 Then list real issues ${otherName} MISSED — defects AND bad design decisions — only ones you can defend; ids "${criticName}-missed-<n>".`
 }
@@ -187,12 +206,15 @@ Debate record:
 ${JSON.stringify(bundle)}
 
 Rules:
-- Same underlying issue found by both sides: confirm once, agreement "both". Merge duplicates under one id, mention merged ids in description.
-- criticVerdict "valid": confirm unless obviously wrong.
-- criticVerdict "invalid", "uncertain", or "uncritiqued": VERIFY YOURSELF in the actual files before deciding — never confirm or reject an unvetted issue unchecked.
-- missedIssues are candidates (agreement = the side that raised them); verify before confirming.
+- Same underlying issue found by both sides (criticDuplicateOf tags are strong hints): confirm once, agreement "both". Merge duplicates under one id, mention merged ids in description.
+- Tiered verification — spend file reads where the stakes are:
+  * high/medium with criticVerdict "invalid", "uncertain", or "uncritiqued": VERIFY YOURSELF in the actual files before deciding.
+  * high/medium with criticVerdict "valid": confirm unless obviously wrong.
+  * low: decide on the debate record alone, no file reads — valid -> confirm, invalid -> reject, uncertain/uncritiqued -> reject as unvetted.
+- missedIssues are candidates (agreement = the side that raised them); verify high/medium ones in the files, judge lows on the record.
 - design issues: confirm only if the alternative is feasible in this codebase and materially better — then it deserves the same weight as a defect, do not drop it as taste.
 - Reject anything without a concrete failure scenario or concrete better alternative.
+${strict ? '- STRICT MODE: confirm ONLY findings a maintainer would block the merge over; reject the rest with reason "below strict bar".' : ''}
 - Each confirmed issue gets a specific, actionable fixRecommendation.
 - exitSignal true when confirmed is empty.`
 }
@@ -224,6 +246,7 @@ ISSUE <n>: <title>
 KIND: defect|design
 FILE: <path>:<line>
 SEVERITY: high|medium|low
+IMPACT: <blast radius, one sentence>
 DESCRIPTION: <failure scenario or better alternative, max 3 sentences>
 Finally:
 ISSUES_FOUND: <n>
@@ -235,19 +258,24 @@ Output format (follow exactly):
 For each of the other reviewer's issue ids:
 VERDICT <issueId>: valid|invalid|uncertain
 REASONING: <max 2 sentences, file:line citations>
+DUPLICATE_OF: <your side's issue id, only when it is the same underlying issue>
 Then for each missed issue (if any):
-MISSED ISSUE <n>: <title> / KIND / FILE / SEVERITY / DESCRIPTION`
+MISSED ISSUE <n>: <title> / KIND / FILE / SEVERITY / IMPACT / DESCRIPTION`
 
 // ---------- helpers ----------
 const emptyCritique = { verdicts: [], missedIssues: [], summary: 'skipped (nothing to critique)' }
 
 function threadIssues(issues, critique) {
   const v = new Map(critique.verdicts.map((x) => [x.issueId, x]))
-  return issues.map((i) => ({
-    ...i,
-    criticVerdict: v.get(i.id) ? v.get(i.id).verdict : 'uncritiqued',
-    criticReasoning: v.get(i.id) ? v.get(i.id).reasoning : '',
-  }))
+  return issues.map((i) => {
+    const x = v.get(i.id)
+    return {
+      ...i,
+      criticVerdict: x ? x.verdict : 'uncritiqued',
+      criticReasoning: x ? x.reasoning : '',
+      ...(x && x.duplicateOf ? { criticDuplicateOf: x.duplicateOf } : {}),
+    }
+  })
 }
 
 function fingerprintOf(confirmed) {
@@ -269,6 +297,7 @@ log(`Reviewing ${scope.files.length} files (${solo ? 'solo' : 'claude+codex'}, $
 let codexAvailable = !solo
 let prevFingerprint = null
 const fixedAcrossIterations = []
+const prevConfirmed = [] // {file, title} of findings already confirmed+fixed; next passes hunt elsewhere
 let synthesis = null
 let status = 'max-iterations'
 let iterations = 0
@@ -279,9 +308,9 @@ for (let iter = 1; iter <= maxIterations; iter++) {
 
   // independent reviews (barrier: cross-review needs both)
   const [claudeReviewRaw, codexReviewRaw] = await parallel([
-    () => agent(reviewInstructions(scope, 'claude'), { schema: REVIEW_SCHEMA, phase: 'Review', label: 'claude-review' + it }),
+    () => agent(reviewInstructions(scope, 'claude', prevConfirmed), { schema: REVIEW_SCHEMA, phase: 'Review', label: 'claude-review' + it }),
     () => codexAvailable
-      ? agent(codexRunnerPrompt(reviewInstructions(scope, 'codex') + CODEX_REVIEW_FORMAT, 'review'), { schema: REVIEW_SCHEMA, phase: 'Review', label: 'codex-review' + it, effort: 'low' })
+      ? agent(codexRunnerPrompt(reviewInstructions(scope, 'codex', prevConfirmed) + CODEX_REVIEW_FORMAT, 'review'), { schema: REVIEW_SCHEMA, phase: 'Review', label: 'codex-review' + it, effort: 'low' })
       : Promise.resolve(null),
   ])
   const claudeReview = claudeReviewRaw || { issues: [], summary: 'claude reviewer unavailable', exitSignal: false }
@@ -301,14 +330,14 @@ for (let iter = 1; iter <= maxIterations; iter++) {
   // cross-review (skip a leg when nothing to critique or codex is down)
   const [claudeOnCodexRaw, codexOnClaudeRaw] = await parallel([
     () => codexReview.issues.length
-      ? agent(critiqueInstructions(scope, 'claude', 'codex', codexReview.issues), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'claude-on-codex' + it })
+      ? agent(critiqueInstructions(scope, 'claude', 'codex', codexReview.issues, claudeReview.issues), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'claude-on-codex' + it })
       : Promise.resolve(emptyCritique),
     // codex down or solo: a fresh claude critic stands in, so claude's findings never reach synthesis uncontested
     () => !claudeReview.issues.length
       ? Promise.resolve(emptyCritique)
       : codexAvailable
-        ? agent(codexRunnerPrompt(critiqueInstructions(scope, 'codex', 'claude', claudeReview.issues) + CODEX_CRITIQUE_FORMAT, 'critique'), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'codex-on-claude' + it, effort: 'low' })
-        : agent(critiqueInstructions(scope, 'critic', 'claude', claudeReview.issues) + '\n\nYou are a fresh, independent stand-in for the unavailable second model. You share no context with the reviewer — critique with full hostility.', { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'self-critique' + it }),
+        ? agent(codexRunnerPrompt(critiqueInstructions(scope, 'codex', 'claude', claudeReview.issues, codexReview.issues) + CODEX_CRITIQUE_FORMAT, 'critique'), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'codex-on-claude' + it, effort: 'low' })
+        : agent(critiqueInstructions(scope, 'critic', 'claude', claudeReview.issues, []) + '\n\nYou are a fresh, independent stand-in for the unavailable second model. You share no context with the reviewer — critique with full hostility.', { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'self-critique' + it }),
   ])
   const claudeOnCodex = claudeOnCodexRaw || emptyCritique
   const codexOnClaude = codexOnClaudeRaw || emptyCritique
@@ -330,6 +359,32 @@ for (let iter = 1; iter <= maxIterations; iter++) {
   if (!synthesis) return { status: 'error', error: 'synthesis agent failed', target, iterations, codexAvailable, fixed: fixedAcrossIterations }
   log(`Synthesis ${it}: ${synthesis.confirmed.length} confirmed, ${synthesis.rejected.length} rejected`)
 
+  // refute panel: confirmed highs without cross-model corroboration get a 2-vote check
+  const contested = synthesis.confirmed.filter((c) => c.severity === 'high' && c.agreement !== 'both')
+  if (contested.length) {
+    const votes = await parallel(contested.map((c) => () =>
+      parallel([1, 2].map((n) => () =>
+        agent(`A code-review judge confirmed the finding below. Try to REFUTE it: open the actual files and look for evidence it is wrong, already handled, or pre-existing rather than introduced by the change under review. refuted=true ONLY with concrete file-based evidence — if the finding holds, say so.
+${repoNote}
+Target: ${scope.summary}
+${scope.diffCommand ? `See the changes: run ${scope.diffCommand}` : `Files: ${scope.files.join(', ')}`}
+
+Finding:
+${JSON.stringify(c)}`, { schema: PANEL_SCHEMA, phase: 'Panel', label: `panel-${c.id}-${n}` + it })
+      )).then((vs) => ({ c, refutes: vs.filter(Boolean).filter((v) => v.refuted) }))
+    ))
+    for (const vote of votes.filter(Boolean)) {
+      if (vote.refutes.length === 2) {
+        synthesis.confirmed = synthesis.confirmed.filter((x) => x.id !== vote.c.id)
+        synthesis.rejected.push({ id: vote.c.id, reason: `high finding refuted 2/2 by panel: ${vote.refutes[0].reasoning}` })
+        log(`Panel ${it}: rejected ${vote.c.id}`)
+      } else if (vote.refutes.length === 1) {
+        vote.c.description += ` [panel contested 1/2: ${vote.refutes[0].reasoning}]`
+      }
+    }
+    synthesis.exitSignal = !synthesis.confirmed.length
+  }
+
   if (!synthesis.confirmed.length) { status = 'clean'; break }
   if (!fix) { status = 'issues-found'; break }
 
@@ -346,14 +401,24 @@ ${JSON.stringify(synthesis.confirmed)}
 
 Rules:
 - Minimal, targeted fixes; follow each fixRecommendation unless the actual files contradict it — then fix the underlying issue properly and note the deviation.
-- Do not refactor beyond the fix. Do not fix anything not listed.
-- Skip (with reason) anything that turns out wrong or needs a product decision.`,
+- Do not refactor beyond the fix. Do not fix anything not listed. Do not touch files no finding names unless a fix strictly requires it (then say so in notes).
+- Skip (with reason) anything that turns out wrong or needs a product decision.
+- Afterwards run \`${git} status --porcelain\` and report EVERY modified/created file in changedFiles, exactly as git prints the paths.`,
     { schema: FIX_SCHEMA, phase: 'Fix', label: 'fix' + it }
   )
   if (fixResult) {
     fixedAcrossIterations.push(...fixResult.fixed)
     log(`Fix ${it}: ${fixResult.fixed.length} fixed, ${fixResult.skipped.length} skipped`)
+    // mutation guard: the fixer may only touch files the confirmed findings name
+    const allowed = new Set(synthesis.confirmed.map((i) => i.file))
+    const outOfScope = (fixResult.changedFiles || []).filter((f) => !allowed.has(f))
+    if (outOfScope.length) {
+      log(`Fix ${it}: out-of-scope edits detected (${outOfScope.join(', ')}) — stopping. Notes: ${fixResult.notes || 'none'}`)
+      status = 'scope-violation'
+      break
+    }
     if (!fixResult.fixed.length) { status = 'stagnant'; break }
+    prevConfirmed.push(...synthesis.confirmed.filter((c) => fixResult.fixed.includes(c.id)).map((c) => ({ file: c.file, title: c.title })))
   } else {
     log(`Fix ${it}: fixer agent failed; stopping`)
     status = 'error'
@@ -363,7 +428,7 @@ Rules:
 }
 
 return {
-  status, // clean | issues-found | stagnant | max-iterations | nothing-to-review | error
+  status, // clean | issues-found | stagnant | max-iterations | scope-violation | nothing-to-review | error
   target,
   iterations,
   codexAvailable,

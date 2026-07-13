@@ -28,16 +28,21 @@ One iteration (report-only runs do exactly one):
                      ▼
               ┌────────────┐
               │  Synthesis  │   judge (high effort): merges duplicates,
-              │    judge    │   re-verifies disputed/uncritiqued findings
+              │    judge    │   re-verifies disputed high/medium findings
               └──────┬──────┘   in the files itself, assigns agreement
                      ▼
               ┌────────────┐
-              │    Fix      │   fix mode only: apply confirmed fixes,
-              │  (optional) │   then loop back to Review
+              │   Panel     │   only for confirmed HIGHs one model raised:
+              │ (as needed) │   2 refuters vote; 2/2 refuted → rejected
+              └──────┬──────┘
+                     ▼
+              ┌────────────┐
+              │    Fix      │   fix mode only: apply confirmed fixes
+              │  (optional) │   (mutation-guarded), loop back to Review
               └────────────┘
 ```
 
-4–6 subagents per iteration. Every stage communicates through JSON schemas (`StructuredOutput`), so nothing depends on parsing prose.
+4–6 subagents per iteration (plus 2 per uncorroborated high finding). Every stage communicates through JSON schemas (`StructuredOutput`), so nothing depends on parsing prose.
 
 ### Scope
 
@@ -59,27 +64,40 @@ Two reviewers get identical instructions (modulo the id prefix) and no knowledge
 - **`defect`** — broken behavior. Requires a concrete failure scenario: *this input/state → this wrong outcome*. For documents, defects include contradictions, ambiguity an implementer can't resolve, and tasks/specs that don't cover the stated intent.
 - **`design`** — the decision itself is wrong: needless complexity, wrong abstraction, fighting existing codebase patterns, an unnecessary dependency, a path that bites later. Reviewers are told to presume every major decision guilty until it survives scrutiny. Requires naming a concrete, materially better alternative — "could be nicer" without one is banned.
 
-Caps keep the debate bounded: ≤ 10 issues per reviewer, most important first, ≤ 3 sentences per description.
+Every finding carries an **impact** line (blast radius in one sentence), and severity is anchored to merge impact: *high = a maintainer would block the merge*. For diff targets, reviewers may only flag issues the change **introduces or materially worsens** — anything possibly pre-existing must be checked against the merge-base first (in the PR #208 field test, pre-existing-code findings were the entire false-positive class).
+
+Caps keep the debate bounded: ≤ 10 issues per reviewer (≤ 5 in `strict` mode), most important first, ≤ 3 sentences per description. `strict: true` raises the bar end-to-end: reviewers and judge only keep merge-blocking findings — the low-noise mode.
 
 ### Cross-examination
 
 Each side verifies every one of the other's findings *against the files* (plausibility judgments are forbidden) and returns per-issue verdicts — `valid` / `invalid` (with file:line proof) / `uncertain` — plus any real issues the other side missed. A design finding is `invalid` if its alternative isn't materially better or isn't feasible in this codebase.
 
+Each critic also sees a compact `{id, file, title}` list of its own side's findings — for **duplicate-tagging only**: when the other side's issue is the same underlying one, the verdict carries `duplicateOf`, which turns the judge's duplicate-merging from a reasoning task into bookkeeping and makes `both` agreement labels reliable.
+
 In the PR #208 field test this stage killed 3 of Codex's 10 findings with merge-base evidence (`git show` proving the flagged code pre-existed the PR) — this is the hallucination/noise filter that makes the output trustworthy.
 
 ### Synthesis
 
-A high-effort judge receives each finding threaded with its critic's verdict (not the raw debate documents). Rules:
+A high-effort judge receives each finding threaded with its critic's verdict (not the raw debate documents). Verification is **tiered** so file reads go where the stakes are:
 
-- Findings both sides raised independently → confirmed once, agreement `both`, duplicates merged.
-- `valid` verdicts → confirm unless obviously wrong.
-- `invalid`, `uncertain`, or `uncritiqued` → the judge must open the files and verify itself before deciding. Nothing unvetted gets confirmed or rejected on faith.
+- Findings both sides raised independently (or tagged `duplicateOf`) → confirmed once, agreement `both`, duplicates merged.
+- High/medium with `invalid` / `uncertain` / `uncritiqued` verdicts → the judge must open the files and verify itself before deciding.
+- High/medium with `valid` verdicts → confirm unless obviously wrong.
+- Low → decided on the debate record alone, no file reads: `valid` confirms, anything unvetted is rejected (precision over volume at the tier where a miss costs least).
 - Confirmed design findings carry the same weight as defects — the judge may not drop them as taste.
 - Every confirmed finding gets a specific, actionable `fixRecommendation` and an agreement label (`both` / `claude-only` / `codex-only`).
 
+### Refute panel
+
+A single judge is a single point of failure exactly where stakes are highest, so every confirmed **high** finding that lacks cross-model corroboration (agreement ≠ `both`) gets two fresh refuter agents. Each must produce concrete file-based evidence to refute; 2/2 refuted moves the finding to `rejected`, 1/2 keeps it annotated as contested. Cost is bounded: highs are rare, and corroborated ones skip the panel entirely.
+
 ### Fix loop (opt-in)
 
-With `fix: true`, a fixer agent applies the confirmed recommendations (minimal, targeted; skips anything needing a product decision), then the pipeline re-reviews the now-fixed target — up to `maxIterations` (default 3). A fingerprint of the confirmed set (`file|title` pairs) acts as a circuit breaker: if an iteration confirms the same set as the previous one, the run stops as `stagnant` instead of burning tokens.
+With `fix: true`, a fixer agent applies the confirmed recommendations (minimal, targeted; skips anything needing a product decision), then the pipeline re-reviews the now-fixed target — up to `maxIterations` (default 3). Three guards keep the loop honest:
+
+- **Mutation guard.** The fixer must report every file it touched (`git status --porcelain`); an edit to a file no confirmed finding names stops the run as `scope-violation` for human inspection, instead of letting the next iteration bless drift.
+- **Anti-anchoring memory.** Iteration 2+ reviewers receive the already-confirmed-and-fixed list and are told not to re-report those findings — fresh passes hunt what was missed instead of re-debating what was fixed (also the cheapest token cut in the loop).
+- **Stagnation circuit breaker.** A fingerprint of the confirmed set (`file|title` pairs): if an iteration confirms the same set as the previous one, the run stops as `stagnant` instead of burning tokens.
 
 ## The Codex leg
 
@@ -106,12 +124,12 @@ codex exec --sandbox read-only - < promptfile
 
 ```jsonc
 {
-  "status": "clean | issues-found | stagnant | max-iterations | nothing-to-review | error",
+  "status": "clean | issues-found | stagnant | max-iterations | scope-violation | nothing-to-review | error",
   "target": "origin/main",
   "iterations": 1,
   "codexAvailable": true,
   "confirmed": [ { "id", "kind", "file", "line", "severity", "title",
-                   "description", "agreement", "fixRecommendation" } ],
+                   "description", "impact", "agreement", "fixRecommendation" } ],
   "rejected":  [ { "id", "reason" } ],
   "fixed":     [ "issue ids (fix mode)" ],
   "summary":   "judge's narrative verdict"
@@ -129,9 +147,14 @@ agentic-toolkit/
 │   └── adversarial-review/
 │       ├── SKILL.md              # trigger description, arg table, report format
 │       └── adversarial-review.mjs # the Workflow script (single source of truth)
+├── eval/
+│   ├── README.md                # seeded-bug fixture protocol
+│   └── score.mjs                # precision/recall scoring vs a fixture manifest
 ├── ARCHITECTURE.md
 ├── CHANGELOG.md
 └── README.md
 ```
+
+Pipeline changes are validated with the `eval/` harness: fixtures with known seeded bugs plus known-clean files, scored for recall (seeded bugs found), precision (findings in clean files are hard false positives), and token cost — because the research is clear that multi-agent protocol changes don't universally help and must be measured.
 
 The skill instructs the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to the SKILL.md; the script orchestrates all subagents deterministically. Install via `npx skills add igorsova/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add igorsova/agentic-toolkit`. Local development uses a symlink from `~/.claude/skills/adversarial-review` into this repo.
