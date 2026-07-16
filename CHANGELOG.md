@@ -2,6 +2,13 @@
 
 All notable changes to the `adversarial-review` skill.
 
+## [1.2.0] — 2026-07-12
+
+### Changed
+
+- **Flag-style arguments**, matching built-in Claude Code commands: `--base <ref>`, `--fix`, `--iterations <n>`, `--strict`, `--no-codex`, `--repo <path>`; positional target (`working-tree` or a path); remaining free text is still the reviewer focus.
+- **`solo` renamed to `codex: false`** (`--no-codex`) — the old name didn't say what it did. Bare legacy keywords (`fix`, `solo`, `iterations <n>`, `base <ref>`) still parse, and old JSON args (`solo`, `base`, `changeDir`, `mode`) still map, so existing callers (e.g. the OpenSpec schema) keep working.
+
 ## [1.1.0] — 2026-07-12
 
 Precision and cost-control upgrades, informed by a survey of current adversarial-review research and tooling (Refute-or-Promote stage-gating, TriAdReview, the "Do More Agents Help?" protocol study, dementev-dev's skill, production reviewer FP benchmarks). Every mechanism is bounded — nothing adds a standing per-run cost.

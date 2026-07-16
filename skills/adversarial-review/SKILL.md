@@ -1,6 +1,7 @@
 ---
 name: adversarial-review
 description: Adversarial Claude-vs-Codex debate review of any target — a branch diff, the working tree, or documents (specs, proposals, plans). Hunts real defects AND challenges design decisions, approaches, and implementation paths. Use when the user asks for an adversarial review, debate review, cross-model review, or hostile scrutiny of code or plans.
+argument-hint: "[path | working-tree] [--base <ref>] [--fix] [--iterations <n>] [--strict] [--no-codex] [--repo <path>] [focus text]"
 ---
 
 # Adversarial Review
@@ -11,20 +12,22 @@ Run the adversarial-review Workflow and report its verdict. The debate: independ
 
 Call the **Workflow tool** with:
 - `scriptPath`: the `adversarial-review.mjs` file in this skill's directory (the same directory as this SKILL.md).
-- `args`: object assembled from the user's free-form arguments (all optional):
+- `args`: object assembled from the user's arguments (all optional):
 
-| User says | Arg |
-|---|---|
-| _(nothing)_ | `target: "auto"` — uncommitted changes if any, else branch diff vs default branch |
-| `working-tree` | `target: "working-tree"` (uncommitted only) |
-| `base <ref>` / a git ref | `target: "<ref>"` (branch diff vs merge-base) |
-| a directory or file path(s) | `target: "<path>"` — reviews those files as they stand (code or documents, e.g. `openspec/changes/<name>/`) |
-| `fix` | `fix: true` (debate → apply confirmed fixes → re-review, up to `maxIterations`, default 3) |
-| `iterations <n>` | `maxIterations: n` |
-| `solo` | `solo: true` (skip the Codex leg — cheaper, single-model) |
-| `strict` | `strict: true` — only merge-blocking findings survive (low-noise mode, ≤5 issues/reviewer) |
-| a repo outside the cwd (e.g. reviewing a PR of another repo) | `repo: "<absolute path to its root>"` — checkout/worktree must already be at the right commit |
-| remaining free text | `focus: "<text>"` — extra lens for the reviewers (e.g. "these are OpenSpec artifacts; check tasks cover the specs") |
+| User input | JSON arg | Meaning |
+|---|---|---|
+| _(nothing)_ | `target: "auto"` | uncommitted changes if any, else branch diff vs default branch |
+| `working-tree` | `target: "working-tree"` | uncommitted changes only |
+| `--base <ref>` (or a bare git ref) | `target: "<ref>"` | branch diff vs merge-base with `<ref>` |
+| a directory or file path | `target: "<path>"` | review those files as they stand — code or documents (e.g. `openspec/changes/<name>/`) |
+| `--fix` | `fix: true` | debate → apply confirmed fixes → re-review, up to `maxIterations` (default 3) |
+| `--iterations <n>` | `maxIterations: n` | fix-loop cap |
+| `--strict` | `strict: true` | low-noise mode: only merge-blocking findings survive, ≤5 issues/reviewer |
+| `--no-codex` | `codex: false` | skip the Codex leg (cheaper; a fresh Claude critic still cross-examines) |
+| `--repo <path>` (or when reviewing another repo's checkout) | `repo: "<absolute root>"` | review a repo outside the session cwd; checkout/worktree must already be at the right commit |
+| remaining free text | `focus: "<text>"` | extra lens for the reviewers (e.g. "these are OpenSpec artifacts; check tasks cover the specs") |
+
+Bare legacy keywords (`fix`, `solo`, `iterations <n>`, `base <ref>`) mean the same as their flags; `solo` ≡ `--no-codex`.
 
 Runs in the background (~15–35 min; ~300k subagent tokens per iteration for small/clean diffs, up to ~650k for a large PR with a heavy debate). Don't block on it if the user has more requests.
 

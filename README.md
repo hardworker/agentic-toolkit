@@ -20,13 +20,15 @@ Scope → [Claude review ∥ Codex review] → [cross-examination ∥] → Synth
 ### Usage
 
 ```
-/adversarial-review                          # auto: uncommitted changes, else branch diff vs default branch
-/adversarial-review working-tree             # uncommitted changes only
-/adversarial-review base develop             # branch diff vs merge-base with develop
-/adversarial-review openspec/changes/foo/    # review documents as they stand
-/adversarial-review fix iterations 2         # apply confirmed fixes, re-review, up to 2 rounds
-/adversarial-review solo                     # skip Codex leg (cheaper)
-/adversarial-review focus on the retry logic # free text becomes reviewer focus
+/adversarial-review                            # auto: uncommitted changes, else branch diff vs default branch
+/adversarial-review working-tree               # uncommitted changes only
+/adversarial-review --base develop             # branch diff vs merge-base with develop
+/adversarial-review openspec/changes/foo/      # review documents as they stand
+/adversarial-review --fix --iterations 2       # apply confirmed fixes, re-review, up to 2 rounds
+/adversarial-review --strict                   # low-noise: only merge-blocking findings
+/adversarial-review --no-codex                 # skip Codex leg (cheaper single-model)
+/adversarial-review --repo ~/src/other-repo    # review a checkout outside the cwd
+/adversarial-review focus on the retry logic   # free text becomes reviewer focus
 ```
 
 Requires: Claude Code with the Workflow tool. Optional: [Codex CLI](https://github.com/openai/codex) (`codex login`) for the second model.

@@ -19,7 +19,7 @@ Measures precision / recall / cost of the skill against fixtures with **known se
 }
 ```
 
-   The cheapest way to seed: ask a model to inject N subtle bugs into a healthy diff and write the manifest for you, then eyeball it. Keep fixtures small (≤10 files) so runs are cheap; a `solo` run is usually enough for regression purposes.
+   The cheapest way to seed: ask a model to inject N subtle bugs into a healthy diff and write the manifest for you, then eyeball it. Keep fixtures small (≤10 files) so runs are cheap; a `--no-codex` run is usually enough for regression purposes.
 
 2. **Run the skill** on the fixture (`repo` + `target` args), save the returned JSON to `results/<fixture>-<variant>.json`.
 
@@ -35,4 +35,4 @@ Measures precision / recall / cost of the skill against fixtures with **known se
 
 ## What to compare
 
-Run the same fixture across variants before/after a pipeline change: `solo` vs duo, `strict` vs default, prompt tweaks. A change that drops recall on seeded bugs or floods `cleanFiles` with findings is a regression, whatever it feels like.
+Run the same fixture across variants before/after a pipeline change: `--no-codex` vs duo, `--strict` vs default, prompt tweaks. A change that drops recall on seeded bugs or floods `cleanFiles` with findings is a regression, whatever it feels like.

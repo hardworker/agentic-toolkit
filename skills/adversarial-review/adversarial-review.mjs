@@ -26,7 +26,8 @@ const repoNote = repo ? `\nRepository root: ${repo} — file paths are relative 
 const explicitFiles = Array.isArray(ARGS.files) && ARGS.files.length ? ARGS.files : null
 const focus = ARGS.focus || ''
 const fix = !!ARGS.fix
-const solo = !!ARGS.solo
+// codex: false (or legacy solo: true) runs single-model with a fresh-claude critic
+const solo = ARGS.codex === false || ARGS.solo === true
 const strict = !!ARGS.strict
 const maxIterations = fix ? Math.max(1, ARGS.maxIterations || 3) : 1
 
