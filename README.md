@@ -38,12 +38,12 @@ Requires: Claude Code with the Workflow tool. Optional: [Codex CLI](https://gith
 Via [skills.sh](https://skills.sh):
 
 ```
-npx skills add igorsova/agentic-toolkit
+npx skills add hardworker/agentic-toolkit
 ```
 
 Via Claude Code plugin marketplace:
 
 ```
-/plugin marketplace add igorsova/agentic-toolkit
+/plugin marketplace add hardworker/agentic-toolkit
 /plugin install agentic-toolkit@agentic-toolkit
 ```
