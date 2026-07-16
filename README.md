@@ -27,6 +27,8 @@ Scope → [Claude review ∥ Codex review] → [cross-examination ∥] → Synth
 /adversarial-review --fix --iterations 2       # apply confirmed fixes, re-review, up to 2 rounds
 /adversarial-review --strict                   # low-noise: only merge-blocking findings
 /adversarial-review --no-codex                 # skip Codex leg (cheaper single-model)
+/adversarial-review --effort low               # cheap precision pass: merge-blocking findings only
+/adversarial-review --effort max               # widest net, strongest reasoning, 3-vote panel
 /adversarial-review --repo ~/src/other-repo    # review a checkout outside the cwd
 /adversarial-review focus on the retry logic   # free text becomes reviewer focus
 ```

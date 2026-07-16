@@ -1,7 +1,7 @@
 ---
 name: adversarial-review
 description: Adversarial Claude-vs-Codex debate review of any target — a branch diff, the working tree, or documents (specs, proposals, plans). Hunts real defects AND challenges design decisions, approaches, and implementation paths. Use when the user asks for an adversarial review, debate review, cross-model review, or hostile scrutiny of code or plans.
-argument-hint: "[path | working-tree] [--base <ref>] [--fix] [--iterations <n>] [--strict] [--no-codex] [--repo <path>] [focus text]"
+argument-hint: "[path | working-tree] [--base <ref>] [--fix] [--iterations <n>] [--effort <level>] [--strict] [--no-codex] [--repo <path>] [focus text]"
 ---
 
 # Adversarial Review
@@ -24,12 +24,13 @@ Call the **Workflow tool** with:
 | `--iterations <n>` | `maxIterations: n` | fix-loop cap |
 | `--strict` | `strict: true` | low-noise mode: only merge-blocking findings survive, ≤5 issues/reviewer |
 | `--no-codex` | `codex: false` | skip the Codex leg (cheaper; a fresh Claude critic still cross-examines) |
+| `--effort <level>` | `effort: "<level>"` | review depth, same scale as /code-review: `low` \| `medium` (default) \| `high` \| `xhigh` \| `max`. low = few merge-blocking findings, cheap agents, no refute panel; medium = the standard pipeline; high and above = wider net (reviewers also raise suspicions for the debate to filter), bigger issue caps, stronger reasoning tiers, 3-vote panel at xhigh+ |
 | `--repo <path>` (or when reviewing another repo's checkout) | `repo: "<absolute root>"` | review a repo outside the session cwd; checkout/worktree must already be at the right commit |
 | remaining free text | `focus: "<text>"` | extra lens for the reviewers (e.g. "these are OpenSpec artifacts; check tasks cover the specs") |
 
 Bare legacy keywords (`fix`, `solo`, `iterations <n>`, `base <ref>`) mean the same as their flags; `solo` ≡ `--no-codex`.
 
-Runs in the background (~15–35 min; ~300k subagent tokens per iteration for small/clean diffs, up to ~650k for a large PR with a heavy debate). Don't block on it if the user has more requests.
+Runs in the background (~15–35 min; ~300k subagent tokens per iteration for small/clean diffs, up to ~650k for a large PR with a heavy debate — noticeably less at `--effort low`, more at `high` and above). Don't block on it if the user has more requests.
 
 ## Report
 

@@ -99,6 +99,20 @@ With `fix: true`, a fixer agent applies the confirmed recommendations (minimal, 
 - **Anti-anchoring memory.** Iteration 2+ reviewers receive the already-confirmed-and-fixed list and are told not to re-report those findings — fresh passes hunt what was missed instead of re-debating what was fixed (also the cheapest token cut in the loop).
 - **Stagnation circuit breaker.** A fingerprint of the confirmed set (`file|title` pairs): if an iteration confirms the same set as the previous one, the run stops as `stagnant` instead of burning tokens.
 
+### Effort levels
+
+`effort: low|medium|high|xhigh|max` (default `medium`) scales the whole pipeline on the same axis as `/code-review` — low/medium buy precision, high and above buy coverage:
+
+| level | issue cap/reviewer | finding bar | reviewer & critic tier | judge tier | refute panel |
+|---|---|---|---|---|---|
+| `low` | 5 | merge-blocking only (strict) | `low` | `medium` | skipped, findings annotated |
+| `medium` | 10 | standard | session default | `high` | 2 votes, unanimous rejects |
+| `high` | 15 | wide net | `high` | `high` | 2 votes, unanimous rejects |
+| `xhigh` | 20 | wide net | `xhigh` | `xhigh` | 3 votes, majority rejects |
+| `max` | 25 | wide net | `max` | `max` | 3 votes, majority rejects |
+
+"Wide net" tells reviewers to also raise suspicions they could not fully verify, labeled as such — breadth enters at the cheapest stage and the cross-examination/judge/panel chain filters it, so output precision holds while recall grows. `--strict` composes: it wins over wide-net and pins the cap at 5. Codex runner agents stay at `low` regardless (they only transcribe), and the scope agent stays at `low`.
+
 ## The Codex leg
 
 Codex participates through a thin runner: a low-effort Claude agent writes the prompt to a temp file, executes
@@ -127,6 +141,7 @@ codex exec --sandbox read-only - < promptfile
   "status": "clean | issues-found | stagnant | max-iterations | scope-violation | nothing-to-review | error",
   "target": "origin/main",
   "iterations": 1,
+  "effort": "medium",
   "codexAvailable": true,
   "confirmed": [ { "id", "kind", "file", "line", "severity", "title",
                    "description", "impact", "agreement", "fixRecommendation" } ],

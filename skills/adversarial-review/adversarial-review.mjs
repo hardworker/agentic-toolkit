@@ -28,7 +28,26 @@ const focus = ARGS.focus || ''
 const fix = !!ARGS.fix
 // codex: false (or legacy solo: true) runs single-model with a fresh-claude critic
 const solo = ARGS.codex === false || ARGS.solo === true
-const strict = !!ARGS.strict
+// ---------- effort ----------
+// review depth presets, mirroring /code-review semantics: low/medium = fewer, high-confidence
+// findings; high..max = wider net (speculative candidates enter the debate — cross-examination
+// filters them), bigger issue caps, stronger reasoning tiers, 3-vote panel at xhigh+.
+// reviewerEffort null = inherit the session tier. medium = the pre-1.3 pipeline unchanged.
+const EFFORT = {
+  low:    { cap: 5,  wideNet: false, reviewerEffort: 'low',   synthEffort: 'medium', panelVotes: 0 },
+  medium: { cap: 10, wideNet: false, reviewerEffort: null,    synthEffort: 'high',   panelVotes: 2 },
+  high:   { cap: 15, wideNet: true,  reviewerEffort: 'high',  synthEffort: 'high',   panelVotes: 2 },
+  xhigh:  { cap: 20, wideNet: true,  reviewerEffort: 'xhigh', synthEffort: 'xhigh',  panelVotes: 3 },
+  max:    { cap: 25, wideNet: true,  reviewerEffort: 'max',   synthEffort: 'max',    panelVotes: 3 },
+}
+const effortLevel = Object.hasOwn(EFFORT, ARGS.effort) ? ARGS.effort : 'medium'
+const E = EFFORT[effortLevel]
+const eff = (tier) => (tier ? { effort: tier } : {})
+// low effort means the strict bar: merge-blocking findings only
+const strict = !!ARGS.strict || effortLevel === 'low'
+// wide net contradicts the strict bar; strict wins when both are requested
+const wideNet = E.wideNet && !strict
+const issueCap = strict ? Math.min(5, E.cap) : E.cap
 const maxIterations = fix ? Math.max(1, ARGS.maxIterations || 3) : 1
 
 // ---------- schemas ----------
@@ -173,8 +192,8 @@ ${scope.diffCommand ? '- Flag ONLY issues these changes introduce or materially 
   * design — the decision itself is wrong: needless complexity, wrong abstraction, fights existing codebase patterns, unnecessary dependency, reinvented standard solution, a path that will bite later. Actively challenge the author's decisions — assume every major choice (data flow, abstraction, dependency, algorithm, API shape) is wrong until it survives scrutiny. Description = the concrete better alternative and why it is materially better here.
 - No style nits, no praise, no "could be nicer" without a defensible alternative.
 - severity anchored to merge impact: high = a maintainer would block the merge (wrong behavior/data/security, or a decision locking in real damage); medium = real defect worth fixing, limited blast radius; low = genuine but minor. impact = the blast radius in one sentence.
-${strict ? '- STRICT MODE: report ONLY findings a maintainer would block the merge over. When unsure a finding clears that bar, drop it.' : ''}
-- At most ${strict ? 5 : 10} issues, most important first, description max 3 sentences each. Ids "${idPrefix}-<n>".
+${strict ? '- STRICT MODE: report ONLY findings a maintainer would block the merge over. When unsure a finding clears that bar, drop it.' : ''}${wideNet ? '- WIDE NET: also raise findings you suspect but could not fully verify — the cross-examination will filter them. Say plainly in the description what is verified and what is suspicion.' : ''}
+- At most ${issueCap} issues, most important first, description max 3 sentences each. Ids "${idPrefix}-<n>".
 - exitSignal true ONLY if nothing worth fixing.`
 }
 
@@ -293,7 +312,7 @@ if (explicitFiles) {
 }
 if (!scope) return { status: 'error', error: 'scope agent failed' }
 if (scope.empty || !scope.files.length) return { status: 'nothing-to-review', target }
-log(`Reviewing ${scope.files.length} files (${solo ? 'solo' : 'claude+codex'}, ${fix ? 'fix loop, max ' + maxIterations : 'report-only'})`)
+log(`Reviewing ${scope.files.length} files (${solo ? 'solo' : 'claude+codex'}, effort ${effortLevel}, ${fix ? 'fix loop, max ' + maxIterations : 'report-only'})`)
 
 let codexAvailable = !solo
 let prevFingerprint = null
@@ -309,7 +328,7 @@ for (let iter = 1; iter <= maxIterations; iter++) {
 
   // independent reviews (barrier: cross-review needs both)
   const [claudeReviewRaw, codexReviewRaw] = await parallel([
-    () => agent(reviewInstructions(scope, 'claude', prevConfirmed), { schema: REVIEW_SCHEMA, phase: 'Review', label: 'claude-review' + it }),
+    () => agent(reviewInstructions(scope, 'claude', prevConfirmed), { schema: REVIEW_SCHEMA, phase: 'Review', label: 'claude-review' + it, ...eff(E.reviewerEffort) }),
     () => codexAvailable
       ? agent(codexRunnerPrompt(reviewInstructions(scope, 'codex', prevConfirmed) + CODEX_REVIEW_FORMAT, 'review'), { schema: REVIEW_SCHEMA, phase: 'Review', label: 'codex-review' + it, effort: 'low' })
       : Promise.resolve(null),
@@ -331,14 +350,14 @@ for (let iter = 1; iter <= maxIterations; iter++) {
   // cross-review (skip a leg when nothing to critique or codex is down)
   const [claudeOnCodexRaw, codexOnClaudeRaw] = await parallel([
     () => codexReview.issues.length
-      ? agent(critiqueInstructions(scope, 'claude', 'codex', codexReview.issues, claudeReview.issues), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'claude-on-codex' + it })
+      ? agent(critiqueInstructions(scope, 'claude', 'codex', codexReview.issues, claudeReview.issues), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'claude-on-codex' + it, ...eff(E.reviewerEffort) })
       : Promise.resolve(emptyCritique),
     // codex down or solo: a fresh claude critic stands in, so claude's findings never reach synthesis uncontested
     () => !claudeReview.issues.length
       ? Promise.resolve(emptyCritique)
       : codexAvailable
         ? agent(codexRunnerPrompt(critiqueInstructions(scope, 'codex', 'claude', claudeReview.issues, codexReview.issues) + CODEX_CRITIQUE_FORMAT, 'critique'), { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'codex-on-claude' + it, effort: 'low' })
-        : agent(critiqueInstructions(scope, 'critic', 'claude', claudeReview.issues, []) + '\n\nYou are a fresh, independent stand-in for the unavailable second model. You share no context with the reviewer — critique with full hostility.', { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'self-critique' + it }),
+        : agent(critiqueInstructions(scope, 'critic', 'claude', claudeReview.issues, []) + '\n\nYou are a fresh, independent stand-in for the unavailable second model. You share no context with the reviewer — critique with full hostility.', { schema: CRITIQUE_SCHEMA, phase: 'Cross-Review', label: 'self-critique' + it, ...eff(E.reviewerEffort) }),
   ])
   const claudeOnCodex = claudeOnCodexRaw || emptyCritique
   const codexOnClaude = codexOnClaudeRaw || emptyCritique
@@ -355,32 +374,37 @@ for (let iter = 1; iter <= maxIterations; iter++) {
       missedByClaude: claudeOnCodex.missedIssues,
       missedByCodex: codexOnClaude.missedIssues,
     }),
-    { schema: SYNTHESIS_SCHEMA, phase: 'Synthesis', label: 'synthesis' + it, effort: 'high' }
+    { schema: SYNTHESIS_SCHEMA, phase: 'Synthesis', label: 'synthesis' + it, effort: E.synthEffort }
   )
   if (!synthesis) return { status: 'error', error: 'synthesis agent failed', target, iterations, codexAvailable, fixed: fixedAcrossIterations }
   log(`Synthesis ${it}: ${synthesis.confirmed.length} confirmed, ${synthesis.rejected.length} rejected`)
 
   // refute panel: confirmed highs without cross-model corroboration get a 2-vote check
   const contested = synthesis.confirmed.filter((c) => c.severity === 'high' && c.agreement !== 'both')
-  if (contested.length) {
+  if (contested.length && !E.panelVotes) {
+    log(`Panel ${it}: skipped at effort ${effortLevel} — annotating ${contested.length} uncorroborated high finding(s)`)
+    for (const c of contested) c.description += ` [refute panel skipped: effort ${effortLevel}]`
+  } else if (contested.length) {
+    // 2 votes: unanimous rejects; 3 votes (xhigh+): majority rejects
+    const rejectAt = Math.floor(E.panelVotes / 2) + 1
     const votes = await parallel(contested.map((c) => () =>
-      parallel([1, 2].map((n) => () =>
+      parallel(Array.from({ length: E.panelVotes }, (_, n) => () =>
         agent(`A code-review judge confirmed the finding below. Try to REFUTE it: open the actual files and look for evidence it is wrong, already handled, or pre-existing rather than introduced by the change under review. refuted=true ONLY with concrete file-based evidence — if the finding holds, say so.
 ${repoNote}
 Target: ${scope.summary}
 ${scope.diffCommand ? `See the changes: run ${scope.diffCommand}` : `Files: ${scope.files.join(', ')}`}
 
 Finding:
-${JSON.stringify(c)}`, { schema: PANEL_SCHEMA, phase: 'Panel', label: `panel-${c.id}-${n}` + it })
+${JSON.stringify(c)}`, { schema: PANEL_SCHEMA, phase: 'Panel', label: `panel-${c.id}-${n + 1}` + it })
       )).then((vs) => ({ c, refutes: vs.filter(Boolean).filter((v) => v.refuted) }))
     ))
     for (const vote of votes.filter(Boolean)) {
-      if (vote.refutes.length === 2) {
+      if (vote.refutes.length >= rejectAt) {
         synthesis.confirmed = synthesis.confirmed.filter((x) => x.id !== vote.c.id)
-        synthesis.rejected.push({ id: vote.c.id, reason: `high finding refuted 2/2 by panel: ${vote.refutes[0].reasoning}` })
+        synthesis.rejected.push({ id: vote.c.id, reason: `high finding refuted ${vote.refutes.length}/${E.panelVotes} by panel: ${vote.refutes[0].reasoning}` })
         log(`Panel ${it}: rejected ${vote.c.id}`)
-      } else if (vote.refutes.length === 1) {
-        vote.c.description += ` [panel contested 1/2: ${vote.refutes[0].reasoning}]`
+      } else if (vote.refutes.length) {
+        vote.c.description += ` [panel contested ${vote.refutes.length}/${E.panelVotes}: ${vote.refutes[0].reasoning}]`
       }
     }
     synthesis.exitSignal = !synthesis.confirmed.length
@@ -432,6 +456,7 @@ return {
   status, // clean | issues-found | stagnant | max-iterations | scope-violation | nothing-to-review | error
   target,
   iterations,
+  effort: effortLevel,
   codexAvailable,
   confirmed: synthesis ? synthesis.confirmed : [],
   rejected: synthesis ? synthesis.rejected : [],

@@ -2,6 +2,12 @@
 
 All notable changes to the `adversarial-review` skill.
 
+## [1.3.0] — 2026-07-16
+
+### Added
+
+- **Effort levels** (`--effort low|medium|high|xhigh|max`, default `medium`), the same depth scale as the built-in `/code-review`: low/medium buy precision, high and above buy coverage. One preset table drives the whole pipeline — per-reviewer issue cap (5→25), finding bar (`low` = strict merge-blocking bar; `high`+ = wide net, reviewers also raise labeled suspicions for the debate to filter), reviewer/critic/judge reasoning tiers, and the refute panel (skipped-with-annotation at `low`, 2 votes unanimous-rejects at medium/high, 3 votes majority-rejects at xhigh+). Breadth enters at the cheapest stage; the cross-examination → judge → panel chain keeps output precision. `--strict` composes and wins over wide-net. `medium` is the pre-1.3 pipeline unchanged; result now reports `effort`.
+
 ## [1.2.0] — 2026-07-12
 
 ### Changed
