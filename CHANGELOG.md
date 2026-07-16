@@ -1,6 +1,25 @@
 # Changelog
 
-All notable changes to the `adversarial-review` skill.
+Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently.
+
+# crucible
+
+## [1.0.0] — 2026-07-16
+
+Initial release: end-to-end build pipeline (idea → tested code) that debates the user's assumptions before building. Designed from a survey of the 2024–2026 multi-agent literature (Debate-or-Vote, Cost-of-Consensus, SycEval, MAST, Cognition/Anthropic orchestration guidance, SWE-bench ensembling analyses); the load-bearing citations live in ARCHITECTURE.md.
+
+### Added
+
+- **Phase-parameterized Workflow script** (`crucible.mjs`) — `phase: surface | plan | develop | test | full`; the main thread chains invocations with a debate gate after surface and a go/no-go gate after plan; `full` is the autonomous mode that halts (`challenged`) instead of guessing whenever a human ruling is needed.
+- **Skeptic panel (surface phase)** — 2–4 isolated lenses (feasibility / necessity / scope / adversary) attack every brief assumption with file evidence; no cross-talk between skeptics; assumptions passed unattributed (naming the user's position measurably increases agreement with it); uncertainty maps to `shaky`, never `holds`; a consolidating judge file-verifies contested verdicts.
+- **Competing plans + verifying judge (plan phase)** — 2–3 forced-apart planner angles (minimal / robust / refactor-first); the judge spot-checks file claims by opening files, synthesizes one plan of ≤ 8 tasks, keeps test-first ordering when test infra exists, and surfaces `planChallenges` for genuine product calls.
+- **Sequential develop phase** — one implementer agent per task in dependency order, each seeing the whole plan, completed-task summaries, and deviations; per-task test evidence required; `blocked` stops the run instead of improvising; out-of-plan file touches are logged.
+- **Test + hostile review phase** — full suite with a bounded fix loop (stagnation fingerprint breaker), fresh-context reviewer hunting merge-blocking defects/design/acceptance-gaps/hollow-tests, 2-vote refute panel on high findings, optional auto-fix of confirmed findings with one suite re-run (`fixFindings: false` to report instead).
+- **Budget as a first-class mechanism** — fan-outs scale to the workflow token budget (reserve-half rule, ~70k/agent from sibling field data), every phase boundary stops cleanly as `budget-exhausted`, and the result reports actual per-phase spend (`result.tokens`).
+- **Sequential fallback (`PLAYBOOK.md`)** — the same pipeline as a portable single-loop protocol per the Agent Skills open standard: no tool names, capability-conditional wording, `.crucible/` phase artifacts as compaction-proof memory. Codex CLI picks it up from `.agents/skills/`; `codex review` slots in as the fresh-eyes reviewer.
+- **Stub-runtime smoke test (`eval/crucible-smoke.mjs`)** — executes the real script's control flow with canned agent responses (30 checks: chaining, gates, blocked tasks, stagnation, refute kills, budget floors, error surfacing) at zero token cost.
+
+# adversarial-review
 
 ## [1.3.0] — 2026-07-16
 

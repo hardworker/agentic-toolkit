@@ -7,7 +7,7 @@
     {
       "name": "agentic-toolkit",
       "source": "./",
-      "description": "Adversarial Claude-vs-Codex debate review (defects + design challenges, unified for code and documents)"
+      "description": "Agent skills: adversarial-review (Claude-vs-Codex debate review of code and documents) and crucible (end-to-end build pipeline that challenges your assumptions, then plans, develops, and tests)"
     }
   ]
 }

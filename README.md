@@ -1,6 +1,6 @@
 # agentic-toolkit
 
-Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the debate pipeline works and [CHANGELOG.md](CHANGELOG.md) for history. Currently one skill:
+Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Two skills:
 
 ## adversarial-review
 
@@ -35,7 +35,35 @@ Scope → [Claude review ∥ Codex review] → [cross-examination ∥] → Synth
 
 Requires: Claude Code with the Workflow tool. Optional: [Codex CLI](https://github.com/openai/codex) (`codex login`) for the second model.
 
-### Install
+## crucible
+
+End-to-end build pipeline that argues back: an idea goes in, gets its assumptions attacked by a skeptic panel, survives a debate with you, becomes a judged plan, then tested code. Budget-scaled at every fan-out.
+
+```
+Recon → [skeptic panel ∥] → consolidate → ══ debate gate ══
+      → [competing plans ∥] → plan judge → ══ plan gate ══
+      → sequential develop → test suite + fix loop → hostile review → refute votes → fix
+```
+
+- Skeptics attack every assumption with file evidence (feasibility / necessity / scope / adversary lenses); you rule on the survivors — rulings are settled, never re-litigated.
+- Plans compete (minimal vs robust vs refactor-first); a judge file-verifies their claims and synthesizes one, test-first when test infra exists.
+- Implementation is sequential with per-task test evidence; a fresh hostile reviewer plus a 2-vote refute panel gate the result.
+- Works without the Workflow tool too: [PLAYBOOK.md](skills/crucible/PLAYBOOK.md) is the same pipeline as a sequential protocol for Codex CLI or any Agent-Skills-compatible agent.
+
+### Usage
+
+```
+/crucible add rate limiting to the public API      # gated run: debate → plan gate → build → test
+/crucible --auto migrate configs to TOML           # one-shot; halts instead of guessing when a ruling is needed
+/crucible --thorough ...                           # max panels (4 skeptics, 3 planners)
+/crucible --no-fix ...                             # report review findings instead of fixing them
+/crucible --phase test                             # re-run a single phase
+/crucible --repo ~/src/other-repo ...              # build in a checkout outside the cwd
+```
+
+Requires: Claude Code with the Workflow tool for the orchestrated path; anything that can read/edit files and run shell commands for the playbook path.
+
+## Install
 
 Via [skills.sh](https://skills.sh):
 
@@ -49,3 +77,5 @@ Via Claude Code plugin marketplace:
 /plugin marketplace add hardworker/agentic-toolkit
 /plugin install agentic-toolkit@agentic-toolkit
 ```
+
+For Codex CLI, copy or symlink the skill directories into `.agents/skills/` — crucible runs its playbook path there.
