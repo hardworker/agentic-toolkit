@@ -1,4 +1,6 @@
 export const meta = {
+  // a crucible is the vessel ore is tested in under fire: an idea goes in,
+  // its assumptions get attacked, tested code comes out
   name: 'crucible',
   description: 'End-to-end feature pipeline: recon, challenge the assumptions, plan, develop, test — budget-scaled',
   whenToUse: 'Take a rough idea to tested code with the assumptions debated instead of rubber-stamped. Phase-parameterized: surface / plan / develop / test run as separate invocations with user gates between, or full for one-shot.',
@@ -22,11 +24,11 @@ const runPhase = ARGS.phase || 'full'          // surface | plan | develop | tes
 const idea = ARGS.idea || ''                    // free-text feature idea (surface/full)
 const userAssumptions = Array.isArray(ARGS.assumptions) ? ARGS.assumptions : []
 const focus = ARGS.focus || ''
-const repo = ARGS.repo || null                  // absolute repo root when not the session cwd
-const git = repo ? `git -C ${repo}` : 'git'
-const repoNote = repo ? `\nRepository root: ${repo} — file paths are relative to it; run every git command as \`${git} ...\` and Read/Edit files under that root.` : ''
+const cwd = ARGS.cwd || null                    // working directory: absolute repo root when not the session cwd
+const git = cwd ? `git -C ${cwd}` : 'git'
+const repoNote = cwd ? `\nRepository root: ${cwd} — file paths are relative to it; run every git command as \`${git} ...\` and Read/Edit files under that root.` : ''
 const thorough = !!ARGS.thorough
-const fixFindings = ARGS.fixFindings !== false  // test phase: apply confirmed review findings
+const dry = !!ARGS.dry                          // full mode: stop after planning — no code written
 // threaded between phase invocations (main thread passes prior results back in)
 let repoMap = ARGS.repoMap || null
 let brief = ARGS.brief || null
@@ -549,7 +551,7 @@ async function testPhase(taskResults, changedFilesIn) {
   }
 
   let fixedFindings = []
-  if (fixFindings && review.findings.some((f) => f.severity !== 'low') && !budgetExhausted('finding fixes')) {
+  if (review.findings.some((f) => f.severity !== 'low') && !budgetExhausted('finding fixes')) {
     phase('Fix')
     const toFix = review.findings.filter((f) => f.severity !== 'low')
     const fixed = await agent(findingsFixPrompt(toFix), { schema: FIXUP_SCHEMA, label: 'findings-fix', phase: 'Fix' })
@@ -601,6 +603,9 @@ if (runPhase === 'plan' || runPhase === 'full') {
   if (runPhase === 'plan') return { ...result, tokens: tokensByPhase(marks) }
   if (plan.planChallenges.length) {
     return { ...result, status: 'challenged', tokens: tokensByPhase(marks), summary: `Halted before building: the plan has ${plan.planChallenges.length} decisions needing a ruling` }
+  }
+  if (dry) {
+    return { ...result, status: 'planned', tokens: tokensByPhase(marks), summary: 'Dry run: stopped after planning — no code written' }
   }
 }
 

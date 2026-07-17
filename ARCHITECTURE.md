@@ -199,7 +199,7 @@ An end-to-end build pipeline that treats the user's idea as a set of attackable 
               └─────────────┘   refute on highs → fix confirmed → re-run suite
 ```
 
-The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` / `test` / `full`): the main thread chains invocations and holds the gates, threading each phase's output into the next via args. `full` is the no-gate mode for autonomous runs — it **halts** (`challenged`) whenever a human ruling is needed, never guesses.
+The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` / `test` / `full`): the main thread chains invocations and holds the gates, threading each phase's output into the next via args. `full` is the no-gate mode for autonomous runs — it **halts** (`challenged`) whenever a human ruling is needed, never guesses. `dry: true` stops after planning (status `planned`): the thinking phases without the build.
 
 ### Design decisions (and the evidence behind them)
 
@@ -217,7 +217,7 @@ The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` 
 
 ```jsonc
 {
-  "status": "done | done-with-findings | challenged | blocked | test-failures | budget-exhausted | ok | error",
+  "status": "done | done-with-findings | planned | challenged | blocked | test-failures | budget-exhausted | ok | error",
   "phaseRun": "surface | plan | develop | test | full",
   "brief":   { "goal", "nonGoals", "assumptions": [{ "id", "text", "source" }], "unknowns", "constraints", "acceptanceCriteria" },
   "repoMap": { "summary", "keyFiles", "conventions", "testCommand", "lintCommand" },
@@ -240,7 +240,7 @@ Standalone phase invocations return `status: "ok"` — the build verdict belongs
 
 ### Validation
 
-`eval/crucible-smoke.mjs` executes the actual workflow script under a stub runtime (canned agent responses, real control flow): 30 checks covering the happy path, the challenged halt, phase chaining, blocked tasks, the stagnant fix loop, refute-panel kills, finding fixes, budget floors/exhaustion, and failure surfacing. Zero tokens. Pipeline-behavior changes must keep it green; prompt-quality changes need field runs like the sibling skill's.
+`eval/crucible-smoke.mjs` executes the actual workflow script under a stub runtime (canned agent responses, real control flow): 32 checks covering the happy path, the challenged halt, the dry run, phase chaining, blocked tasks, the stagnant fix loop, refute-panel kills, finding fixes, budget floors/exhaustion, and failure surfacing. Zero tokens. Pipeline-behavior changes must keep it green; prompt-quality changes need field runs like the sibling skill's.
 
 ### Future work
 

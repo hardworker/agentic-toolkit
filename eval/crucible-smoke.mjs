@@ -140,6 +140,13 @@ const has = (calls, prefix) => calls.filter((c) => c.startsWith(prefix)).length
   check('challenged: no planners spawned', has(calls, 'plan') === 0)
 }
 
+// 2b. dry full run stops after planning, writes no code
+{
+  const { result: r, calls } = await run({ phase: 'full', idea: 'add x', dry: true })
+  check('dry: status planned', r.status === 'planned', r.status)
+  check('dry: plan present, no implementers spawned', !!r.plan && has(calls, 'task:') === 0)
+}
+
 // 3. chained phase-by-phase invocations
 {
   const s = await run({ phase: 'surface', idea: 'add x' })

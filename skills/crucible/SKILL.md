@@ -1,7 +1,7 @@
 ---
 name: crucible
-description: End-to-end build pipeline that argues back — recon → surface (a skeptic panel attacks the idea's assumptions with file evidence) → plan (competing drafts, verifying judge) → develop → test + hostile review. Use when the user wants an idea pressure-tested and then built, wants a feature taken from scratch to tested code with the assumptions challenged first, or says "crucible", "pressure-test this then build it", "challenge my assumptions then build it".
-argument-hint: "[idea] [--auto] [--thorough] [--no-fix] [--focus <text>] [--repo <path>] [--phase <surface|plan|develop|test>]"
+description: End-to-end build pipeline — recon → surface (a skeptic panel attacks the idea's assumptions with file evidence) → plan (competing drafts, verifying judge) → develop → test + hostile review. Use when the user wants an idea pressure-tested and then built, wants a feature taken from scratch to tested code with the assumptions challenged first, or says "crucible", "pressure-test this then build it", "challenge my assumptions then build it".
+argument-hint: "[idea] [--auto] [--dry] [--thorough] [--focus <text>] [--cwd <path>] [--phase <surface|plan|develop|test>]"
 ---
 
 # Crucible
@@ -22,9 +22,9 @@ The debate is the point. When the skeptics' evidence contradicts the user's idea
 | free text | the idea (first run) — pass verbatim as `idea` |
 | `--auto` | one-shot `phase: "full"` run, no user gates; halts as `challenged` instead of guessing when a ruling is needed |
 | `--thorough` | max panel sizes (4 skeptics, 3 planners, 3 test-fix rounds) |
-| `--no-fix` | `fixFindings: false` — report review findings instead of fixing them |
+| `--dry` | stop after the plan: recon, assumption debate, and planning only — no code gets written |
 | `--focus <text>` | extra emphasis for skeptics, planners, and reviewer beyond the idea itself (e.g. "be paranoid about migration safety") |
-| `--repo <path>` | absolute repo root when it is not the session cwd |
+| `--cwd <path>` | working directory: absolute repo root when it is not the session cwd |
 | `--phase <name>` | run a single phase (needs that phase's inputs from a prior run) |
 
 Flag→arg mapping is Path A semantics; Path B reads the same flags per its ground rules.
@@ -37,7 +37,7 @@ Restate the idea in one sentence and list the user's claims that will become ass
 
 If the Workflow tool is available (Claude Code), run phases as separate Workflow invocations with `scriptPath` = the `crucible.mjs` next to this SKILL.md, gating between them. Runs happen in the background — don't block on them if the user has other requests. If the user's message carries a token target (e.g. "+500k"), the workflow's budget picks it up and the panels scale to it automatically.
 
-**1. Surface.** `args: { phase: "surface", idea: "<verbatim>", assumptions: ["<user's stated claims>"], focus?, repo?, thorough? }` → returns `{ brief, repoMap, surface }`.
+**1. Surface.** `args: { phase: "surface", idea: "<verbatim>", assumptions: ["<user's stated claims>"], focus?, cwd?, thorough? }` → returns `{ brief, repoMap, surface }`.
 
 **2. Debate gate (the core of this skill).** Present `surface.challenges` to the user, most severe first: title, the evidence, the counterproposal, the panel's recommendation. Conduct rules:
 - Lead with the evidence, not with deference. If the panel found `src/x.js` already does the thing, open with that.
@@ -46,13 +46,13 @@ If the Workflow tool is available (Claude Code), run phases as separate Workflow
 - Record rulings as `resolutions: [{ id, decision: "keep-original" | "adopt-counterproposal" | "revise", note }]`. Rulings are settled — later phases must not re-litigate them.
 - `surface.proceed === "halt"` means the evidence contradicts the goal itself (e.g. it already exists). Say so plainly and stop unless the user overrules.
 
-**3. Plan.** `args: { phase: "plan", brief, repoMap, resolutions, focus?, repo?, thorough? }` (edit `brief` first if rulings changed the goal) → returns `{ plan }`. Show the user: task list (title + files), test strategy, risks, and every `planChallenge` — get a go/no-go. Skip the gate only if the user pre-approved.
+**3. Plan.** `args: { phase: "plan", brief, repoMap, resolutions, focus?, cwd?, thorough? }` (edit `brief` first if rulings changed the goal) → returns `{ plan }`. Show the user: task list (title + files), test strategy, risks, and every `planChallenge` — get a go/no-go. With `--dry`, this is the last step: report the brief, the debate record, and the plan — no code gets written.
 
-**4. Build.** `args: { phase: "develop", plan, repoMap, brief?, repo? }` → returns `{ taskResults, changedFiles }`; pass both verbatim into the next invocation, immediately and with no gate: `args: { phase: "test", plan, brief, repoMap, taskResults, changedFiles, repo?, fixFindings? }`. A `blocked` status means a task hit a decision the plan didn't cover — bring the `blockedReason` to the user, don't improvise.
+**4. Build.** `args: { phase: "develop", plan, repoMap, brief?, cwd? }` → returns `{ taskResults, changedFiles }`; pass both verbatim into the next invocation, immediately and with no gate: `args: { phase: "test", plan, brief, repoMap, taskResults, changedFiles, cwd? }`. A `blocked` status means a task hit a decision the plan didn't cover — bring the `blockedReason` to the user, don't improvise.
 
 **5. Report** (see below). Optionally offer `/adversarial-review --strict` as an extra cross-model gate on the final diff, and a commit.
 
-`--auto`: single invocation `args: { phase: "full", idea, assumptions, ... }`. It halts (`challenged`) rather than guessing whenever a human ruling is needed. After a halt: settle the rulings with the user, then resume with per-phase invocations from where it stopped — `phase: "plan"` with the returned `brief`/`repoMap` plus `resolutions` after a surface halt; `phase: "develop"` with the returned `plan` after a plan halt.
+`--auto`: single invocation `args: { phase: "full", idea, assumptions, ... }`. It halts (`challenged`) rather than guessing whenever a human ruling is needed. After a halt: settle the rulings with the user, then resume with per-phase invocations from where it stopped — `phase: "plan"` with the returned `brief`/`repoMap` plus `resolutions` after a surface halt; `phase: "develop"` with the returned `plan` after a plan halt. `--auto --dry` (`dry: true`) runs the same invocation but stops after planning with status `planned`.
 
 Cost expectations (estimates from this repo's per-agent field data, ~50–80k tokens/agent): surface ≈ 4–6 agents, plan ≈ 3–4, develop ≈ 1 per task (≤8), test ≈ 2–10+ (refute votes scale with high findings). A small feature end-to-end ≈ 0.8–1.5M subagent tokens. The script reports actual per-phase spend in `result.tokens`.
 
@@ -63,7 +63,7 @@ In any environment without the Workflow tool — Codex CLI, restricted sessions,
 ## Report
 
 When the run completes, report:
-- Status: `done` / `done-with-findings` / `challenged` / `blocked` / `test-failures` / `budget-exhausted` / `agent-failed` / `error`. (Standalone surface/plan/develop invocations return `ok` — those are phase completions, not build verdicts.)
+- Status: `done` / `done-with-findings` / `planned` (dry run) / `challenged` / `blocked` / `test-failures` / `budget-exhausted` / `agent-failed` / `error`. (Standalone surface/plan/develop invocations return `ok` — those are phase completions, not build verdicts.)
 - The debate record: each challenge, the user's ruling (or the halt reason in `--auto`).
 - What was built: tasks completed, files changed, deviations the implementers recorded.
 - Evidence: suite command + result, review findings fixed vs remaining (with `file:line`).

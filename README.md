@@ -37,7 +37,7 @@ Requires: Claude Code with the Workflow tool. Optional: [Codex CLI](https://gith
 
 ## crucible
 
-End-to-end build pipeline that argues back: an idea goes in, gets its assumptions attacked by a skeptic panel, survives a debate with you, becomes a judged plan, then tested code. Budget-scaled at every fan-out.
+End-to-end build pipeline named after the vessel ore is tested in under fire: an idea goes in, gets its assumptions attacked by a skeptic panel, survives a debate with you, becomes a judged plan, then tested code. Budget-scaled at every fan-out.
 
 ```
 Recon → [skeptic panel ∥] → consolidate → ══ debate gate ══
@@ -55,10 +55,10 @@ Recon → [skeptic panel ∥] → consolidate → ══ debate gate ══
 ```
 /crucible add rate limiting to the public API      # gated run: debate → plan gate → build → test
 /crucible --auto migrate configs to TOML           # one-shot; halts instead of guessing when a ruling is needed
+/crucible --dry ...                                # recon + debate + plan only; no code written
 /crucible --thorough ...                           # max panels (4 skeptics, 3 planners)
-/crucible --no-fix ...                             # report review findings instead of fixing them
 /crucible --phase test                             # re-run a single phase
-/crucible --repo ~/src/other-repo ...              # build in a checkout outside the cwd
+/crucible --cwd ~/src/other-repo ...               # build in a checkout outside the cwd
 ```
 
 Requires: Claude Code with the Workflow tool for the orchestrated path; anything that can read/edit files and run shell commands for the playbook path.
