@@ -28,7 +28,7 @@ const cwd = ARGS.cwd || null                    // working directory: absolute r
 const git = cwd ? `git -C ${cwd}` : 'git'
 const repoNote = cwd ? `\nRepository root: ${cwd} — file paths are relative to it; run every git command as \`${git} ...\` and Read/Edit files under that root.` : ''
 const thorough = !!ARGS.thorough
-const dry = !!ARGS.dry                          // full mode: stop after planning — no code written
+const dry = !!ARGS.dry                          // write-guard: never modify project files — develop is skipped, test fixes are disabled
 // threaded between phase invocations (main thread passes prior results back in)
 let repoMap = ARGS.repoMap || null
 let brief = ARGS.brief || null
@@ -516,7 +516,7 @@ async function testPhase(taskResults, changedFilesIn) {
 
   const maxFixRounds = thorough ? 3 : 2
   let prevFailureFp = null
-  for (let round = 1; !suite.pass && suite.ran && suite.failures.length && round <= maxFixRounds; round++) {
+  for (let round = 1; !dry && !suite.pass && suite.ran && suite.failures.length && round <= maxFixRounds; round++) {
     const fp = suite.failures.map((f) => f.test).sort().join('|')
     if (fp === prevFailureFp) { log('same failures two rounds in a row — stopping the fix loop'); break }
     prevFailureFp = fp
@@ -551,7 +551,7 @@ async function testPhase(taskResults, changedFilesIn) {
   }
 
   let fixedFindings = []
-  if (review.findings.some((f) => f.severity !== 'low') && !budgetExhausted('finding fixes')) {
+  if (!dry && review.findings.some((f) => f.severity !== 'low') && !budgetExhausted('finding fixes')) {
     phase('Fix')
     const toFix = review.findings.filter((f) => f.severity !== 'low')
     const fixed = await agent(findingsFixPrompt(toFix), { schema: FIXUP_SCHEMA, label: 'findings-fix', phase: 'Fix' })
@@ -604,13 +604,12 @@ if (runPhase === 'plan' || runPhase === 'full') {
   if (plan.planChallenges.length) {
     return { ...result, status: 'challenged', tokens: tokensByPhase(marks), summary: `Halted before building: the plan has ${plan.planChallenges.length} decisions needing a ruling` }
   }
-  if (dry) {
-    return { ...result, status: 'planned', tokens: tokensByPhase(marks), summary: 'Dry run: stopped after planning — no code written' }
-  }
 }
 
 let devOut = { taskResults: ARGS.taskResults || [], changedFiles: ARGS.changedFiles || [] }
 if (runPhase === 'develop' || runPhase === 'full') {
+  // dry gates the writes, not the thinking: develop has nothing non-mutating to do
+  if (dry) return { ...result, status: 'planned', tokens: tokensByPhase(marks), summary: 'Dry run: develop skipped — no code written' }
   if (budgetExhausted('develop')) return { ...result, status: 'budget-exhausted', tokens: tokensByPhase(marks) }
   devOut = await developPhase()
   marks.develop = budget.spent()

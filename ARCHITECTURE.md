@@ -139,7 +139,7 @@ codex exec --sandbox read-only - < promptfile
 - **Token cost tracks debate volume, not phase count.** Field data: 332k tokens for a solo run confirming 7 findings; 628k for a duo run on the same 66-file PR confirming 13 of 20 candidates. Budget expectations should scale with how contested the change is.
 - **One pipeline for code and documents.** Document review differs only in what counts as a defect, which fits in two lines of the reviewer rules — not in a parallel mode with its own prompts and schemas. Anything document-specific goes in `focus` free text.
 - **Structured output everywhere.** Schema validation retries at the tool-call layer, so a malformed agent answer self-corrects instead of corrupting the debate record.
-- **`repo` argument instead of cwd assumptions.** Workflow subagents inherit the session cwd; reviewing a PR checked out elsewhere threads `git -C <repo>` through every prompt.
+- **`cwd` argument instead of cwd assumptions.** Workflow subagents inherit the session cwd; reviewing a PR checked out elsewhere threads `git -C <root>` through every prompt. (Legacy `repo` still maps.)
 
 ### Result contract
 
@@ -199,7 +199,7 @@ An end-to-end build pipeline that treats the user's idea as a set of attackable 
               └─────────────┘   refute on highs → fix confirmed → re-run suite
 ```
 
-The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` / `test` / `full`): the main thread chains invocations and holds the gates, threading each phase's output into the next via args. `full` is the no-gate mode for autonomous runs — it **halts** (`challenged`) whenever a human ruling is needed, never guesses. `dry: true` stops after planning (status `planned`): the thinking phases without the build.
+The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` / `test` / `full`): the main thread chains invocations and holds the gates, threading each phase's output into the next via args. `full` is the no-gate mode for autonomous runs — it **halts** (`challenged`) whenever a human ruling is needed, never guesses. `dry: true` is a write-guard, not a phase stop: the thinking phases run, develop is skipped (a build run ends after planning as `planned`), and the test phase reports suite failures and review findings instead of fixing them.
 
 ### Design decisions (and the evidence behind them)
 
@@ -240,7 +240,7 @@ Standalone phase invocations return `status: "ok"` — the build verdict belongs
 
 ### Validation
 
-`eval/crucible-smoke.mjs` executes the actual workflow script under a stub runtime (canned agent responses, real control flow): 32 checks covering the happy path, the challenged halt, the dry run, phase chaining, blocked tasks, the stagnant fix loop, refute-panel kills, finding fixes, budget floors/exhaustion, and failure surfacing. Zero tokens. Pipeline-behavior changes must keep it green; prompt-quality changes need field runs like the sibling skill's.
+`eval/crucible-smoke.mjs` executes the actual workflow script under a stub runtime (canned agent responses, real control flow): 35 checks covering the happy path, the challenged halt, dry-run write-gating, phase chaining, blocked tasks, the stagnant fix loop, refute-panel kills, finding fixes, budget floors/exhaustion, and failure surfacing. Zero tokens. Pipeline-behavior changes must keep it green; prompt-quality changes need field runs like the sibling skill's.
 
 ### Future work
 

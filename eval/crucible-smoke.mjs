@@ -140,11 +140,27 @@ const has = (calls, prefix) => calls.filter((c) => c.startsWith(prefix)).length
   check('challenged: no planners spawned', has(calls, 'plan') === 0)
 }
 
-// 2b. dry full run stops after planning, writes no code
+// 2b. dry full run: thinking phases run, build is write-gated
 {
   const { result: r, calls } = await run({ phase: 'full', idea: 'add x', dry: true })
   check('dry: status planned', r.status === 'planned', r.status)
   check('dry: plan present, no implementers spawned', !!r.plan && has(calls, 'task:') === 0)
+}
+
+// 2c. dry test phase: suite + review + refutes run, fixers never spawn
+{
+  const { result: r, calls } = await run(
+    { phase: 'test', dry: true, plan: FINAL_PLAN, brief: RECON.brief, repoMap: RECON.repoMap, changedFiles: ['src/a.js'] },
+    { respond: responder({ review: REVIEW_HIGH }, { suite: [SUITE_FAIL] }) },
+  )
+  check('dry test: no fixers spawned', has(calls, 'test-fix') === 0 && has(calls, 'findings-fix') === 0, calls.join(','))
+  check('dry test: failures and findings reported', r.status === 'test-failures' && r.review.findings.length === 1, r.status)
+}
+
+// 2d. dry standalone develop refuses to write
+{
+  const { result: r, calls } = await run({ phase: 'develop', dry: true, plan: FINAL_PLAN, repoMap: RECON.repoMap })
+  check('dry develop: skipped as planned', r.status === 'planned' && has(calls, 'task:') === 0, r.status)
 }
 
 // 3. chained phase-by-phase invocations

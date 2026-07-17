@@ -20,7 +20,7 @@ const ARGS = (() => {
 // unified target; legacy args (mode/base/changeDir) still map onto it
 const target = ARGS.target || ARGS.changeDir || ARGS.base || 'auto'
 // optional absolute path to the repository root when it is not the session cwd
-const repo = ARGS.repo || null
+const repo = ARGS.cwd || ARGS.repo || null
 const git = repo ? `git -C ${repo}` : 'git'
 const repoNote = repo ? `\nRepository root: ${repo} — file paths are relative to it; run every git command as \`${git} ...\` and Read files under that root.` : ''
 const explicitFiles = Array.isArray(ARGS.files) && ARGS.files.length ? ARGS.files : null

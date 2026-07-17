@@ -22,7 +22,7 @@ The debate is the point. When the skeptics' evidence contradicts the user's idea
 | free text | the idea (first run) — pass verbatim as `idea` |
 | `--auto` | one-shot `phase: "full"` run, no user gates; halts as `challenged` instead of guessing when a ruling is needed |
 | `--thorough` | max panel sizes (4 skeptics, 3 planners, 3 test-fix rounds) |
-| `--dry` | stop after the plan: recon, assumption debate, and planning only — no code gets written |
+| `--dry` | write-guard, `dry: true`: never modify project files — develop is skipped (a build run ends after planning as `planned`), and a `--dry --phase test` run reports suite failures and review findings instead of fixing them |
 | `--focus <text>` | extra emphasis for skeptics, planners, and reviewer beyond the idea itself (e.g. "be paranoid about migration safety") |
 | `--cwd <path>` | working directory: absolute repo root when it is not the session cwd |
 | `--phase <name>` | run a single phase (needs that phase's inputs from a prior run) |
@@ -46,13 +46,13 @@ If the Workflow tool is available (Claude Code), run phases as separate Workflow
 - Record rulings as `resolutions: [{ id, decision: "keep-original" | "adopt-counterproposal" | "revise", note }]`. Rulings are settled — later phases must not re-litigate them.
 - `surface.proceed === "halt"` means the evidence contradicts the goal itself (e.g. it already exists). Say so plainly and stop unless the user overrules.
 
-**3. Plan.** `args: { phase: "plan", brief, repoMap, resolutions, focus?, cwd?, thorough? }` (edit `brief` first if rulings changed the goal) → returns `{ plan }`. Show the user: task list (title + files), test strategy, risks, and every `planChallenge` — get a go/no-go. With `--dry`, this is the last step: report the brief, the debate record, and the plan — no code gets written.
+**3. Plan.** `args: { phase: "plan", brief, repoMap, resolutions, focus?, cwd?, thorough? }` (edit `brief` first if rulings changed the goal) → returns `{ plan }`. Show the user: task list (title + files), test strategy, risks, and every `planChallenge` — get a go/no-go. With `--dry`, this is where a build run ends (develop is write-gated): report the brief, the debate record, and the plan — no code gets written.
 
 **4. Build.** `args: { phase: "develop", plan, repoMap, brief?, cwd? }` → returns `{ taskResults, changedFiles }`; pass both verbatim into the next invocation, immediately and with no gate: `args: { phase: "test", plan, brief, repoMap, taskResults, changedFiles, cwd? }`. A `blocked` status means a task hit a decision the plan didn't cover — bring the `blockedReason` to the user, don't improvise.
 
 **5. Report** (see below). Optionally offer `/adversarial-review --strict` as an extra cross-model gate on the final diff, and a commit.
 
-`--auto`: single invocation `args: { phase: "full", idea, assumptions, ... }`. It halts (`challenged`) rather than guessing whenever a human ruling is needed. After a halt: settle the rulings with the user, then resume with per-phase invocations from where it stopped — `phase: "plan"` with the returned `brief`/`repoMap` plus `resolutions` after a surface halt; `phase: "develop"` with the returned `plan` after a plan halt. `--auto --dry` (`dry: true`) runs the same invocation but stops after planning with status `planned`.
+`--auto`: single invocation `args: { phase: "full", idea, assumptions, ... }`. It halts (`challenged`) rather than guessing whenever a human ruling is needed. After a halt: settle the rulings with the user, then resume with per-phase invocations from where it stopped — `phase: "plan"` with the returned `brief`/`repoMap` plus `resolutions` after a surface halt; `phase: "develop"` with the returned `plan` after a plan halt. `--auto --dry` (`dry: true`) runs the same invocation but skips the build: status `planned` after planning.
 
 Cost expectations (estimates from this repo's per-agent field data, ~50–80k tokens/agent): surface ≈ 4–6 agents, plan ≈ 3–4, develop ≈ 1 per task (≤8), test ≈ 2–10+ (refute votes scale with high findings). A small feature end-to-end ≈ 0.8–1.5M subagent tokens. The script reports actual per-phase spend in `result.tokens`.
 
