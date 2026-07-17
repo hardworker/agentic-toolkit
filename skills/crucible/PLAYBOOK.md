@@ -8,7 +8,7 @@ The crucible pipeline for environments without a workflow orchestrator: same fiv
 - Do not modify any project file before the Develop phase. Recon, Surface, and Plan are read-only (add `.crucible/` writes only).
 - Token discipline: read only the files a step needs, never re-read unchanged files, keep each artifact under one page. Caps: ≤ 10 assumptions, ≤ 8 tasks, ≤ 6 review findings.
 - Non-interactive run (no user available): wherever a phase says STOP, halt and report instead of guessing — a wrong guess wastes the whole build.
-- Flags map here too: `--thorough` → 3 fix rounds in Phase 5 (default 2); `--dry` → write no project files, ever: run Recon, Surface, and Plan, skip Develop (a build run ends at the plan gate), and if the user explicitly asks for the Test phase on an existing change, run the suite and review but report failures and findings instead of fixing them; `--auto` → the non-interactive rule above; `--focus <text>` → carry the emphasis into every attack, plan, and review step.
+- Flags map here too: `--thorough` → 3 fix rounds in Phase 5 (default 2); `--auto` → the non-interactive rule above; `--focus <text>` → carry the emphasis into every attack, plan, and review step. A plan-only request simply ends at the Phase 3 gate.
 
 ## Phase 1 — Recon (read-only)
 
@@ -68,4 +68,4 @@ Task by task, in dependency order:
 
 ## Report
 
-Status (`done` / `done-with-findings` / `planned` for a `--dry` run / `challenged` / `blocked` / `test-failures`); the debate record (challenges + rulings); tasks completed, files changed, deviations; suite command + result; findings fixed vs remaining with `file:line`. Then delete `.crucible/` (it is excluded from git via `.git/info/exclude`, never committed).
+Status (`done` / `done-with-findings` / `challenged` / `blocked` / `test-failures`); the debate record (challenges + rulings); tasks completed, files changed, deviations; suite command + result; findings fixed vs remaining with `file:line`. Then delete `.crucible/` (it is excluded from git via `.git/info/exclude`, never committed).
