@@ -21,7 +21,7 @@ The debate is the point. When the skeptics' evidence contradicts the user's idea
 |---|---|---|
 | free text | `idea: "<verbatim>"` | the feature idea (first run) |
 | `--auto` | `phase: "full"` | one-shot run, no user gates; halts as `challenged` instead of guessing when a ruling is needed |
-| `--effort <level>` | `effort: "<level>"` | pipeline depth, same scale as adversarial-review and /code-review: `low` \| `medium` (default) \| `high` \| `xhigh` \| `max`. low = 2 skeptics, 2 planners, 1 test-fix round, refute panel skipped, cheap agents; medium = the standard pipeline; high and above = 4 skeptics, 3 planners, 3 fix rounds, stronger reasoning tiers, 3-vote majority panel at xhigh+. Legacy `--thorough` ≡ `high` |
+| `--effort <level>` | `effort: "<level>"` | pipeline depth, same scale as adversarial-review and /code-review: `low` \| `medium` (default) \| `high` \| `xhigh` \| `max`. low = 2 skeptics, 2 planners, 1 test-fix round, refute panel skipped, cheap agents; medium = the standard pipeline; high and above = 4 skeptics, 3 planners, 3 fix rounds, stronger reasoning tiers, 3-vote majority panel at xhigh+ |
 | `--focus <text>` | `focus: "<text>"` | extra emphasis for skeptics, planners, and reviewer beyond the idea itself (e.g. "be paranoid about migration safety") |
 | `--cwd <path>` | `cwd: "<absolute root>"` | build in a repo outside the session cwd |
 | `--phase <name>` | `phase: "<name>"` | run a single phase (needs that phase's inputs from a prior run) |

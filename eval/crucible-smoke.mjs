@@ -167,11 +167,11 @@ const has = (calls, prefix) => calls.filter((c) => c.startsWith(prefix)).length
   check('effort xhigh: majority refutation kills the finding', r.review.findings.length === 0 && r.status === 'done', r.status)
 }
 
-// 2g. --thorough is a legacy alias for effort high
+// 2g. effort high widens the surface panel
 {
-  const { result: r, calls } = await run({ phase: 'surface', idea: 'add x', thorough: true })
-  check('thorough alias: 4 skeptics', has(calls, 'skeptic:') === 4, `${has(calls, 'skeptic:')}`)
-  check('thorough alias: effort high', r.effort === 'high', r.effort)
+  const { result: r, calls } = await run({ phase: 'surface', idea: 'add x', effort: 'high' })
+  check('effort high: 4 skeptics', has(calls, 'skeptic:') === 4, `${has(calls, 'skeptic:')}`)
+  check('effort high: reported in result', r.effort === 'high', r.effort)
 }
 
 // 3. chained phase-by-phase invocations

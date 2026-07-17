@@ -8,7 +8,7 @@ The crucible pipeline for environments without a workflow orchestrator: same fiv
 - Do not modify any project file before the Develop phase. Recon, Surface, and Plan are read-only (add `.crucible/` writes only).
 - Token discipline: read only the files a step needs, never re-read unchanged files, keep each artifact under one page. Caps: ≤ 10 assumptions, ≤ 8 tasks, ≤ 6 review findings.
 - Non-interactive run (no user available): wherever a phase says STOP, halt and report instead of guessing — a wrong guess wastes the whole build.
-- Flags map here too: `--effort low` → attack through the first two lenses only, two competing plans, 1 fix round in Phase 5, skip the refute step; `medium` (default) → this playbook as written; `high` and above (legacy `--thorough`) → all four lenses, three competing plans (add *refactor-first*: prepare the code so the feature lands as a small change), 3 fix rounds. `--auto` → the non-interactive rule above; `--focus <text>` → carry the emphasis into every attack, plan, and review step. A plan-only request simply ends at the Phase 3 gate.
+- Flags map here too: `--effort low` → attack through the first two lenses only, two competing plans, 1 fix round in Phase 5, skip the refute step; `medium` (default) → this playbook as written; `high` and above → all four lenses, three competing plans (add *refactor-first*: prepare the code so the feature lands as a small change), 3 fix rounds. `--auto` → the non-interactive rule above; `--focus <text>` → carry the emphasis into every attack, plan, and review step. A plan-only request simply ends at the Phase 3 gate.
 
 ## Phase 1 — Recon (read-only)
 

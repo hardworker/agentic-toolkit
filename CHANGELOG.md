@@ -14,7 +14,7 @@ Args and docs aligned with adversarial-review.
 
 ### Changed
 
-- **`--thorough` is now a legacy alias for `--effort high`** (still accepted, no longer documented as primary).
+- **`--thorough` removed** — `--effort high` replaces it (one depth knob across the toolkit).
 - **Docs aligned to the sibling's format** — SKILL.md argument table converted to three columns (user input → JSON arg → meaning), playbook flag mapping rewritten in effort terms, cost line notes the effort effect.
 
 ## [1.0.0] — 2026-07-16

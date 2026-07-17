@@ -30,7 +30,7 @@ const repoNote = cwd ? `\nRepository root: ${cwd} — file paths are relative to
 // ---------- effort ----------
 // depth presets, same scale as adversarial-review and /code-review: low/medium buy
 // precision, high and above buy coverage. agentEffort null = inherit the session tier.
-// medium = the 1.0 pipeline unchanged. legacy --thorough maps to high.
+// medium = the 1.0 pipeline unchanged.
 const EFFORT = {
   low:    { skeptics: 2, planners: 2, fixRounds: 1, refuteVotes: 0, agentEffort: 'low',   judgeEffort: 'medium' },
   medium: { skeptics: 3, planners: 2, fixRounds: 2, refuteVotes: 2, agentEffort: null,    judgeEffort: 'high' },
@@ -38,7 +38,7 @@ const EFFORT = {
   xhigh:  { skeptics: 4, planners: 3, fixRounds: 3, refuteVotes: 3, agentEffort: 'xhigh', judgeEffort: 'xhigh' },
   max:    { skeptics: 4, planners: 3, fixRounds: 3, refuteVotes: 3, agentEffort: 'max',   judgeEffort: 'max' },
 }
-const effortLevel = Object.hasOwn(EFFORT, ARGS.effort) ? ARGS.effort : (ARGS.thorough ? 'high' : 'medium')
+const effortLevel = Object.hasOwn(EFFORT, ARGS.effort) ? ARGS.effort : 'medium'
 const E = EFFORT[effortLevel]
 const eff = (tier) => (tier ? { effort: tier } : {})
 // threaded between phase invocations (main thread passes prior results back in)
