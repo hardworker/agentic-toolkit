@@ -55,7 +55,8 @@ Recon → [skeptic panel ∥] → consolidate → ══ debate gate ══
 ```
 /crucible add rate limiting to the public API      # gated run: debate → plan gate → build → test
 /crucible --auto migrate configs to TOML           # one-shot; halts instead of guessing when a ruling is needed
-/crucible --thorough ...                           # max panels (4 skeptics, 3 planners)
+/crucible --effort low ...                         # cheap pass: 2 skeptics, 2 planners, no refute panel
+/crucible --effort high ...                        # wide net: 4 skeptics, 3 planners, 3 fix rounds
 /crucible --phase test                             # re-run a single phase
 /crucible --cwd ~/src/other-repo ...               # build in a checkout outside the cwd
 ```

@@ -4,6 +4,19 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # crucible
 
+## [1.1.0] — 2026-07-17
+
+Args and docs aligned with adversarial-review.
+
+### Added
+
+- **Effort levels** (`--effort low|medium|high|xhigh|max`, default `medium`) — the same depth scale as adversarial-review and `/code-review`: one preset table drives skeptic count (2/3/4), planner count (2/2/3), test-fix rounds (1/2/3), refute votes (skipped-with-annotation at `low`, 2-vote unanimous-rejects at medium/high, 3-vote majority-rejects at `xhigh`+), and agent reasoning tiers (judges `medium`→`max`, workers `low`→`max`, suite runner pinned at `low`). The budget floor still applies regardless of effort. Result reports `effort`.
+
+### Changed
+
+- **`--thorough` is now a legacy alias for `--effort high`** (still accepted, no longer documented as primary).
+- **Docs aligned to the sibling's format** — SKILL.md argument table converted to three columns (user input → JSON arg → meaning), playbook flag mapping rewritten in effort terms, cost line notes the effort effect.
+
 ## [1.0.0] — 2026-07-16
 
 Initial release: end-to-end build pipeline (idea → tested code) that debates the user's assumptions before building. Designed from a survey of the 2024–2026 multi-agent literature (Debate-or-Vote, Cost-of-Consensus, SycEval, MAST, Cognition/Anthropic orchestration guidance, SWE-bench ensembling analyses); the load-bearing citations live in ARCHITECTURE.md.

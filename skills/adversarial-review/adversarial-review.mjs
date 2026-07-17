@@ -7,7 +7,7 @@ export const meta = {
     { title: 'Review', detail: 'independent Claude + Codex reviews' },
     { title: 'Cross-Review', detail: 'each side attacks the other\'s findings' },
     { title: 'Synthesis', detail: 'judge verifies disputes in the files, confirms/rejects' },
-    { title: 'Panel', detail: '2-vote refute check on uncorroborated high findings' },
+    { title: 'Panel', detail: 'refute votes on uncorroborated high findings' },
     { title: 'Fix', detail: 'apply confirmed fixes (fix mode only)' },
   ],
 }

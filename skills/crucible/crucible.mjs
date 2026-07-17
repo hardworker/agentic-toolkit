@@ -27,7 +27,20 @@ const focus = ARGS.focus || ''
 const cwd = ARGS.cwd || null                    // working directory: absolute repo root when not the session cwd
 const git = cwd ? `git -C ${cwd}` : 'git'
 const repoNote = cwd ? `\nRepository root: ${cwd} — file paths are relative to it; run every git command as \`${git} ...\` and Read/Edit files under that root.` : ''
-const thorough = !!ARGS.thorough
+// ---------- effort ----------
+// depth presets, same scale as adversarial-review and /code-review: low/medium buy
+// precision, high and above buy coverage. agentEffort null = inherit the session tier.
+// medium = the 1.0 pipeline unchanged. legacy --thorough maps to high.
+const EFFORT = {
+  low:    { skeptics: 2, planners: 2, fixRounds: 1, refuteVotes: 0, agentEffort: 'low',   judgeEffort: 'medium' },
+  medium: { skeptics: 3, planners: 2, fixRounds: 2, refuteVotes: 2, agentEffort: null,    judgeEffort: 'high' },
+  high:   { skeptics: 4, planners: 3, fixRounds: 3, refuteVotes: 2, agentEffort: 'high',  judgeEffort: 'high' },
+  xhigh:  { skeptics: 4, planners: 3, fixRounds: 3, refuteVotes: 3, agentEffort: 'xhigh', judgeEffort: 'xhigh' },
+  max:    { skeptics: 4, planners: 3, fixRounds: 3, refuteVotes: 3, agentEffort: 'max',   judgeEffort: 'max' },
+}
+const effortLevel = Object.hasOwn(EFFORT, ARGS.effort) ? ARGS.effort : (ARGS.thorough ? 'high' : 'medium')
+const E = EFFORT[effortLevel]
+const eff = (tier) => (tier ? { effort: tier } : {})
 // threaded between phase invocations (main thread passes prior results back in)
 let repoMap = ARGS.repoMap || null
 let brief = ARGS.brief || null
@@ -37,8 +50,7 @@ let plan = ARGS.plan || null
 // ---------- budget ----------
 // rough per-subagent cost observed in this repo's field tests: ~50–80k output tokens
 const PER_AGENT = 70_000
-function scaledCount(dflt, max, label) {
-  const want = thorough ? max : dflt
+function scaledCount(want, label) {
   if (!budget.total) return want
   // reserve half the remaining budget for the phases after this fan-out
   const affordable = Math.floor(budget.remaining() / (PER_AGENT * 2))
@@ -447,20 +459,20 @@ Rules:
 // ---------- phase runners ----------
 async function surfacePhase() {
   phase('Recon')
-  const recon = await agent(reconPrompt(), { schema: RECON_SCHEMA, label: 'recon', phase: 'Recon' })
+  const recon = await agent(reconPrompt(), { schema: RECON_SCHEMA, label: 'recon', phase: 'Recon', ...eff(E.agentEffort) })
   if (!recon) return { error: 'recon agent failed' }
   repoMap = recon.repoMap
   brief = recon.brief
   log(`Brief: ${brief.assumptions.length} assumptions, ${brief.acceptanceCriteria.length} acceptance criteria`)
 
   phase('Surface')
-  const nSkeptics = scaledCount(3, 4, 'skeptics')
+  const nSkeptics = scaledCount(E.skeptics, 'skeptics')
   const lenses = SKEPTIC_LENSES.slice(0, nSkeptics)
   const reports = (await parallel(lenses.map((l) => () =>
-    agent(skepticPrompt(l), { schema: SKEPTIC_SCHEMA, label: `skeptic:${l.key}`, phase: 'Surface' })
+    agent(skepticPrompt(l), { schema: SKEPTIC_SCHEMA, label: `skeptic:${l.key}`, phase: 'Surface', ...eff(E.agentEffort) })
   ))).filter(Boolean)
   if (!reports.length) return { error: 'all skeptics failed' }
-  const consolidated = await agent(consolidatePrompt(reports), { schema: CONSOLIDATED_SCHEMA, label: 'consolidate', phase: 'Surface', effort: 'high' })
+  const consolidated = await agent(consolidatePrompt(reports), { schema: CONSOLIDATED_SCHEMA, label: 'consolidate', phase: 'Surface', ...eff(E.judgeEffort) })
   if (!consolidated) return { error: 'consolidation failed' }
   log(`Surface: ${consolidated.challenges.length} challenges, verdict ${consolidated.proceed}`)
   return { repoMap, brief, surface: consolidated }
@@ -469,13 +481,13 @@ async function surfacePhase() {
 async function planPhase() {
   if (!brief || !repoMap) return { error: 'plan phase needs brief and repoMap from the surface phase (pass them in args)' }
   phase('Plan')
-  const nPlanners = scaledCount(2, 3, 'planners')
+  const nPlanners = scaledCount(E.planners, 'planners')
   const angles = PLANNER_ANGLES.slice(0, nPlanners)
   const drafts = (await parallel(angles.map((a) => () =>
-    agent(plannerPrompt(a), { schema: PLAN_DRAFT_SCHEMA, label: `plan:${a.key}`, phase: 'Plan' })
+    agent(plannerPrompt(a), { schema: PLAN_DRAFT_SCHEMA, label: `plan:${a.key}`, phase: 'Plan', ...eff(E.agentEffort) })
   ))).filter(Boolean)
   if (!drafts.length) return { error: 'all planners failed' }
-  const judged = await agent(planJudgePrompt(drafts), { schema: FINAL_PLAN_SCHEMA, label: 'plan-judge', phase: 'Plan', effort: 'high' })
+  const judged = await agent(planJudgePrompt(drafts), { schema: FINAL_PLAN_SCHEMA, label: 'plan-judge', phase: 'Plan', ...eff(E.judgeEffort) })
   if (!judged) return { error: 'plan judge failed' }
   plan = judged
   log(`Plan: ${plan.tasks.length} tasks (${drafts.length} drafts judged), ${plan.planChallenges.length} open challenges`)
@@ -489,7 +501,7 @@ async function developPhase() {
   const changedFiles = new Set()
   for (const task of plan.tasks) {
     if (budgetExhausted(`task ${task.id}`)) return { taskResults: done, changedFiles: [...changedFiles], stopped: 'budget-exhausted' }
-    const res = await agent(implementPrompt(task, done.map((d) => ({ id: d.id, title: d.title, summary: d.summary, changedFiles: d.changedFiles }))), { schema: TASK_RESULT_SCHEMA, label: `task:${task.id}`, phase: 'Develop' })
+    const res = await agent(implementPrompt(task, done.map((d) => ({ id: d.id, title: d.title, summary: d.summary, changedFiles: d.changedFiles }))), { schema: TASK_RESULT_SCHEMA, label: `task:${task.id}`, phase: 'Develop', ...eff(E.agentEffort) })
     if (!res) return { taskResults: done, changedFiles: [...changedFiles], stopped: 'agent-failed', stoppedAt: task.id }
     done.push({ id: task.id, title: task.title, ...res })
     for (const f of res.changedFiles) changedFiles.add(f)
@@ -513,7 +525,7 @@ async function testPhase(taskResults, changedFilesIn) {
   if (!suite) suite = { ran: false, command: '', pass: false, failures: [], notes: 'suite runner failed' }
   if (!suite.ran) log(`no test suite ran: ${suite.notes || 'no test infra'} — review is the only gate`)
 
-  const maxFixRounds = thorough ? 3 : 2
+  const maxFixRounds = E.fixRounds
   let prevFailureFp = null
   for (let round = 1; !suite.pass && suite.ran && suite.failures.length && round <= maxFixRounds; round++) {
     const fp = suite.failures.map((f) => f.test).sort().join('|')
@@ -521,7 +533,7 @@ async function testPhase(taskResults, changedFilesIn) {
     prevFailureFp = fp
     if (budgetExhausted(`test-fix round ${round}`)) break
     log(`test-fix round ${round}: ${suite.failures.length} failures`)
-    const fixed = await agent(testFixPrompt(suite, changedFiles), { schema: FIXUP_SCHEMA, label: `test-fix-${round}`, phase: 'Test' })
+    const fixed = await agent(testFixPrompt(suite, changedFiles), { schema: FIXUP_SCHEMA, label: `test-fix-${round}`, phase: 'Test', ...eff(E.agentEffort) })
     if (!fixed) break
     for (const f of fixed.changedFiles) if (!changedFiles.includes(f)) changedFiles.push(f)
     suite = (await agent(suitePrompt(), { schema: SUITE_SCHEMA, label: `suite-rerun-${round}`, phase: 'Test', effort: 'low' })) || suite
@@ -530,21 +542,24 @@ async function testPhase(taskResults, changedFilesIn) {
   phase('Review')
   let review = { findings: [], summary: 'review skipped (budget exhausted)', exitSignal: true }
   if (!budgetExhausted('review')) {
-    review = (await agent(reviewPrompt(taskResults, changedFiles), { schema: REVIEW_SCHEMA, label: 'review', phase: 'Review' })) || { findings: [], summary: 'reviewer failed — change is UNREVIEWED', exitSignal: false }
+    review = (await agent(reviewPrompt(taskResults, changedFiles), { schema: REVIEW_SCHEMA, label: 'review', phase: 'Review', ...eff(E.agentEffort) })) || { findings: [], summary: 'reviewer failed — change is UNREVIEWED', exitSignal: false }
   }
-  // refute votes: every high finding gets 2 independent refuters; 2/2 refuted kills it
+  // refute votes on high findings: unanimous 2/2 kills at ≤2 votes, majority 2/3 at 3;
+  // low effort skips the panel and says so on the finding
   const highs = review.findings.filter((f) => f.severity === 'high')
-  if (highs.length && !budgetExhausted('refute panel')) {
+  if (highs.length && E.refuteVotes === 0) {
+    for (const f of highs) f.description += ' [refute panel skipped at low effort]'
+  } else if (highs.length && !budgetExhausted('refute panel')) {
     const votes = await parallel(highs.map((f) => () =>
-      parallel([1, 2].map((n) => () => agent(refutePrompt(f), { schema: REFUTE_SCHEMA, label: `refute-${f.id}-${n}`, phase: 'Review' })))
+      parallel(Array.from({ length: E.refuteVotes }, (_, i) => () => agent(refutePrompt(f), { schema: REFUTE_SCHEMA, label: `refute-${f.id}-${i + 1}`, phase: 'Review' })))
         .then((vs) => ({ f, refutes: vs.filter(Boolean).filter((v) => v.refuted) }))
     ))
     for (const vote of votes.filter(Boolean)) {
-      if (vote.refutes.length === 2) {
+      if (vote.refutes.length >= 2) {
         review.findings = review.findings.filter((x) => x.id !== vote.f.id)
         log(`refute panel killed ${vote.f.id}: ${vote.refutes[0].reasoning}`)
       } else if (vote.refutes.length === 1) {
-        vote.f.description += ` [contested 1/2: ${vote.refutes[0].reasoning}]`
+        vote.f.description += ` [contested 1/${E.refuteVotes}: ${vote.refutes[0].reasoning}]`
       }
     }
   }
@@ -553,7 +568,7 @@ async function testPhase(taskResults, changedFilesIn) {
   if (review.findings.some((f) => f.severity !== 'low') && !budgetExhausted('finding fixes')) {
     phase('Fix')
     const toFix = review.findings.filter((f) => f.severity !== 'low')
-    const fixed = await agent(findingsFixPrompt(toFix), { schema: FIXUP_SCHEMA, label: 'findings-fix', phase: 'Fix' })
+    const fixed = await agent(findingsFixPrompt(toFix), { schema: FIXUP_SCHEMA, label: 'findings-fix', phase: 'Fix', ...eff(E.agentEffort) })
     if (fixed) {
       fixedFindings = fixed.fixed
       for (const f of fixed.changedFiles) if (!changedFiles.includes(f)) changedFiles.push(f)
@@ -578,7 +593,7 @@ function tokensByPhase(marks) {
 const marks = { start: spentAt.start }
 // standalone phase invocations return status "ok" (the phase completed; the main
 // thread owns the gates); only test/full compute a build verdict
-const result = { status: 'ok', phaseRun: runPhase }
+const result = { status: 'ok', phaseRun: runPhase, effort: effortLevel }
 
 if (runPhase === 'surface' || runPhase === 'full') {
   if (!idea) return { status: 'error', error: 'surface phase needs args.idea (the feature idea, free text)' }

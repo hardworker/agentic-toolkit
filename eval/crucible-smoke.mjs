@@ -140,6 +140,40 @@ const has = (calls, prefix) => calls.filter((c) => c.startsWith(prefix)).length
   check('challenged: no planners spawned', has(calls, 'plan') === 0)
 }
 
+// 2e. effort low: smaller panels, no refute votes, one fix round, annotation instead
+{
+  const { result: r, calls } = await run(
+    { phase: 'test', effort: 'low', plan: FINAL_PLAN, brief: RECON.brief, repoMap: RECON.repoMap, changedFiles: ['src/a.js'] },
+    {
+      respond: responder(
+        { review: REVIEW_HIGH, 'findings-fix': { fixed: [], skipped: [{ id: 'r-1', reason: 'needs decision' }], changedFiles: [], notes: '' } },
+        { suite: [SUITE_FAIL, SUITE_FAIL] },
+      ),
+    },
+  )
+  check('effort low: one fix round only', has(calls, 'test-fix') === 1, `${has(calls, 'test-fix')}`)
+  check('effort low: refute panel skipped', has(calls, 'refute-') === 0)
+  check('effort low: skipped panel annotated on the finding', r.review.findings[0]?.description.includes('skipped at low effort'))
+  check('effort low: reported in result', r.effort === 'low', r.effort)
+}
+
+// 2f. effort xhigh: 3 refute votes, majority (2/3) kills
+{
+  const { result: r, calls } = await run(
+    { phase: 'test', effort: 'xhigh', plan: FINAL_PLAN, brief: RECON.brief, repoMap: RECON.repoMap, changedFiles: ['src/a.js'] },
+    { respond: responder({ review: REVIEW_HIGH }, { 'refute-': [REFUTE_YES, REFUTE_YES, REFUTE_NO] }) },
+  )
+  check('effort xhigh: 3 refute votes cast', has(calls, 'refute-') === 3, `${has(calls, 'refute-')}`)
+  check('effort xhigh: majority refutation kills the finding', r.review.findings.length === 0 && r.status === 'done', r.status)
+}
+
+// 2g. --thorough is a legacy alias for effort high
+{
+  const { result: r, calls } = await run({ phase: 'surface', idea: 'add x', thorough: true })
+  check('thorough alias: 4 skeptics', has(calls, 'skeptic:') === 4, `${has(calls, 'skeptic:')}`)
+  check('thorough alias: effort high', r.effort === 'high', r.effort)
+}
+
 // 3. chained phase-by-phase invocations
 {
   const s = await run({ phase: 'surface', idea: 'add x' })

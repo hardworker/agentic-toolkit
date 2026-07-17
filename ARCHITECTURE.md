@@ -211,6 +211,7 @@ The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` 
 - **Fresh-context hostile review + default-to-refuted.** Models favor their own output ([self-preference bias](https://arxiv.org/abs/2404.13076)), so the reviewer shares no context with the builders and hunts merge-blocking findings only (reviewer over-reporting drives over-engineering). Every high finding faces 2 independent refuters needing file evidence — the same reproduction-gate philosophy as [Aardvark](https://openai.com/index/introducing-aardvark/)'s discard-on-non-reproduction.
 - **Test-first ordering, hollow-test hunting.** Agents left alone write tests that assert whatever the implementation does; planners must schedule failing acceptance tests before implementation when test infra exists, and the reviewer explicitly hunts tests that cannot fail.
 - **Budget is first-class.** Fan-outs scale to the workflow token budget (~70k/agent from this repo's field data, reserve-half rule so early phases can't starve later ones), every phase boundary checks `budget-exhausted` and stops cleanly, and the result reports actual per-phase spend. Multi-agent runs ~15× chat cost ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)) — the pipeline must know what it spent.
+- **Effort levels shared with the sibling.** `effort: low|medium|high|xhigh|max` (default `medium`; legacy `thorough` ≡ `high`) drives one preset table — skeptics 2/3/4, planners 2/2/3, test-fix rounds 1/2/3, refute votes 0/2/3 (skipped-with-annotation at `low`, 3-vote majority-rejects at `xhigh`+), and agent reasoning tiers. Same axis as adversarial-review and `/code-review`: low/medium buy precision, high and above buy coverage. The budget floor applies regardless of effort; the suite runner stays at `low` (it only runs commands).
 - **Overhead must be earned.** The SKILL.md's first rule is when *not* to run crucible: a one-sentence uncontested change gets built directly. Spec-pipeline tooling's main failure mode is ceremony on well-understood work ([waterfall-strikes-back critique](https://marmelab.com/blog/2025/11/12/spec-driven-development-waterfall-strikes-back.html)); gates sit exactly where the industry converged — after clarification, after plan (Kiro, Spec Kit, Superpowers all gate there).
 
 ### Result contract
@@ -228,7 +229,8 @@ The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` 
   "review":  { "findings": [{ "id", "kind", "file", "severity", "title", "description", "impact", "fixRecommendation" }], "summary" },
   "fixedFindings": [ "finding ids" ],
   "changedFiles": [ "every file the run touched" ],
-  "tokens":  { "surface", "plan", "develop", "test", "total" }
+  "tokens":  { "surface", "plan", "develop", "test", "total" },
+  "effort":  "low | medium | high | xhigh | max"
 }
 ```
 
@@ -240,7 +242,7 @@ Standalone phase invocations return `status: "ok"` — the build verdict belongs
 
 ### Validation
 
-`eval/crucible-smoke.mjs` executes the actual workflow script under a stub runtime (canned agent responses, real control flow): 30 checks covering the happy path, the challenged halt, phase chaining, blocked tasks, the stagnant fix loop, refute-panel kills, finding fixes, budget floors/exhaustion, and failure surfacing. Zero tokens. Pipeline-behavior changes must keep it green; prompt-quality changes need field runs like the sibling skill's.
+`eval/crucible-smoke.mjs` executes the actual workflow script under a stub runtime (canned agent responses, real control flow): 38 checks covering the happy path, the challenged halt, phase chaining, blocked tasks, the stagnant fix loop, refute-panel kills and effort-preset variants, finding fixes, budget floors/exhaustion, and failure surfacing. Zero tokens. Pipeline-behavior changes must keep it green; prompt-quality changes need field runs like the sibling skill's.
 
 ### Future work
 
