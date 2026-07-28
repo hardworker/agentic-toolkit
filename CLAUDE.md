@@ -17,4 +17,6 @@ Agent skills, each at `skills/<name>/SKILL.md` with support files beside it. Eve
 
 ## Git
 
-Remote `hardworker/agentic-toolkit` is private. Commit locally; never push without explicit per-push approval.
+Remote `hardworker/agentic-toolkit` is **public** — anything committed here is published. No absolute home paths, account/session ids, tokens, or machine-specific details in tracked files; use placeholders (`<skill-dir>`, `<accountId>`) and `~`.
+
+Commit locally; never push without explicit per-push approval. History is linear and lands straight on `main` — no PRs, no merge commits.
