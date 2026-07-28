@@ -1,12 +1,14 @@
 ---
 name: session-migration
-description: Find a Claude Code session that belongs to another account and surface it in the account signed in now — in the desktop app's recents and in the CLI `claude agents` view. Session records are stored per-account on disk, so after an account switch earlier sessions vanish from the sidebar, from list_sessions and from search_session_transcripts. Use when (1) the user refers to a past session/dialog/conversation and list_sessions or search_session_transcripts turns up nothing matching — check the other accounts before saying it does not exist; (2) the user explicitly asks to migrate/move a session between accounts, or says a session is missing, disappeared, or is not in recents after an account switch. Matches titles fuzzily, so an approximate, partial, or misspelled name is enough.
-argument-hint: "[session name] [--import | --move] [--to <accountId>] [--dry-run]"
+description: Find any past Claude Code session — desktop or terminal, any account — and surface it wherever the user wants it: the desktop app's recents, the CLI `claude agents` view, or a `claude --resume` command. Desktop records are stored per account, and terminal sessions have no desktop record at all, so both are invisible to list_sessions and search_session_transcripts. Use when (1) the user refers to a past session, dialog or conversation and list_sessions or search_session_transcripts turns up nothing matching — sweep the other accounts and the CLI transcripts before saying it does not exist; (2) the user asks to migrate or move a session between accounts, to get a terminal session into the desktop app, or to reopen a desktop session in the CLI; (3) the user says a session is missing, disappeared, or is not in recents after an account switch. Matches titles fuzzily, so an approximate, partial, or misspelled name is enough.
+argument-hint: "[session name] [--import | --move | --resume | --job] [--to <accountId>] [--dry-run]"
 ---
 
-# Session migration between accounts
+# Session migration
 
-macOS only — every path below is a macOS Claude Code Desktop location.
+Find a session anywhere Claude Code keeps one, and put it where the user wants it — desktop sidebar, `claude agents`, or a terminal resume.
+
+macOS only — every desktop path below is a macOS Claude Code Desktop location.
 
 ## Three surfaces, three stores
 
@@ -17,13 +19,26 @@ macOS only — every path below is a macOS Claude Code Desktop location.
 | CLI `claude --resume` | `~/.claude/projects/<slug(cwd)>/<cliSessionId>.jsonl` | no |
 
 - The desktop record is metadata only (`title`, `cwd`, `branch`, `worktreeName`, `model`, `cliSessionId`, …). Account-scoped, which is why an account switch hides sessions.
-- The **transcript never moves** — it is already visible to `claude --resume` from any account.
+- The **transcript is the durable artifact** — account-agnostic, resumable by `claude --resume <cliSessionId>` no matter which account (or app) created it. Everything else is a pointer to it.
+- Sessions therefore come in two flavours: **desktop** (a record plus a transcript) and **cli-only** (a transcript and nothing else — started in a terminal, so the desktop app has never heard of it). `list`/`find` cover both; `--source cli|desktop` narrows.
 - The app loads every record in the current account/org into an **in-memory map in the main process**, and rebuilds it only on launch or on an account switch. There is no file watcher: a record dropped into the directory is invisible until the app restarts.
 - A past *interactive desktop* session has **no job entry**, so it never appears in `claude agents` even under the right account. The entry must be synthesized — independent of migration.
 - Deletion in the desktop UI writes a `deleted_<uuid>` tombstone (a file holding the deletion epoch-ms). Migrating into an account that holds a tombstone for the session needs `--force`, which clears it.
 - `git-worktrees.json` leases worktrees by host session id and is account-agnostic — no edit needed.
 
 Current account: `$CLAUDE_CODE_HOST_SESSION_ID` names the live session; the account directory holding it is the current one. Fallback is `lastKnownAccountUuid` in `~/Library/Application Support/Claude/config.json`.
+
+## Which direction
+
+| The user wants | Subcommand | Works on |
+|---|---|---|
+| it back in the desktop sidebar | `import` or `move` | desktop records in another account, and cli-only sessions |
+| to continue it in the terminal | `resume` | anything with a transcript |
+| it listed in `claude agents` | `job` | anything with a transcript |
+
+Desktop → CLI needs no migration at all: the transcript is already there, so `resume` just prints the `cd … && claude --resume <cliSessionId>` line. The only genuinely missing piece on that side is the `claude agents` row, which `job` synthesizes.
+
+CLI → desktop is the direction that needs work, and `import` handles it for both a session stranded in another account and one that has never existed outside the terminal.
 
 ## Two ways into the desktop sidebar — pick one, never both
 
@@ -49,14 +64,17 @@ python3 <skill-dir>/ccd_sessions.py accounts
 
 | Command | Purpose |
 |---|---|
-| `accounts` | Account dirs, session counts, CLI-job counts, which account is signed in (`*`) |
-| `list [--all] [--account ID] [--json]` | Sessions; default is *other* accounts only |
-| `find QUERY [--search-transcripts] [--limit N] [--min-score F]` | Fuzzy match by name across all accounts |
+| `accounts` | Account dirs, session counts, CLI-job counts, cli-only transcript count, which account is signed in (`*`) |
+| `list [--all] [--account ID] [--source desktop\|cli] [--json]` | Sessions; default hides the current account's own desktop records |
+| `find QUERY [--search-transcripts] [--limit N] [--min-score F]` | Fuzzy match by name across every account **and** every CLI transcript |
+| `resume REF` | Print the `cd … && claude --resume …` line for a session |
 | `import REF [--force] [--dry-run]` | Live import into the current account via the deep link |
 | `move REF [--to ACCOUNT] [--copy] [--no-job] [--force] [--dry-run]` | Relocate the record **and** create the CLI job entry |
 | `job REF [--detail TEXT] [--force] [--dry-run]` | CLI job entry only — no account change |
 
-`find` scores title, worktree name, branch, cwd basename, and — for untitled sessions — the first real user message from the transcript. `--search-transcripts` also greps transcript bodies, for when the user remembers content rather than a name. Listings flag `cli-job` / `no-cli-job`.
+`find` scores title, worktree name, branch, cwd basename, and — for untitled sessions — the first real user message from the transcript. For cli-only sessions the title is the CLI's own `ai-title` entry, read from the transcript header. `--search-transcripts` also greps transcript bodies, for when the user remembers content rather than a name. Listings flag `cli-only` and `cli-job` / `no-cli-job`.
+
+The CLI sweep reads the first 400 lines of each transcript (~1s for 160 sessions), so `find` sees terminal sessions the desktop app has never known about.
 
 `REF` is a `sessionId`, a `cliSessionId`, or a fuzzy title. Ambiguous fuzzy input (top two within 0.12) is refused with the candidates printed — pass an explicit id then.
 
@@ -66,7 +84,7 @@ python3 <skill-dir>/ccd_sessions.py accounts
 
 1. **Locate.** `find "<what the user called it>"`. Widen with a shorter query, a lower `--min-score`, or `--search-transcripts` before concluding it is not there. `list --all` is the fallback.
 2. **Confirm with the user** which session, by title + cwd + branch. Never guess between plausible candidates.
-3. **Pick the path** using the table above; say which one you are using and what it costs.
+3. **Pick the direction** from the direction table, then — if it is desktop-bound — the path from the tradeoff table; say which one you are using and what it costs.
 4. **Preview** with `--dry-run`, then apply.
 5. **After `import`**: restore the title — the import leaves it untitled, and the script prints what to set. If your environment exposes session management (`set_session_title`), call it with `local_<cliSessionId>`; otherwise tell the user to rename the session in the app.
 6. **CLI view**: `job <REF> --detail "<one-liner>"` if the session should also show in `claude agents`. `move` does this automatically.
@@ -76,7 +94,7 @@ python3 <skill-dir>/ccd_sessions.py accounts
 ## Rules
 
 - Get explicit confirmation before `import` or a real `move`. `import` navigates the user's desktop window away from whatever they are looking at, and `move` changes which account owns the session. `--dry-run` and `job` need no confirmation.
-- Never move the running session; the script blocks it.
+- Never move the running session; the script blocks it. `move` also refuses cli-only sessions — there is no record to relocate, so `import` is the only way to give one a desktop presence.
 - Nothing is deleted: `move` renames, `--copy` duplicates, an existing destination is refused. The only removal is a tombstone under `--force`.
 - Do not hand-edit a record to change ownership — the file's location *is* the ownership.
 - Do not patch a record the app has loaded; the in-memory copy wins and will overwrite it. Use `set_session_title` for renames.
@@ -84,4 +102,4 @@ python3 <skill-dir>/ccd_sessions.py accounts
 
 ## When triggered implicitly
 
-If a session search came up empty, run `find` before reporting the session as missing. Report it as *found in another account*, name it, and offer the two paths — do not migrate unprompted.
+If a session search came up empty, run `find` before reporting the session as missing — `list_sessions` sees one account's desktop records and nothing else, while `find` sweeps every account plus every CLI transcript. Report where it actually lives (another account, or terminal-only), name it, and offer the direction that fits what the user is doing — do not migrate unprompted.

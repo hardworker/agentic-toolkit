@@ -65,28 +65,30 @@ Requires: Claude Code with the Workflow tool for the orchestrated path; anything
 
 ## session-migration
 
-Claude Code Desktop stores session records per account, so switching accounts hides every session created under the old one — gone from the sidebar, from `list_sessions`, from `search_session_transcripts`. This skill finds them again and puts a chosen one back in front of you. macOS only.
+Finds any past session and puts it where you want it. Two things hide sessions from you: Claude Code Desktop scopes its records per account, so an account switch buries everything created before it; and terminal sessions never get a desktop record at all. Both are invisible to `list_sessions` and `search_session_transcripts` — the skill sweeps every account **and** every CLI transcript on disk. macOS only.
 
-It also fires implicitly: when a session search comes up empty, check the other accounts before telling the user the conversation does not exist. Names are matched fuzzily, so a half-remembered or misspelled title is enough.
+It also fires implicitly: when a session search comes up empty, look in the other accounts and the CLI before telling the user the conversation does not exist. Names are matched fuzzily, so a half-remembered or misspelled title is enough.
 
-Two ways into the sidebar, with different costs:
+Where you can send a session:
 
-| | `import` | `move` |
+| Destination | How | Notes |
 |---|---|---|
-| Mechanism | `claude://resume?session=…` deep link → the app's own CLI-session import | relocates the record file between account directories |
-| Appears | immediately | after a full app restart |
-| Loses | title, model, original timestamps | nothing |
+| Desktop sidebar, now | `import` | `claude://resume?…` deep link → the app's own import. Loses title, model, original timestamps |
+| Desktop sidebar, intact | `move` | relocates the record file; keeps everything; needs a full app restart |
+| Terminal | `resume` | prints `cd … && claude --resume …`; the transcript was always there |
+| `claude agents` view | `job` | synthesizes the background-job entry that interactive sessions never get |
 
-A third surface is separate: past *desktop* sessions have no background-job entry, so they never show in the CLI `claude agents` view under any account. `job` synthesizes one.
+`import` and `move` are mutually exclusive — they produce different session ids, so running both duplicates the row in recents. Each refuses when the other has run.
 
 ### Usage
 
 ```
-/session-migration                              # list what is hiding in other accounts
-/session-migration astro theme                  # fuzzy-find it across accounts
+/session-migration                              # everything not in this account's sidebar
+/session-migration astro theme                  # fuzzy-find across accounts and CLI transcripts
 /session-migration the one about metro ports    # --search-transcripts when only content is remembered
-/session-migration <name> --import              # live import into the current account
-/session-migration <name> --move                # relocate the record, full fidelity, needs a restart
+/session-migration <name> --import              # into the desktop app now
+/session-migration <name> --move                # into the desktop app intact, needs a restart
+/session-migration <name> --resume              # reopen it in the terminal
 ```
 
 Requires: Python 3, macOS, Claude Code Desktop.

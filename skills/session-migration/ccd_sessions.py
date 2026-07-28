@@ -21,6 +21,9 @@ APP_CONFIG = os.path.expanduser("~/Library/Application Support/Claude/config.jso
 PROJECTS = os.path.expanduser("~/.claude/projects")
 JOBS = os.path.expanduser("~/.claude/jobs")
 
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+SCAN_LINE_CAP = 400
+
 FIELD_WEIGHTS = (
     ("title", 1.00),
     ("worktreeName", 0.90),
@@ -119,14 +122,95 @@ def transcript_contains(rec, needle):
     return False
 
 
+def parse_ts(value):
+    if not isinstance(value, str):
+        return 0
+    try:
+        return int(
+            datetime.datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp() * 1000
+        )
+    except ValueError:
+        return 0
+
+
+def scan_cli_transcripts():
+    """Every CLI transcript on disk, keyed by cliSessionId. Header-only read."""
+    out = {}
+    for path in glob.glob(os.path.join(PROJECTS, "*", "*.jsonl")):
+        cli = os.path.basename(path)[:-6]
+        if not UUID_RE.match(cli):
+            continue
+        try:
+            st = os.stat(path)
+        except OSError:
+            continue
+        meta = {
+            "transcript": path,
+            "cwd": "",
+            "branch": "",
+            "aiTitle": "",
+            "createdAt": 0,
+            "lastActivityAt": int(st.st_mtime * 1000),
+        }
+        try:
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                for i, line in enumerate(fh):
+                    if i > SCAN_LINE_CAP or (meta["aiTitle"] and meta["cwd"]):
+                        break
+                    if '"ai-title"' not in line and '"cwd"' not in line and '"timestamp"' not in line:
+                        continue
+                    try:
+                        entry = json.loads(line)
+                    except ValueError:
+                        continue
+                    if not meta["aiTitle"] and entry.get("type") == "ai-title":
+                        meta["aiTitle"] = entry.get("aiTitle") or ""
+                    if not meta["cwd"] and entry.get("cwd"):
+                        meta["cwd"] = entry["cwd"]
+                        meta["branch"] = entry.get("gitBranch") or ""
+                    if not meta["createdAt"]:
+                        meta["createdAt"] = parse_ts(entry.get("timestamp"))
+        except OSError:
+            continue
+        out[cli] = meta
+    return out
+
+
+def cli_record(cli, meta):
+    cwd = meta["cwd"]
+    return {
+        "path": "",
+        "account": "",
+        "org": "",
+        "sessionId": "",
+        "cliSessionId": cli,
+        "title": meta["aiTitle"],
+        "cwd": cwd,
+        "cwdBase": os.path.basename(cwd),
+        "originCwd": cwd,
+        "worktreePath": "",
+        "worktreeName": "",
+        "branch": meta["branch"],
+        "model": "",
+        "bridgeSessionIds": [],
+        "spawnSeed": {},
+        "isArchived": False,
+        "lastActivityAt": meta["lastActivityAt"],
+        "createdAt": meta["createdAt"] or meta["lastActivityAt"],
+        "hasJob": os.path.isdir(os.path.join(JOBS, cli[:8])),
+        "source": "cli",
+    }
+
+
 def accounts():
     if not os.path.isdir(STORE):
         die("session store not found: " + STORE)
     return sorted(d for d in os.listdir(STORE) if os.path.isdir(os.path.join(STORE, d)))
 
 
-def load_sessions(include_archived=True):
+def load_sessions(include_archived=True, include_cli=True):
     out = []
+    seen = set()
     for account in accounts():
         for path in glob.glob(os.path.join(STORE, account, "*", "local_*.json")):
             try:
@@ -159,8 +243,18 @@ def load_sessions(include_archived=True):
                     "lastActivityAt": data.get("lastActivityAt") or 0,
                     "createdAt": data.get("createdAt") or 0,
                     "hasJob": bool(cli) and os.path.isdir(os.path.join(JOBS, cli[:8])),
+                    "source": "desktop",
                 }
             )
+            if cli:
+                seen.add(cli)
+
+    if include_cli:
+        for cli, meta in scan_cli_transcripts().items():
+            if cli in seen:
+                continue
+            out.append(cli_record(cli, meta))
+
     out.sort(key=lambda r: r["lastActivityAt"], reverse=True)
     return out
 
@@ -172,7 +266,7 @@ def current_session_id():
 def current_account(sessions=None):
     host = current_session_id()
     if host:
-        for rec in sessions if sessions is not None else load_sessions():
+        for rec in sessions if sessions is not None else load_sessions(include_cli=False):
             if rec["sessionId"] == host:
                 return rec["account"]
     try:
@@ -242,35 +336,43 @@ def rank(query, sessions, search_transcripts=False, min_score=0.35, limit=10):
 def resolve(ref, sessions):
     ref_l = ref.lower()
     for rec in sessions:
-        if rec["sessionId"].lower() == ref_l or rec["cliSessionId"].lower() == ref_l:
+        if ref_l in (rec["sessionId"].lower(), rec["cliSessionId"].lower()):
             return rec
     for rec in sessions:
-        if ref_l and (ref_l in rec["sessionId"].lower() or ref_l in rec["cliSessionId"].lower()):
+        ids = [i.lower() for i in (rec["sessionId"], rec["cliSessionId"]) if i]
+        if any(ref_l in i for i in ids):
             return rec
     hits = rank(ref, sessions, limit=5)
     if not hits:
         die("no session matches %r — run `list` to see everything" % ref)
     if len(hits) > 1 and hits[0]["score"] - hits[1]["score"] < 0.12:
-        lines = ["ambiguous %r — pass an explicit sessionId:" % ref]
+        lines = ["ambiguous %r — pass an explicit session id:" % ref]
         for h in hits:
-            lines.append("  %.2f  %s  %s" % (h["score"], h["sessionId"], h["title"] or h["cwdBase"]))
+            lines.append(
+                "  %.2f  %s  %s"
+                % (h["score"], h["sessionId"] or h["cliSessionId"], h["title"] or h["cwdBase"])
+            )
         die("\n".join(lines))
-    return next(r for r in sessions if r["sessionId"] == hits[0]["sessionId"])
+    top = hits[0]["cliSessionId"] or hits[0]["sessionId"]
+    return next(r for r in sessions if (r["cliSessionId"] or r["sessionId"]) == top)
 
 
 def fmt(rec, current, show_score=False):
+    cli_only = rec["source"] == "cli"
     marks = []
-    if rec["account"] == current:
+    if cli_only:
+        marks.append("cli-only (no desktop record)")
+    elif rec["account"] == current:
         marks.append("current-account")
-    if rec["sessionId"] == current_session_id():
+    if rec["sessionId"] and rec["sessionId"] == current_session_id():
         marks.append("THIS-SESSION")
     if rec["isArchived"]:
         marks.append("archived")
     marks.append("cli-job" if rec["hasJob"] else "no-cli-job")
     head = "%.2f  " % rec["score"] if show_score else ""
     label = rec["title"] or rec["worktreeName"] or rec["cwdBase"] or "(untitled)"
-    out = "%s%-42s  %s" % (head, label[:42], rec["sessionId"])
-    out += "\n      account=%s  cwd=%s" % (rec["account"][:8], rec["cwd"])
+    out = "%s%-42s  %s" % (head, label[:42], rec["sessionId"] or rec["cliSessionId"])
+    out += "\n      account=%s  cwd=%s" % (rec["account"][:8] or "-", rec["cwd"] or "?")
     if rec["branch"]:
         out += "  branch=" + rec["branch"]
     out += "  [" + ", ".join(marks) + "]"
@@ -389,16 +491,23 @@ def cmd_accounts(args):
                 ",".join(o[:8] for o in orgs) or "-",
             )
         )
+    cli_only = [r for r in sessions if r["source"] == "cli"]
+    print(
+        "  (no account)                          transcripts=%d  cli-jobs=%d  CLI-only, never in the desktop app"
+        % (len(cli_only), sum(1 for r in cli_only if r["hasJob"]))
+    )
     print("\n* = account the desktop app is signed into now")
 
 
 def cmd_list(args):
     sessions = load_sessions(include_archived=args.include_archived)
     current = current_account(sessions)
+    if args.source != "all":
+        sessions = [r for r in sessions if r["source"] == args.source]
     if args.account:
         sessions = [r for r in sessions if r["account"].startswith(args.account)]
     elif not args.all:
-        sessions = [r for r in sessions if r["account"] != current]
+        sessions = [r for r in sessions if r["account"] != current or r["source"] == "cli"]
     if args.json:
         print(json.dumps(sessions, indent=2))
         return
@@ -443,7 +552,8 @@ def cmd_import(args):
         die("no CLI transcript for %s — import reads the transcript, not the record" % cli)
 
     imported_id = "local_" + cli
-    clash = [r for r in sessions if r["account"] == current and r["sessionId"] in (imported_id, rec["sessionId"])]
+    owned = {imported_id, rec["sessionId"]} - {""}
+    clash = [r for r in sessions if r["account"] == current and r["sessionId"] in owned]
     if clash and not args.force:
         die(
             "current account already holds %s — importing would duplicate the conversation "
@@ -466,10 +576,31 @@ def cmd_import(args):
     print("created/last-activity timestamps are reset to import time.")
 
 
+def cmd_resume(args):
+    sessions = load_sessions(include_archived=True)
+    rec = resolve(args.session, sessions)
+    cli = rec["cliSessionId"]
+    if not cli:
+        die("session %s has no cliSessionId — nothing for the CLI to resume" % rec["sessionId"])
+    path = transcript_path(rec)
+    if not path:
+        die("no transcript on disk for %s — the CLI has nothing to resume" % cli)
+
+    print("resume  %s" % (rec["title"] or "(untitled)"))
+    print("  source     %s" % rec["source"])
+    print("  transcript %s" % path)
+    print("  cli job    %s" % ("yes" if rec["hasJob"] else "no — run `job` to list it in `claude agents`"))
+    print("\n  cd %s && claude --resume %s" % (rec["cwd"] or ".", cli))
+    print("  (add --fork-session to branch off instead of continuing in place)")
+
+
 def cmd_job(args):
     sessions = load_sessions(include_archived=True)
     rec = resolve(args.session, sessions)
-    print("cli job entry for %s (%s)" % (rec["sessionId"], rec["title"] or "untitled"))
+    print(
+        "cli job entry for %s (%s)"
+        % (rec["sessionId"] or rec["cliSessionId"], rec["title"] or "untitled")
+    )
     write_job(rec, detail=args.detail, dry_run=args.dry_run, force=args.force)
     if args.dry_run:
         print("\ndry run — nothing written")
@@ -481,6 +612,11 @@ def cmd_move(args):
     sessions = load_sessions(include_archived=True)
     current = current_account(sessions)
     rec = resolve(args.session, sessions)
+    if rec["source"] == "cli":
+        die(
+            "%s is a CLI-only session — there is no desktop record to relocate. "
+            "Use `import` to give it one in the current account." % rec["cliSessionId"]
+        )
     if rec["sessionId"] == current_session_id():
         die("refusing to move the session that is running right now")
     target = args.to or current
@@ -546,20 +682,25 @@ def main():
     p = sub.add_parser("accounts", help="list account dirs and session counts")
     p.set_defaults(func=cmd_accounts)
 
-    p = sub.add_parser("list", help="list sessions (default: other accounts only)")
+    p = sub.add_parser("list", help="list sessions (default: everything outside this account's sidebar)")
     p.add_argument("--all", action="store_true")
     p.add_argument("--account")
     p.add_argument("--include-archived", action="store_true", default=True)
+    p.add_argument("--source", choices=["all", "desktop", "cli"], default="all")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_list)
 
-    p = sub.add_parser("find", help="fuzzy-match sessions by name across all accounts")
+    p = sub.add_parser("find", help="fuzzy-match by name across all accounts and CLI transcripts")
     p.add_argument("query")
     p.add_argument("--limit", type=int, default=10)
     p.add_argument("--min-score", type=float, default=0.35)
     p.add_argument("--search-transcripts", action="store_true")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_find)
+
+    p = sub.add_parser("resume", help="print the CLI command that reopens a session")
+    p.add_argument("session")
+    p.set_defaults(func=cmd_resume)
 
     p = sub.add_parser("import", help="live-import into the current account via claude://resume")
     p.add_argument("session")

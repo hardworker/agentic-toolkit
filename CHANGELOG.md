@@ -4,6 +4,23 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # session-migration
 
+## [1.1.0] — 2026-07-29
+
+Both directions. 1.0.0 only knew about sessions that had a desktop record, which meant it could move a session between accounts but was blind to the 147 terminal-only transcripts on this machine and had nothing to say about reopening a desktop session in the CLI.
+
+### Added
+
+- **CLI transcripts are first-class sessions.** `~/.claude/projects/*/<uuid>.jsonl` is scanned into the same inventory as desktop records, tagged `source: cli`, titled from the transcript's own `ai-title` entry and located by its `cwd`/`gitBranch` header fields. Header-only read, first 400 lines, ~1s for 160 sessions — no cache. `find` and `list` now cover sessions the desktop app has never heard of; `list --source cli|desktop` narrows.
+- **`resume`** — the desktop → CLI direction, which needs no migration at all because the transcript is account-agnostic: prints the `cd <cwd> && claude --resume <cliSessionId>` line (plus the `--fork-session` variant). The only genuinely missing piece on that side is the `claude agents` row, which `job` already synthesizes.
+- **`import` accepts cli-only sessions**, giving a terminal session a desktop record for the first time — the same deep link, now reachable for transcripts the app's own recovery scan would offer only if no account held a record.
+- **Direction table in SKILL.md** — destination (sidebar / terminal / agents view) chooses the subcommand, before the import-vs-move tradeoff table chooses the path.
+
+### Changed
+
+- `accounts` reports the cli-only transcript count alongside the per-account rows.
+- `move` refuses cli-only sessions with a pointer to `import` — there is no record to relocate.
+- Ambiguity and id resolution work off `cliSessionId` when a record id does not exist.
+
 ## [1.0.0] — 2026-07-29
 
 Initial release: recover Claude Code Desktop sessions stranded in another account. Built by reading the desktop app's own session store and `app.asar` loader rather than guessing at the format — the mechanisms below are what the app actually does.

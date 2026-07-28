@@ -4,7 +4,7 @@ Two debate pipelines built on one design philosophy — agent output you don't h
 
 - [**adversarial-review**](#adversarial-review) — cross-model debate review of an existing target (diff, working tree, documents).
 - [**crucible**](#crucible) — end-to-end build pipeline (idea → challenged assumptions → plan → code → tests) that debates the user before it builds.
-- [**session-migration**](#session-migration) — recovers Claude Code Desktop sessions stranded in another account. No subagents; a store-format tool.
+- [**session-migration**](#session-migration) — finds any past session (desktop or terminal, any account) and moves it to the surface you want. No subagents; a store-format tool.
 
 ## adversarial-review
 
@@ -252,7 +252,7 @@ Standalone phase invocations return `status: "ok"` — the build verdict belongs
 
 ## session-migration
 
-The odd one out: no Workflow script, no subagents, no debate. Claude Code Desktop scopes session records by account, so an account switch strands every earlier session — invisible to the sidebar, to `list_sessions`, to `search_session_transcripts`. The skill is a locator plus two recovery paths, and its design work was reading the desktop app's store and `app.asar` loader instead of guessing at the format.
+The odd one out: no Workflow script, no subagents, no debate. Two mechanisms hide past work. Claude Code Desktop scopes session records by account, so an account switch strands everything created before it; and terminal sessions never get a desktop record at all. Both are invisible to the sidebar, to `list_sessions` and to `search_session_transcripts`. The skill is a locator over every store plus routes between them, and its design work was reading the desktop app's own store and `app.asar` loader instead of guessing at the format.
 
 ### What the app actually does
 
@@ -270,10 +270,26 @@ Three facts drive every design decision:
 
 Interactive desktop sessions never get a `~/.claude/jobs/` entry, so they are absent from `claude agents` under every account; `job` synthesizes one from the record plus the transcript (name, intent, result summary, token count, resume id).
 
+### Routing, not migrating
+
+Because the transcript is the durable artifact and the other two stores are pointers to it, most of what looks like migration is just writing the missing pointer:
+
+| Destination | Route | Cost |
+|---|---|---|
+| desktop sidebar, now | `import` — the deep link | new record id, metadata reset |
+| desktop sidebar, intact | `move` — relocate the record | full app restart |
+| terminal | `resume` — print `claude --resume` | none; the transcript was always reachable |
+| `claude agents` | `job` — synthesize the registry entry | none |
+
+Only the desktop direction needs a decision, which is why `import` and `move` carry a tradeoff table and refuse to both run. Desktop → CLI is free.
+
+The inventory unifies both worlds: desktop records keyed by `cliSessionId`, plus every `~/.claude/projects/*/<uuid>.jsonl` not already claimed by one, tagged `source: cli`. CLI titles come from the transcript's own `ai-title` entry and the location from its `cwd`/`gitBranch` header fields — a header-only read (first 400 lines) that costs ~1s across 160 sessions, cheap enough that no cache exists to go stale.
+
 ### Design decisions
 
 - **Two paths, mutually exclusive.** `import` is live but produces a *new* record id (`local_<cliSessionId>`) and loses title, model and the original timestamps; `move` preserves the record whole but needs a restart. Running both yields two sidebar rows for one conversation, so each refuses when the other has run.
 - **Fuzzy by default.** The trigger case is a half-remembered name, so `find` scores title, worktree, branch, cwd and — for untitled sessions — the transcript's first user message, combining sequence ratio, substring hit and token recall. Ambiguity is surfaced, never resolved by guess: top two within 0.12 prints candidates and stops.
+- **Search the CLI too, always.** Scoping the inventory to desktop records was the 1.0.0 mistake: on this machine that is 15 sessions out of 162. A skill whose whole job is "find the conversation the user means" cannot skip 90% of them, and the scan is cheap enough that there is no reason to make it opt-in.
 - **Nothing is destroyed.** `move` renames, `--copy` duplicates, an existing destination is refused, the running session is blocked. The single removal is a deletion tombstone (`deleted_<uuid>`, holding the deletion epoch-ms) under `--force`.
 - **Never patch a loaded record.** The in-memory copy wins and overwrites disk, so renames go through `set_session_title` rather than the file.
 - **Verify before reporting**, the one habit shared with the debate skills: `list_sessions` must show an imported session and `claude agents --json --all` must contain a synthesized job before success is claimed.
