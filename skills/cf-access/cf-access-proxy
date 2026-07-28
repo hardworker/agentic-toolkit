@@ -1,0 +1,332 @@
+#!/usr/bin/env node
+// cf-access-proxy — localhost HTTP fronts for Cloudflare Access apps.
+//
+// Injects a fresh `cf-access-token` on every proxied request, so a client that
+// cannot refresh its own credential (an MCP server that snapshots header env at
+// startup, say) stays authenticated indefinitely: point it at the local port and
+// leave its code alone.
+//
+// Normally there is nothing to configure: the dynamic port takes the upstream from an
+// `x-cf-access-upstream` header and allows any host matching a suffix in
+// ~/.config/cloudflare-access/hosts. Optional fixed ports for clients that cannot send
+// that header live in $CF_ACCESS_PROXY_CONFIG (default ~/.config/cloudflare-access/proxy),
+// one `<port> <upstream-origin>` pair per line.
+//
+// Tokens are minted by `cf-access`, cached until SKEW seconds before expiry, and
+// refreshed once (single-flight, rate-limited) when a response still comes back as a
+// Cloudflare login redirect.
+
+'use strict';
+
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const http = require('http');
+const https = require('https');
+const { execFile } = require('child_process');
+
+const CONFIG =
+  process.env.CF_ACCESS_PROXY_CONFIG || path.join(os.homedir(), '.config/cloudflare-access/proxy');
+const CF_ACCESS = process.env.CF_ACCESS_BIN || path.join(os.homedir(), '.claude/bin/cf-access');
+const SKEW = Number(process.env.CF_ACCESS_SKEW || 600);
+const LOGIN_COOLDOWN = Number(process.env.CF_ACCESS_LOGIN_COOLDOWN || 60) * 1000;
+
+const log = (...a) => console.log(new Date().toISOString(), ...a);
+
+// Never exits on a bad or missing config: under launchd's KeepAlive that would be a
+// restart loop. It logs, keeps serving what it has, and reconciles when the file changes.
+function readRoutes() {
+  let text;
+  try {
+    text = fs.readFileSync(CONFIG, 'utf8');
+  } catch {
+    return []; // no static routes is the normal case: the dynamic port covers everything
+  }
+
+  const routes = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.replace(/#.*/, '').trim();
+    if (!line) continue;
+    const [port, upstream] = line.split(/\s+/);
+    if (!/^\d+$/.test(port || '') || !/^https?:\/\//.test(upstream || '')) {
+      log(`ignoring malformed line: ${raw.trim()}`);
+      continue;
+    }
+    routes.push({ port: Number(port), upstream: new URL(upstream) });
+  }
+  return routes;
+}
+
+const jwtExp = (jwt) => {
+  try {
+    const { exp } = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
+    return Number.isFinite(exp) ? exp : 0;
+  } catch {
+    return 0;
+  }
+};
+
+// One token cache per app, so a stale-token stampede collapses into a single mint.
+class TokenSource {
+  constructor(app) {
+    this.app = app;
+    this.jwt = null;
+    this.exp = 0;
+    this.inflight = null;
+    this.lastLogin = 0;
+  }
+
+  fresh() {
+    return this.jwt && this.exp - Date.now() / 1000 > SKEW;
+  }
+
+  mint(allowLogin) {
+    const args = allowLogin ? ['token', this.app] : ['token', '--no-login', this.app];
+    return new Promise((resolve) => {
+      execFile(CF_ACCESS, args, { timeout: 180_000 }, (err, stdout, stderr) => {
+        const jwt = (stdout || '').trim();
+        if (err || !jwt.startsWith('ey')) {
+          if (allowLogin) log(`token FAILED ${this.app}: ${(stderr || err?.message || '').trim()}`);
+          resolve(null);
+          return;
+        }
+        this.jwt = jwt;
+        this.exp = jwtExp(jwt);
+        log(`token ok ${this.app} (${Math.round(this.exp - Date.now() / 1000)}s)`);
+        resolve(jwt);
+      });
+    });
+  }
+
+  get({ force = false } = {}) {
+    if (!force && this.fresh()) return Promise.resolve(this.jwt);
+    if (this.inflight) return this.inflight;
+
+    this.inflight = (async () => {
+      // Always try the cheap read first: it reflects a token cloudflared refreshed
+      // out of band, and never opens a browser.
+      const local = await this.mint(false);
+      if (local) return local;
+
+      // Only an SSO round-trip is left. Rate-limited, because a burst of failing
+      // requests would otherwise stack up browser tabs.
+      if (Date.now() - this.lastLogin < LOGIN_COOLDOWN) return null;
+      this.lastLogin = Date.now();
+      return this.mint(true);
+    })().finally(() => {
+      this.inflight = null;
+    });
+
+    return this.inflight;
+  }
+}
+
+const isAccessRedirect = (res) =>
+  [301, 302, 303, 307, 308].includes(res.statusCode) &&
+  /cdn-cgi\/access\/login/.test(res.headers.location || '');
+
+const HOP_BY_HOP = new Set([
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+  'host',
+]);
+
+function forward({ upstream, req, body, jwt }) {
+  const agent = upstream.protocol === 'https:' ? https : http;
+  const headers = {};
+  for (const [k, v] of Object.entries(req.headers)) {
+    if (!HOP_BY_HOP.has(k.toLowerCase())) headers[k] = v;
+  }
+  headers.host = upstream.host;
+  if (jwt) headers['cf-access-token'] = jwt;
+  else delete headers['cf-access-token'];
+  delete headers['x-cf-access-upstream'];
+  delete headers['x-cf-access-scheme'];
+  if (body) headers['content-length'] = String(body.length);
+
+  return new Promise((resolve, reject) => {
+    const out = agent.request(
+      {
+        protocol: upstream.protocol,
+        host: upstream.hostname,
+        port: upstream.port || (upstream.protocol === 'https:' ? 443 : 80),
+        method: req.method,
+        path: req.url,
+        headers,
+        servername: upstream.hostname,
+      },
+      resolve
+    );
+    out.on('error', reject);
+    if (body) out.end(body);
+    else out.end();
+  });
+}
+
+// Token caches outlive listeners, so editing routes never costs a re-mint.
+const tokenSources = new Map();
+const tokenSourceFor = (origin) => {
+  if (!tokenSources.has(origin)) tokenSources.set(origin, new TokenSource(origin));
+  return tokenSources.get(origin);
+};
+
+// Whether an origin is behind Access is *learned*, never configured: the first request
+// goes out bare, and only a Cloudflare login redirect proves a token is needed. So a
+// host that isn't gated never triggers an SSO attempt, and a newly gated one starts
+// getting tokens on its own.
+const gating = new Map(); // origin -> "unknown" | "gated" | "open"
+
+const ownPorts = new Set();
+const isSelf = (u) =>
+  ['127.0.0.1', 'localhost', '::1'].includes(u.hostname) &&
+  ownPorts.has(Number(u.port || (u.protocol === 'https:' ? 443 : 80)));
+
+async function proxyRequest({ req, res, upstream, body }) {
+  // Defence in depth against the loop above: refuse to forward to ourselves.
+  if (isSelf(upstream)) {
+    log(`loop refused: ${upstream.origin}`);
+    res.writeHead(508, { 'content-type': 'text/plain' });
+    res.end(`cf-access-proxy: ${upstream.origin} is this proxy\n`);
+    return;
+  }
+
+  const origin = upstream.origin;
+  const tokens = tokenSourceFor(origin);
+  const state = gating.get(origin) || 'unknown';
+
+  let jwt = state === 'gated' ? await tokens.get() : null;
+  let upRes = await forward({ upstream, req, body, jwt });
+
+  if (isAccessRedirect(upRes)) {
+    if (state !== 'gated') {
+      gating.set(origin, 'gated');
+      log(`${origin} is Access-gated — minting a token`);
+    } else {
+      log(`stale token for ${origin} — refreshing`);
+    }
+    upRes.resume();
+    jwt = await tokens.get({ force: state === 'gated' });
+    if (!jwt) {
+      res.writeHead(511, { 'content-type': 'text/plain' });
+      res.end(`cf-access-proxy: no token for ${origin}\nrun: cf-access login ${origin}\n`);
+      return;
+    }
+    upRes = await forward({ upstream, req, body, jwt });
+  } else if (state === 'unknown') {
+    gating.set(origin, jwt ? 'gated' : 'open');
+  }
+
+  res.writeHead(upRes.statusCode, upRes.headers);
+  upRes.pipe(res);
+}
+
+// Bodies are buffered so a token retry can replay the request byte-for-byte.
+const withBody = (handler) => (req, res) => {
+  const chunks = [];
+  req.on('data', (c) => chunks.push(c));
+  req.on('end', async () => {
+    try {
+      await handler(req, res, chunks.length ? Buffer.concat(chunks) : null);
+    } catch (err) {
+      log(`proxy error ${req.method} ${req.url}: ${err.message}`);
+      res.writeHead(502, { 'content-type': 'text/plain' });
+      res.end(`cf-access-proxy: ${err.message}\n`);
+    }
+  });
+};
+
+function serve({ port, upstream }) {
+  const server = http.createServer(
+    withBody((req, res, body) => proxyRequest({ req, res, upstream, body }))
+  );
+
+  ownPorts.add(port);
+  server.listen(port, '127.0.0.1', () =>
+    log(`listening 127.0.0.1:${port} -> ${upstream.origin}`)
+  );
+  // A port already in use is that one route's problem; the rest keep serving.
+  server.on('error', (err) => log(`${port} -> ${upstream.origin}: ${err.message}`));
+  return server;
+}
+
+const active = new Map(); // "port->origin" -> server
+
+function reconcile() {
+  const wanted = new Map(readRoutes().map((r) => [`${r.port}->${r.upstream.origin}`, r]));
+
+  for (const [key, server] of active) {
+    if (!wanted.has(key)) {
+      server.close();
+      active.delete(key);
+      log(`stopped ${key}`);
+    }
+  }
+  for (const [key, route] of wanted) {
+    if (!active.has(key)) active.set(key, serve(route));
+  }
+}
+
+reconcile();
+// watchFile, not watch: editors replace the file rather than writing in place, which
+// breaks an inode-bound watcher. Polling keeps route edits live with no restart.
+fs.watchFile(CONFIG, { interval: 2000 }, reconcile);
+
+// ---- dynamic port: one listener for every host, no route entry required ----------
+// Callers name the upstream in `x-cf-access-upstream` (cf-access-preload does this
+// automatically), so a gated app that appears later needs no configuration at all.
+// The suffix allowlist is what keeps this from being an open forwarder on loopback.
+
+const HOSTS_FILE =
+  process.env.CF_ACCESS_HOSTS_FILE || path.join(os.homedir(), '.config/cloudflare-access/hosts');
+const DYNAMIC_PORT = Number(process.env.CF_ACCESS_PROXY_DYNAMIC_PORT || 8780);
+
+function allowedSuffixes() {
+  try {
+    return fs
+      .readFileSync(HOSTS_FILE, 'utf8')
+      .split('\n')
+      .map((l) => l.replace(/#.*/, '').trim().replace(/^\*?\./, ''))
+      .filter(Boolean);
+  } catch {
+    return []; // no hosts file: forward nothing rather than guess at a domain
+  }
+}
+
+const hostAllowed = (host) => {
+  const bare = (host || '').split(':')[0].toLowerCase();
+  return allowedSuffixes().some((s) => bare === s || bare.endsWith(`.${s}`));
+};
+
+http
+  .createServer(
+    withBody((req, res, body) => {
+      const host = req.headers['x-cf-access-upstream'];
+      const scheme = req.headers['x-cf-access-scheme'] === 'http' ? 'http' : 'https';
+
+      if (!host) {
+        res.writeHead(400, { 'content-type': 'text/plain' });
+        res.end('cf-access-proxy: missing x-cf-access-upstream\n');
+        return Promise.resolve();
+      }
+      if (!hostAllowed(host)) {
+        log(`refused ${host} (not in ${HOSTS_FILE})`);
+        res.writeHead(403, { 'content-type': 'text/plain' });
+        res.end(`cf-access-proxy: ${host} is not an allowed upstream\n`);
+        return Promise.resolve();
+      }
+
+      return proxyRequest({ req, res, upstream: new URL(`${scheme}://${host}`), body });
+    })
+  )
+  .listen(ownPorts.add(DYNAMIC_PORT) && DYNAMIC_PORT, '127.0.0.1', () =>
+    log(
+      `listening 127.0.0.1:${DYNAMIC_PORT} -> allowed hosts (${allowedSuffixes().join(', ') || 'none configured'})`
+    )
+  )
+  .on('error', (err) => log(`dynamic ${DYNAMIC_PORT}: ${err.message}`));

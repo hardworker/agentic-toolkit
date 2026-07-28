@@ -1,0 +1,7 @@
+# Cloudflare Access apps to keep tokens for, one origin per line.
+# `cf-access login` refreshes every stale one; the first browser tap warms the org
+# session so the rest mint without interaction.
+#
+# Origins only — cloudflared caches tokens per hostname, so a path would miss the cache.
+https://ci.example.com          # CI server
+https://dashboard.example.com   # internal dashboard

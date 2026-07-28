@@ -1,0 +1,6 @@
+# Domain suffixes whose traffic may be routed through cf-access-proxy.
+# A suffix, not an app list: any Cloudflare Access app added under these domains later
+# is picked up automatically, with no config and no restart. This is also the allowlist
+# that keeps the proxy's dynamic port from being an open forwarder on loopback — keep it
+# to domains you own.
+example.com

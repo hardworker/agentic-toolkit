@@ -1,6 +1,6 @@
 # agentic-toolkit
 
-Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Three skills:
+Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Four skills:
 
 ## adversarial-review
 
@@ -92,6 +92,36 @@ Where you can send a session:
 ```
 
 Requires: Python 3, macOS, Claude Code Desktop.
+
+## cf-access
+
+Keeps everything on the machine authenticated to Cloudflare Access–gated hosts. An Access app whose policy allows only an IdP has no service-token path, so the JWT comes from a browser SSO round-trip and lives about a day — which means any client that reads its credential once at startup (most MCP servers, any daemon) works for a day and then dies with a login redirect that looks nothing like an auth error.
+
+Three layers; pick by what the client can do:
+
+| The client can | Use | Renewal |
+|---|---|---|
+| take a header/env on every invocation | `cf-access token` / `cookie` / `env` / `curl` | per invocation |
+| only be pointed at a URL (any language) | proxy fixed port | per request, by the proxy |
+| be a Node process with no config surface | `NODE_OPTIONS=--require …/cf-access-preload.cjs` | per request, by the proxy |
+
+- One browser tap warms the whole org: `cf-access login` refreshes every configured app, minting the rest silently.
+- The proxy **learns** which origins are gated — the first request goes out bare, and only a Cloudflare login redirect makes it mint. Non-gated hosts never trigger SSO.
+- The allowlist is a **domain suffix** list, so an app added under the domain next month needs no config; that same list is what keeps the loopback port from being an open forwarder.
+- `install.sh status` is the one diagnostic — links, config, daemon, port, per-app token TTL — because "no token", "daemon down" and "host not allowed" look identical from the client.
+
+### Usage
+
+```
+<skill-dir>/install.sh                    # symlink scripts, seed config, load the launchd agent
+<skill-dir>/install.sh status             # what is wired, what is stale
+<skill-dir>/install.sh uninstall          # unload and unlink; keeps config and tokens
+cf-access login                           # one tap, every configured app
+cf-access curl https://ci.example.com/…   # authenticated request
+cf-access env <app> <HEADER_VAR> -- <cmd> # launch an MCP server with a fresh token
+```
+
+Requires: `cloudflared`, Node. macOS for the launchd agent; the broker and `curl` mode work anywhere `cloudflared` runs.
 
 ## Install
 

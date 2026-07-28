@@ -1,0 +1,198 @@
+#!/bin/sh
+# cf-access — one place to get a Cloudflare Access JWT for any gated app.
+#
+# Access apps whose policy allows only an IdP (Google Workspace, Okta, …) have no
+# service-token path, so a token can only come from a browser SSO round-trip.
+# cloudflared keeps an org-wide session token, so the first login warms the org and
+# every other app then mints silently — hence `cf-access login` with no args: one tap,
+# all apps.
+#
+# Subcommands:
+#   token [--no-login] <app>        print a valid JWT (refreshing if stale)
+#   cookie <app>                    print "CF_Authorization=<jwt>"
+#   env <app> <VAR> -- <cmd...>     export VAR=<jwt> and exec cmd (MCP launchers)
+#   curl <url> [curl args...]       curl with the JWT header injected
+#   login [<app>...]                refresh stale tokens (default: all configured)
+#   list                            configured apps and remaining token lifetime
+#
+# Apps come from $CF_ACCESS_APPS_FILE (default ~/.config/cloudflare-access/apps).
+set -eu
+
+APPS_FILE="${CF_ACCESS_APPS_FILE:-$HOME/.config/cloudflare-access/apps}"
+SKEW="${CF_ACCESS_SKEW:-600}" # refresh when under this many seconds of life left
+
+die() {
+  echo "cf-access: $*" >&2
+  exit 1
+}
+
+command -v cloudflared >/dev/null 2>&1 || die "cloudflared not installed (brew install cloudflared)"
+
+# Origin only: cloudflared scopes tokens per hostname, and a path would miss the cache.
+app_origin() {
+  printf '%s' "$1" | sed -E 's#^(https?://[^/]+).*#\1#'
+}
+
+configured_apps() {
+  [ -f "$APPS_FILE" ] || return 0
+  sed -E 's/#.*//; s/[[:space:]]+//g' "$APPS_FILE" | grep -E '^https?://' || true
+}
+
+# Seconds of life left in a JWT; -1 when absent or unparseable.
+# stdout.write, not console.log: console.log colorizes numbers under FORCE_COLOR,
+# and the ANSI codes break the numeric tests downstream.
+jwt_ttl() {
+  node -e '
+    const out = (n) => process.stdout.write(String(n));
+    const p = (process.argv[1] || "").split(".")[1];
+    if (!p) { out(-1); process.exit(0) }
+    try {
+      const { exp } = JSON.parse(Buffer.from(p, "base64url").toString());
+      out(Number.isFinite(exp) ? Math.floor(exp - Date.now() / 1000) : -1);
+    } catch { out(-1) }
+  ' "$1" 2>/dev/null || echo -1
+}
+
+cached_token() {
+  t=$(cloudflared access token -app="$1" 2>/dev/null || true)
+  case "$t" in ey*) printf '%s' "$t" ;; esac
+}
+
+# Cache files are named after the *app*, not the requested host — a host covered by a
+# wildcard app (`*.example.com` lands in `-.example.com-<aud>-token`) would survive a
+# host-name glob. The token's own `aud` claim identifies its file unambiguously.
+token_cache_files() {
+  t=$(cached_token "$1")
+  [ -n "$t" ] || return 0
+  aud=$(node -e '
+    const p = (process.argv[1] || "").split(".")[1];
+    try {
+      const { aud } = JSON.parse(Buffer.from(p, "base64url").toString());
+      process.stdout.write(String(Array.isArray(aud) ? aud[0] : aud || ""));
+    } catch {}
+  ' "$t" 2>/dev/null)
+  [ -n "$aud" ] || return 0
+  ls "$HOME/.cloudflared/"*-"$aud"-token 2>/dev/null || true
+}
+
+# `cloudflared access login` hands back the cached app token if one exists, even seconds
+# from expiry — so renewal means clearing the cache first. The token is stashed and put
+# back if the login fails, otherwise a browser-less machine would lose a usable token.
+do_login() {
+  echo "cf-access: browser SSO for $1" >&2
+  stash=$(mktemp -d)
+  token_cache_files "$1" | while IFS= read -r f; do
+    [ -n "$f" ] && [ -f "$f" ] && mv "$f" "$stash/" 2>/dev/null
+  done
+
+  # Restore on any exit path: a login killed by a timeout or Ctrl-C must not swallow
+  # the token it set aside.
+  restore_stash() {
+    if [ -d "$stash" ] && [ -z "$(cached_token "$1")" ]; then
+      for f in "$stash"/*-token; do
+        [ -f "$f" ] && mv "$f" "$HOME/.cloudflared/" 2>/dev/null
+      done
+    fi
+    rm -rf "$stash"
+  }
+  trap 'restore_stash "$1"' EXIT INT TERM
+
+  cloudflared access login "$1" --quiet --auto-close >/dev/null 2>&1 || true
+
+  restore_stash "$1"
+  trap - EXIT INT TERM
+}
+
+# Valid JWT for an app, refreshing when stale unless --no-login.
+get_token() {
+  allow_login=$1
+  app=$(app_origin "$2")
+
+  t=$(cached_token "$app")
+  if [ -z "$t" ] || [ "$(jwt_ttl "$t")" -lt "$SKEW" ]; then
+    [ "$allow_login" = yes ] || return 1
+    do_login "$app"
+    t=$(cached_token "$app")
+  fi
+
+  [ -n "$t" ] && [ "$(jwt_ttl "$t")" -gt 0 ] || return 1
+  printf '%s' "$t"
+}
+
+cmd=${1:-}
+[ -n "$cmd" ] || die "usage: cf-access {token|cookie|env|curl|login|list} ..."
+shift
+
+case "$cmd" in
+token)
+  allow_login=yes
+  [ "${1:-}" = --no-login ] && {
+    allow_login=no
+    shift
+  }
+  [ $# -ge 1 ] || die "usage: cf-access token [--no-login] <app-url>"
+  get_token "$allow_login" "$1" || die "no valid token for $1 (try: cf-access login $1)"
+  echo
+  ;;
+
+cookie)
+  [ $# -ge 1 ] || die "usage: cf-access cookie <app-url>"
+  t=$(get_token yes "$1") || die "no valid token for $1"
+  echo "CF_Authorization=$t"
+  ;;
+
+env)
+  [ $# -ge 4 ] || die "usage: cf-access env <app-url> <VAR> -- <cmd...>"
+  app=$1
+  var=$2
+  shift 2
+  [ "$1" = -- ] || die "expected -- before the command"
+  shift
+  t=$(get_token yes "$app") || die "no valid token for $app (try: cf-access login $app)"
+  # env(1), not export: header-name vars often need literal hyphens
+  # (SOMETOOL_HEADER_cf-access-token), which are not valid shell identifiers.
+  exec env "$var=$t" "$@"
+  ;;
+
+curl)
+  [ $# -ge 1 ] || die "usage: cf-access curl <url> [curl args...]"
+  url=$1
+  shift
+  t=$(get_token yes "$url") || die "no valid token for $url"
+  exec curl -H "cf-access-token: $t" "$url" "$@"
+  ;;
+
+login)
+  apps=$*
+  [ -n "$apps" ] || apps=$(configured_apps)
+  [ -n "$apps" ] || die "no apps given and none configured in $APPS_FILE"
+  for app in $apps; do
+    app=$(app_origin "$app")
+    t=$(cached_token "$app")
+    ttl=$(jwt_ttl "$t")
+    if [ "$ttl" -ge "$SKEW" ]; then
+      echo "ok       $app (${ttl}s left)"
+      continue
+    fi
+    do_login "$app"
+    t=$(cached_token "$app")
+    ttl=$(jwt_ttl "$t")
+    if [ "$ttl" -gt 0 ]; then echo "refreshed $app (${ttl}s)"; else echo "FAILED   $app"; fi
+  done
+  ;;
+
+list)
+  apps=$(configured_apps)
+  [ -n "$apps" ] || die "no apps configured in $APPS_FILE"
+  for app in $apps; do
+    ttl=$(jwt_ttl "$(cached_token "$app")")
+    if [ "$ttl" -gt 0 ]; then
+      printf '%-40s %sh %sm left\n' "$app" "$((ttl / 3600))" "$(((ttl % 3600) / 60))"
+    else
+      printf '%-40s no token\n' "$app"
+    fi
+  done
+  ;;
+
+*) die "unknown subcommand: $cmd" ;;
+esac

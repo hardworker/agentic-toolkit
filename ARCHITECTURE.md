@@ -1,10 +1,11 @@
 # agentic-toolkit — Architecture
 
-Two debate pipelines built on one design philosophy — agent output you don't have to re-check, because every claim was attacked before it reached you, at bounded token cost because every mechanism is gated or capped — plus one utility skill that shares only the "verify before reporting" half.
+Two debate pipelines built on one design philosophy — agent output you don't have to re-check, because every claim was attacked before it reached you, at bounded token cost because every mechanism is gated or capped — plus two utility skills that share only the "verify before reporting" half.
 
 - [**adversarial-review**](#adversarial-review) — cross-model debate review of an existing target (diff, working tree, documents).
 - [**crucible**](#crucible) — end-to-end build pipeline (idea → challenged assumptions → plan → code → tests) that debates the user before it builds.
 - [**session-migration**](#session-migration) — finds any past session (desktop or terminal, any account) and moves it to the surface you want. No subagents; a store-format tool.
+- [**cf-access**](#cf-access) — keeps CLI tools, Node clients and long-running MCP servers authenticated to Cloudflare Access–gated hosts. No subagents; a credential-plumbing tool.
 
 ## adversarial-review
 
@@ -298,6 +299,37 @@ The inventory unifies both worlds: desktop records keyed by `cliSessionId`, plus
 
 Plain stdout, not JSON schemas — the consumer is the agent's own reading, and every mutation prints its source path, destination path and the refresh the user must perform. `--dry-run` on every mutating subcommand prints exactly that report and writes nothing.
 
+## cf-access
+
+The other utility skill, and the only one that installs a background process. The problem is narrow and unfixable at the client: an Access app whose policy allows only an IdP has no service-token path, so the JWT can only come from a browser SSO round-trip, and it lives about a day. Every client that reads its credential once at startup — most MCP servers, any daemon taking a header from env — therefore works for a day and then fails with a login redirect that looks nothing like an auth error. Three layers, each solving a different amount of "the client cannot be changed".
+
+```
+cf-access              broker: mint / cache / renew, one place that knows how
+   ↑ per invocation                    ↑ per request
+shell, curl, MCP launchers      cf-access-proxy ── 127.0.0.1:8780 (dynamic, header names upstream)
+                                        │      └─ 127.0.0.1:<port> (fixed route, any language)
+                                        ↑
+                           cf-access-preload.cjs (NODE_OPTIONS=--require, patches http/https/fetch)
+```
+
+### Design decisions (and the evidence behind them)
+
+- **A broker, not per-client auth.** Every client gets either a token (`token`/`cookie`/`env`/`curl`) or a URL (proxy). Nothing else has to know that `cloudflared` exists, which is what makes a newly gated tool a config line rather than a code change.
+- **Origins, never paths.** `cloudflared` caches tokens per hostname, so an app URL carrying a path silently misses the cache and re-mints forever. Every entry point truncates to the origin first.
+- **`login` clears the cache before it logs in.** `cloudflared access login` returns the *cached* app token if one exists, even seconds from expiry — so a "refresh" without a purge is a no-op. The purge stashes the token to a temp dir and restores it on any exit path (including a timeout or Ctrl-C), so a browser-less machine cannot lose a still-usable token to a failed refresh.
+- **Cache files are found by the token's own `aud`,** not by hostname glob: an app covered by a wildcard policy lands in a `-.<domain>-<aud>-token` file that a host-name pattern would miss.
+- **Gating is learned, not configured.** The proxy sends the first request to an origin *bare*; only a redirect to `cdn-cgi/access/login` proves a token is needed. So a non-gated host never triggers an SSO attempt, and a host gated next month starts getting tokens with no config change.
+- **The allowlist is a domain suffix list, not an app list** — the same reason, and it doubles as the security boundary: the dynamic port would otherwise be an open forwarder on loopback for anything running as the user. Missing file means allow nothing, never a built-in default domain.
+- **Single-flight minting with a login cooldown.** A stale-token stampede collapses into one mint per origin, and a browser login is rate-limited to once a minute — without it a burst of failing requests stacks up SSO tabs.
+- **Bodies are buffered** so the token retry replays a POST byte-for-byte instead of failing it.
+- **The preload refuses to patch the proxy itself** (`argv[1]` check). The proxy is the one process that must reach the real hosts; patching it would aim it at its own port forever.
+- **Config is polled (`watchFile`), and a bad config never exits.** Editors replace files rather than writing in place, which breaks an inode-bound watcher; and under launchd `KeepAlive` an exit-on-bad-config is a restart loop, so malformed lines are logged and the good routes keep serving.
+- **The launchd plist carries an explicit `PATH` and `CF_ACCESS_BIN`.** launchd starts with a bare environment, and the proxy shells out to `cf-access`, which needs both `node` and `cloudflared` — the most common "it works in my shell" failure. `install.sh` writes the plist with the `node` it detected rather than shipping a fixed path.
+
+### Result contract
+
+HTTP status codes and one log line per event, not JSON: the consumers are ordinary clients. The proxy originates `511` (no token — run `login`), `403` (host not in the allowlist), `508` (upstream is the proxy itself), `400` (missing upstream header, which is also the health check), `502` (transport). `install.sh status` is the single diagnostic — links, config, `cloudflared`, daemon state, port liveness, per-app token TTL — because "no token", "daemon down", "host not allowed" and "not installed" all look identical from the client side.
+
 ## Files & distribution
 
 ```
@@ -313,9 +345,16 @@ agentic-toolkit/
 │   │   ├── SKILL.md              # dual-path: Workflow orchestration or playbook
 │   │   ├── crucible.mjs          # phase-parameterized Workflow script
 │   │   └── PLAYBOOK.md           # sequential fallback (Codex CLI, no-Workflow)
-│   └── session-migration/
-│       ├── SKILL.md              # store model, the two recovery paths, safety rules
-│       └── ccd_sessions.py       # locator + import/move/job (no orchestration)
+│   ├── session-migration/
+│   │   ├── SKILL.md              # store model, the two recovery paths, safety rules
+│   │   └── ccd_sessions.py       # locator + import/move/job (no orchestration)
+│   └── cf-access/
+│       ├── SKILL.md              # three layers, wiring patterns, troubleshooting
+│       ├── cf-access             # token broker (sh)
+│       ├── cf-access-proxy       # localhost fronts, token injection (node)
+│       ├── cf-access-preload.cjs # NODE_OPTIONS shim for unmodifiable Node clients
+│       ├── install.sh            # symlinks + config seed + launchd agent; status/uninstall
+│       └── apps.example, hosts.example
 ├── eval/
 │   ├── README.md                # seeded-bug fixture protocol (adversarial-review)
 │   ├── score.mjs                # precision/recall scoring vs a fixture manifest
@@ -325,6 +364,6 @@ agentic-toolkit/
 └── README.md
 ```
 
-The two pipeline skills instruct the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to the SKILL.md; the script orchestrates all subagents deterministically. session-migration is plain Bash over the Python script beside its SKILL.md — no Workflow tool, macOS only. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. For Codex CLI the same SKILL.md is discovered via `.agents/skills` — crucible degrades to its playbook there; adversarial-review requires the Workflow tool.
+The two pipeline skills instruct the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to the SKILL.md; the script orchestrates all subagents deterministically. session-migration is plain Bash over the Python script beside its SKILL.md — no Workflow tool, macOS only. cf-access is the same shape, except its scripts are also **installed** outside the skill: `install.sh` symlinks them into a bin dir (default `~/.claude/bin`) and loads a launchd agent, so the skill directory stays the single source of truth while the daemon and every wired client run from stable paths. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. For Codex CLI the same SKILL.md is discovered via `.agents/skills` — crucible degrades to its playbook there; adversarial-review requires the Workflow tool.
 
 Pipeline changes are validated with the `eval/` harness — seeded-bug fixtures scored for recall/precision/cost (adversarial-review) and the stub-runtime smoke test (crucible) — because the research is clear that multi-agent protocol changes don't universally help and must be measured.

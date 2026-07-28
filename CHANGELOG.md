@@ -2,6 +2,28 @@
 
 Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently.
 
+# cf-access
+
+## [1.0.0] — 2026-07-29
+
+Initial release: keep CLI tools, Node clients and long-running MCP servers authenticated to Cloudflare Access–gated hosts. Packaged from a working local setup that had been running as loose scripts in a bin directory; every mechanism below is there because the obvious version of it failed in practice.
+
+### Added
+
+- **`cf-access`** — the broker: `token`, `cookie`, `env`, `curl`, `login`, `list`. Truncates app URLs to their origin (cloudflared caches per hostname, so a path misses the cache), reports remaining token lifetime, and refreshes anything under 10 minutes of life. `env <app> <VAR> -- <cmd…>` uses `env(1)` rather than `export` so header-name variables may contain hyphens.
+- **`cf-access login` purges before it logs in.** `cloudflared access login` hands back the cached app token even seconds from expiry, so a refresh without a purge is a no-op. The purged token is stashed and restored on any exit path — including a timeout or Ctrl-C — so a failed refresh cannot cost a browser-less machine a usable token. Cache files are identified by the token's own `aud` claim, because a wildcard-policy app lands in a filename a host-name glob would miss.
+- **`cf-access-proxy`** — localhost HTTP fronts that inject a fresh `cf-access-token` per request, for clients that snapshot their credential at startup and cannot renew it. A dynamic port (default 8780) takes the upstream from an `x-cf-access-upstream` header; optional fixed `<port> <origin>` routes serve clients that can only be pointed at a URL. Token caches are per origin, single-flight, with a 60s login cooldown so a burst of failures cannot stack up SSO tabs; request bodies are buffered so a token retry replays a POST byte-for-byte.
+- **Learned gating.** The first request to an origin goes out bare and only a redirect to `cdn-cgi/access/login` marks it gated — so non-gated hosts never trigger an SSO attempt and a newly gated one starts getting tokens on its own, with no configuration.
+- **`cf-access-preload.cjs`** — `NODE_OPTIONS=--require` shim patching `http`/`https`/`fetch` to route allowed hosts into the proxy, so an unmodifiable Node client (an MCP server, a vendored SDK) keeps its real URL and needs no code change. Refuses to patch the proxy itself, which would aim it at its own port forever.
+- **Suffix allowlist** (`~/.config/cloudflare-access/hosts`) — domains, not apps, so an app added under the domain later is covered for free. It is also the security boundary that stops the dynamic port from being an open forwarder on loopback; a missing file allows nothing rather than defaulting to a domain.
+- **`install.sh`** — symlinks the three scripts into a bin dir (default `~/.claude/bin`), seeds the config files from templates without overwriting, writes the launchd plist with the detected `node` plus an explicit `PATH`/`CF_ACCESS_BIN` (launchd starts with a bare environment, and the proxy shells out to `cf-access`), then loads the agent and health-checks the port. `status` reports links, config, `cloudflared`, daemon state, port liveness and per-app token TTL; `uninstall` unloads and unlinks only its own symlinks, keeping config and tokens.
+- **SKILL.md** — layer-selection table (per-invocation token vs fixed port vs preload), MCP wiring patterns for both the launcher and preload forms, and a troubleshooting table mapping each originated status code (`511`/`403`/`508`/`400`/`502`) to its cause.
+
+### Security
+
+- Config never carries a token; JWTs are passed by env or header only, and the skill's rules forbid printing one into a transcript, commit or log.
+- The proxy binds `127.0.0.1` exclusively, and forwards only to hosts matching the operator's own suffix allowlist.
+
 # session-migration
 
 ## [1.1.0] — 2026-07-29
