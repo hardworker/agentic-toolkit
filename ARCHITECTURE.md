@@ -1,9 +1,10 @@
 # agentic-toolkit — Architecture
 
-Two skills, one design philosophy: agent output you don't have to re-check, because every claim was attacked before it reached you — and bounded token cost, because every mechanism is gated or capped.
+Two debate pipelines built on one design philosophy — agent output you don't have to re-check, because every claim was attacked before it reached you, at bounded token cost because every mechanism is gated or capped — plus one utility skill that shares only the "verify before reporting" half.
 
 - [**adversarial-review**](#adversarial-review) — cross-model debate review of an existing target (diff, working tree, documents).
 - [**crucible**](#crucible) — end-to-end build pipeline (idea → challenged assumptions → plan → code → tests) that debates the user before it builds.
+- [**session-migration**](#session-migration) — recovers Claude Code Desktop sessions stranded in another account. No subagents; a store-format tool.
 
 ## adversarial-review
 
@@ -249,6 +250,38 @@ Standalone phase invocations return `status: "ok"` — the build verdict belongs
 - **Cross-model skeptics/judge.** Model heterogeneity is the one intervention that consistently improves debate ([Heter-MAD](https://arxiv.org/abs/2502.08788)); the sibling skill's Codex runner pattern drops in directly.
 - **Adaptive refute votes.** Fixed 2-vote panels could become early-stopping ones ([Adaptive-Consistency](https://arxiv.org/abs/2305.11860): ~8× fewer samples at <0.1% loss).
 
+## session-migration
+
+The odd one out: no Workflow script, no subagents, no debate. Claude Code Desktop scopes session records by account, so an account switch strands every earlier session — invisible to the sidebar, to `list_sessions`, to `search_session_transcripts`. The skill is a locator plus two recovery paths, and its design work was reading the desktop app's store and `app.asar` loader instead of guessing at the format.
+
+### What the app actually does
+
+```
+~/Library/Application Support/Claude/claude-code-sessions/<accountId>/<orgId>/local_<uuid>.json   ← account-scoped record
+~/.claude/projects/<slug(cwd)>/<cliSessionId>.jsonl                                               ← transcript, account-agnostic
+~/.claude/jobs/<first-8-of-cliSessionId>/{state.json,timeline.jsonl}                              ← CLI `claude agents` registry
+```
+
+Three facts drive every design decision:
+
+1. **`LocalSessionManager` holds the records in an in-memory map in the main process**, rebuilt only on launch or an account switch. No file watcher — a record copied into the directory stays invisible until restart. This is why "just move the file" is not a complete answer.
+2. **`claude://resume?session=<cliSessionId>` calls `importCliSession`**, which builds a fresh record from the transcript *in the current account* and inserts it live. This is the app's own recovery mechanism, and the only path that avoids a restart.
+3. **The app's recovery scan excludes any transcript whose id appears in a record under *any* account** (`addOnDiskCliSessionIdsFromAllOrgs`). So the built-in "import CLI sessions" UI will never offer a session you still hold elsewhere — a stranded session must be reached deliberately.
+
+Interactive desktop sessions never get a `~/.claude/jobs/` entry, so they are absent from `claude agents` under every account; `job` synthesizes one from the record plus the transcript (name, intent, result summary, token count, resume id).
+
+### Design decisions
+
+- **Two paths, mutually exclusive.** `import` is live but produces a *new* record id (`local_<cliSessionId>`) and loses title, model and the original timestamps; `move` preserves the record whole but needs a restart. Running both yields two sidebar rows for one conversation, so each refuses when the other has run.
+- **Fuzzy by default.** The trigger case is a half-remembered name, so `find` scores title, worktree, branch, cwd and — for untitled sessions — the transcript's first user message, combining sequence ratio, substring hit and token recall. Ambiguity is surfaced, never resolved by guess: top two within 0.12 prints candidates and stops.
+- **Nothing is destroyed.** `move` renames, `--copy` duplicates, an existing destination is refused, the running session is blocked. The single removal is a deletion tombstone (`deleted_<uuid>`, holding the deletion epoch-ms) under `--force`.
+- **Never patch a loaded record.** The in-memory copy wins and overwrites disk, so renames go through `set_session_title` rather than the file.
+- **Verify before reporting**, the one habit shared with the debate skills: `list_sessions` must show an imported session and `claude agents --json --all` must contain a synthesized job before success is claimed.
+
+### Result contract
+
+Plain stdout, not JSON schemas — the consumer is the agent's own reading, and every mutation prints its source path, destination path and the refresh the user must perform. `--dry-run` on every mutating subcommand prints exactly that report and writes nothing.
+
 ## Files & distribution
 
 ```
@@ -260,10 +293,13 @@ agentic-toolkit/
 │   ├── adversarial-review/
 │   │   ├── SKILL.md              # trigger description, arg table, report format
 │   │   └── adversarial-review.mjs # the Workflow script (single source of truth)
-│   └── crucible/
-│       ├── SKILL.md              # dual-path: Workflow orchestration or playbook
-│       ├── crucible.mjs          # phase-parameterized Workflow script
-│       └── PLAYBOOK.md           # sequential fallback (Codex CLI, no-Workflow)
+│   ├── crucible/
+│   │   ├── SKILL.md              # dual-path: Workflow orchestration or playbook
+│   │   ├── crucible.mjs          # phase-parameterized Workflow script
+│   │   └── PLAYBOOK.md           # sequential fallback (Codex CLI, no-Workflow)
+│   └── session-migration/
+│       ├── SKILL.md              # store model, the two recovery paths, safety rules
+│       └── ccd_sessions.py       # locator + import/move/job (no orchestration)
 ├── eval/
 │   ├── README.md                # seeded-bug fixture protocol (adversarial-review)
 │   ├── score.mjs                # precision/recall scoring vs a fixture manifest
@@ -273,6 +309,6 @@ agentic-toolkit/
 └── README.md
 ```
 
-Skills instruct the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to the SKILL.md; the script orchestrates all subagents deterministically. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. For Codex CLI the same SKILL.md is discovered via `.agents/skills` — crucible degrades to its playbook there; adversarial-review requires the Workflow tool.
+The two pipeline skills instruct the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to the SKILL.md; the script orchestrates all subagents deterministically. session-migration is plain Bash over the Python script beside its SKILL.md — no Workflow tool, macOS only. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. For Codex CLI the same SKILL.md is discovered via `.agents/skills` — crucible degrades to its playbook there; adversarial-review requires the Workflow tool.
 
 Pipeline changes are validated with the `eval/` harness — seeded-bug fixtures scored for recall/precision/cost (adversarial-review) and the stub-runtime smoke test (crucible) — because the research is clear that multi-agent protocol changes don't universally help and must be measured.

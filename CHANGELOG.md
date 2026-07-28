@@ -2,6 +2,28 @@
 
 Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently.
 
+# session-migration
+
+## [1.0.0] — 2026-07-29
+
+Initial release: recover Claude Code Desktop sessions stranded in another account. Built by reading the desktop app's own session store and `app.asar` loader rather than guessing at the format — the mechanisms below are what the app actually does.
+
+### Added
+
+- **`ccd_sessions.py`** — one script, five subcommands: `accounts`, `list`, `find`, `import`, `move`, `job`. No Workflow tool, no subagents; this is a utility skill, not a pipeline.
+- **Fuzzy locator** (`find`) — scores a query against title, worktree name, branch, cwd basename and, for untitled sessions, the first real user message pulled from the transcript. Combines `difflib` ratio, substring hit and token recall, so misspellings and partial names resolve ("advarsarial reveiw" → "Adversarial review", 0.89). `--search-transcripts` greps transcript bodies for when only the content is remembered.
+- **Live import** (`import`) — fires the app's own `claude://resume?session=<cliSessionId>` deep link, which builds a desktop record from the CLI transcript in the current account and navigates to it. No restart. Costs the title, model and original timestamps (reset to import time); the skill restores the title via `set_session_title`.
+- **Record relocation** (`move`) — moves the `local_<uuid>.json` between account directories, preserving title, branch, worktree, model and permission mode. Requires a full app restart: the session map lives in the desktop main process and is rebuilt only on launch or account switch — there is no file watcher.
+- **CLI agents entry** (`job`) — synthesizes `~/.claude/jobs/<8-hex>/{state.json,timeline.jsonl}` so a past *interactive* desktop session appears in the `claude agents` view, which it otherwise never does under any account. Account-agnostic, so it works without migrating. `move` does it automatically.
+- **Implicit trigger** — the description tells the agent to sweep other accounts whenever a session search comes up empty, before reporting a conversation as missing.
+
+### Safety
+
+- Never moves the running session; never deletes a record (`move` renames, `--copy` duplicates, an existing destination is refused). The only removal is a deletion tombstone under `--force`.
+- `import` and `move` each refuse when the other has already run for that conversation — the two produce different session ids, so doing both duplicates the row in recents.
+- Ambiguous fuzzy input (top two scores within 0.12) is refused with candidates printed rather than resolved by guess.
+- Confirmation required before `import` (it navigates the user's window) and before a real `move`; `--dry-run` and `job` are free.
+
 # crucible
 
 ## [1.1.0] — 2026-07-17

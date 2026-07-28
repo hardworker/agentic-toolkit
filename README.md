@@ -1,6 +1,6 @@
 # agentic-toolkit
 
-Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Two skills:
+Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Three skills:
 
 ## adversarial-review
 
@@ -62,6 +62,34 @@ Recon → [skeptic panel ∥] → consolidate → ══ debate gate ══
 ```
 
 Requires: Claude Code with the Workflow tool for the orchestrated path; anything that can read/edit files and run shell commands for the playbook path.
+
+## session-migration
+
+Claude Code Desktop stores session records per account, so switching accounts hides every session created under the old one — gone from the sidebar, from `list_sessions`, from `search_session_transcripts`. This skill finds them again and puts a chosen one back in front of you. macOS only.
+
+It also fires implicitly: when a session search comes up empty, check the other accounts before telling the user the conversation does not exist. Names are matched fuzzily, so a half-remembered or misspelled title is enough.
+
+Two ways into the sidebar, with different costs:
+
+| | `import` | `move` |
+|---|---|---|
+| Mechanism | `claude://resume?session=…` deep link → the app's own CLI-session import | relocates the record file between account directories |
+| Appears | immediately | after a full app restart |
+| Loses | title, model, original timestamps | nothing |
+
+A third surface is separate: past *desktop* sessions have no background-job entry, so they never show in the CLI `claude agents` view under any account. `job` synthesizes one.
+
+### Usage
+
+```
+/session-migration                              # list what is hiding in other accounts
+/session-migration astro theme                  # fuzzy-find it across accounts
+/session-migration the one about metro ports    # --search-transcripts when only content is remembered
+/session-migration <name> --import              # live import into the current account
+/session-migration <name> --move                # relocate the record, full fidelity, needs a restart
+```
+
+Requires: Python 3, macOS, Claude Code Desktop.
 
 ## Install
 
