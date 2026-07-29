@@ -30,6 +30,11 @@ const CONFIG =
 const CF_ACCESS = process.env.CF_ACCESS_BIN || path.join(os.homedir(), '.claude/bin/cf-access');
 const SKEW = Number(process.env.CF_ACCESS_SKEW || 600);
 const LOGIN_COOLDOWN = Number(process.env.CF_ACCESS_LOGIN_COOLDOWN || 60) * 1000;
+// How long a request may wait for a token before it is answered anyway. Must stay under
+// the client's own timeout (30s is the common MCP default) — the login keeps running in
+// the background, so a retry lands on a token. 0 disables waiting entirely.
+const HOLD = Number(process.env.CF_ACCESS_HOLD || 20) * 1000;
+const LOGIN_DEADLINE = Number(process.env.CF_ACCESS_LOGIN_DEADLINE || 120) * 1000;
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 
@@ -83,41 +88,70 @@ class TokenSource {
   mint(allowLogin) {
     const args = allowLogin ? ['token', this.app] : ['token', '--no-login', this.app];
     return new Promise((resolve) => {
-      execFile(CF_ACCESS, args, { timeout: 180_000 }, (err, stdout, stderr) => {
+      let killer;
+      let settled = false;
+      const settle = (v) => {
+        if (!settled) {
+          settled = true;
+          resolve(v);
+        }
+      };
+
+      const child = execFile(CF_ACCESS, args, (err, stdout, stderr) => {
+        clearTimeout(killer);
         const jwt = (stdout || '').trim();
         if (err || !jwt.startsWith('ey')) {
           if (allowLogin) log(`token FAILED ${this.app}: ${(stderr || err?.message || '').trim()}`);
-          resolve(null);
+          settle(null);
           return;
         }
         this.jwt = jwt;
         this.exp = jwtExp(jwt);
         log(`token ok ${this.app} (${Math.round(this.exp - Date.now() / 1000)}s)`);
-        resolve(jwt);
+        settle(jwt); // a late success still lands in the cache, for the client's retry
       });
+
+      // The deadline settles the promise itself rather than waiting for the child to die:
+      // cloudflared ignores SIGTERM and holds the pipe open, which is how execFile's own
+      // `timeout` once turned a login into a 9-minute hang. The kill is best-effort — and
+      // `pkill -P`, because the grandchild is the process that hangs, not the sh wrapper.
+      killer = setTimeout(() => {
+        log(`token deadline ${this.app} — abandoning the mint`);
+        try {
+          child.kill('SIGKILL');
+        } catch {}
+        execFile('/usr/bin/pkill', ['-9', '-P', String(child.pid)], () => {});
+        settle(null);
+      }, allowLogin ? LOGIN_DEADLINE : 15_000);
     });
   }
 
-  get({ force = false } = {}) {
+  get({ force = false, holdMs = 0 } = {}) {
     if (!force && this.fresh()) return Promise.resolve(this.jwt);
-    if (this.inflight) return this.inflight;
 
-    this.inflight = (async () => {
-      // Always try the cheap read first: it reflects a token cloudflared refreshed
-      // out of band, and never opens a browser.
-      const local = await this.mint(false);
-      if (local) return local;
+    if (!this.inflight) {
+      this.inflight = (async () => {
+        // Always try the cheap read first: it reflects a token cloudflared refreshed
+        // out of band, and never opens a browser.
+        const local = await this.mint(false);
+        if (local) return local;
 
-      // Only an SSO round-trip is left. Rate-limited, because a burst of failing
-      // requests would otherwise stack up browser tabs.
-      if (Date.now() - this.lastLogin < LOGIN_COOLDOWN) return null;
-      this.lastLogin = Date.now();
-      return this.mint(true);
-    })().finally(() => {
-      this.inflight = null;
-    });
+        // Only an SSO round-trip is left. Rate-limited, because a burst of failing
+        // requests would otherwise stack up browser tabs.
+        if (Date.now() - this.lastLogin < LOGIN_COOLDOWN) return null;
+        this.lastLogin = Date.now();
+        return this.mint(true);
+      })().finally(() => {
+        this.inflight = null;
+      });
+    }
 
-    return this.inflight;
+    if (!holdMs) return this.inflight;
+    // Give up waiting without giving up the login: the mint keeps running for the retry.
+    return Promise.race([
+      this.inflight,
+      new Promise((r) => setTimeout(() => r(null), holdMs).unref()),
+    ]);
   }
 }
 
@@ -137,7 +171,7 @@ const HOP_BY_HOP = new Set([
   'host',
 ]);
 
-function forward({ upstream, req, body, jwt }) {
+function forward({ upstream, req, body, jwt, keepClientAuth = false }) {
   const agent = upstream.protocol === 'https:' ? https : http;
   const headers = {};
   for (const [k, v] of Object.entries(req.headers)) {
@@ -145,7 +179,7 @@ function forward({ upstream, req, body, jwt }) {
   }
   headers.host = upstream.host;
   if (jwt) headers['cf-access-token'] = jwt;
-  else delete headers['cf-access-token'];
+  else if (!keepClientAuth) delete headers['cf-access-token'];
   delete headers['x-cf-access-upstream'];
   delete headers['x-cf-access-scheme'];
   if (body) headers['content-length'] = String(body.length);
@@ -182,6 +216,18 @@ const tokenSourceFor = (origin) => {
 // getting tokens on its own.
 const gating = new Map(); // origin -> "unknown" | "gated" | "open"
 
+// A client that brings its own Access credential is already authenticated: a service
+// token (the headless-friendly path), a token it minted itself, or a session cookie.
+// Minting over that would replace working auth with an interactive login the client
+// cannot perform — which is exactly how a service-token MCP server ends up blocked on a
+// browser tab. Such requests are forwarded untouched, and never trigger SSO.
+const carriesOwnCredential = (req) => {
+  const h = req.headers;
+  if (h['cf-access-token']) return true;
+  if (h['cf-access-client-id'] && h['cf-access-client-secret']) return true;
+  return /(^|;\s*)CF_Authorization=/.test(h.cookie || '');
+};
+
 const ownPorts = new Set();
 const isSelf = (u) =>
   ['127.0.0.1', 'localhost', '::1'].includes(u.hostname) &&
@@ -197,10 +243,24 @@ async function proxyRequest({ req, res, upstream, body }) {
   }
 
   const origin = upstream.origin;
+
+  if (carriesOwnCredential(req)) {
+    const own = await forward({ upstream, req, body, jwt: null, keepClientAuth: true });
+    if (!isAccessRedirect(own)) {
+      res.writeHead(own.statusCode, own.headers);
+      own.pipe(res);
+      return;
+    }
+    // The credential exists but Access refused it (a service token missing from the
+    // policy, say). Fall through to the broker rather than hand the client a login page.
+    own.resume();
+    log(`${origin}: client credential rejected by Access — falling back to the broker`);
+  }
+
   const tokens = tokenSourceFor(origin);
   const state = gating.get(origin) || 'unknown';
 
-  let jwt = state === 'gated' ? await tokens.get() : null;
+  let jwt = state === 'gated' ? await tokens.get({ holdMs: HOLD }) : null;
   let upRes = await forward({ upstream, req, body, jwt });
 
   if (isAccessRedirect(upRes)) {
@@ -211,10 +271,13 @@ async function proxyRequest({ req, res, upstream, body }) {
       log(`stale token for ${origin} — refreshing`);
     }
     upRes.resume();
-    jwt = await tokens.get({ force: state === 'gated' });
+    jwt = await tokens.get({ force: state === 'gated', holdMs: HOLD });
     if (!jwt) {
       res.writeHead(511, { 'content-type': 'text/plain' });
-      res.end(`cf-access-proxy: no token for ${origin}\nrun: cf-access login ${origin}\n`);
+      res.end(
+        `cf-access-proxy: no token for ${origin} within ${HOLD / 1000}s\n` +
+          `a login may still be finishing in the background — retry, or run: cf-access login ${origin}\n`
+      );
       return;
     }
     upRes = await forward({ upstream, req, body, jwt });

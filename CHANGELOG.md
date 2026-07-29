@@ -4,6 +4,22 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.1.0] — 2026-07-29
+
+Found by a real failure: an MCP server behind Access timed out six times in a row at exactly its 30s client timeout, while `curl` to the same host answered in 0.11s. The proxy log had it — `is Access-gated — minting a token` at 01:21:12Z, `token FAILED` at 01:30:03Z. Nine minutes blocked inline on a browser login nobody could tap.
+
+### Fixed
+
+- **A request can no longer hang on an interactive login.** `execFile`'s `timeout` sends `SIGTERM`, which `cloudflared` ignores while keeping its pipe open — so the callback never fired and a 120s cap became a 9-minute stall. The deadline now settles the mint itself; the kill is best-effort cleanup (`pkill -P`, because the hang is in the grandchild, and `detached: true` was verified *not* to produce a killable process group — the child inherits the parent's `PGID`, so `kill(-pid)` fails with `ESRCH`). A late success still lands in the cache for the client's retry.
+- **A client that brings its own Access credential is no longer overridden.** A service token (`CF-Access-Client-Id` + `CF-Access-Client-Secret`), a `cf-access-token`, or a `CF_Authorization` cookie is forwarded untouched and triggers no SSO — previously the learned-gating state was per origin and unconditional, so one credential-less client poisoned every credentialed one on that host.
+- **…but a rejected credential still gets service.** If Access refuses the client's own credential, the broker takes over and retries rather than handing the client a Cloudflare login page. This is not hypothetical: the MCP server above sends a service token that Access reports as `service_token_status: false`, so it had been silently depending on an injected browser token all along.
+
+### Added
+
+- **`CF_ACCESS_HOLD`** (default 20s) — how long a request may wait for a token before being answered `511` while the login continues in the background, so the client's retry finds a token. Default sits under the common 30s MCP client timeout; `0` disables waiting entirely.
+- **`CF_ACCESS_LOGIN_DEADLINE`** (default 120s) — hard cap on a single mint, after which the proxy stops waiting whether or not the child could be killed.
+- Troubleshooting rows for the three symptoms this release produces or explains: repeated timeouts at exactly the client's timeout, `client credential rejected by Access`, and an unwired client appearing in the proxy because `NODE_OPTIONS` is set globally.
+
 ## [1.0.0] — 2026-07-29
 
 Initial release: keep CLI tools, Node clients and long-running MCP servers authenticated to Cloudflare Access–gated hosts. Packaged from a working local setup that had been running as loose scripts in a bin directory; every mechanism below is there because the obvious version of it failed in practice.
