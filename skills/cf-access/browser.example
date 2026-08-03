@@ -1,0 +1,7 @@
+# Optional: the command that opens the SSO page, if the default browser is wrong —
+# a work Chrome profile rather than a personal one, say. The login URL is appended.
+# Leave this file out entirely to let cloudflared open the default browser.
+#
+# Chrome profile directory names live in ~/Library/Application Support/Google/Chrome/
+# (Default, "Profile 2", …); match them to accounts in that folder's Local State.
+open -na "Google Chrome" --args --profile-directory="Profile 2"

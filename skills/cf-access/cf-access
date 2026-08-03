@@ -19,7 +19,13 @@
 set -eu
 
 APPS_FILE="${CF_ACCESS_APPS_FILE:-$HOME/.config/cloudflare-access/apps}"
+BROWSER_FILE="${CF_ACCESS_BROWSER_FILE:-$HOME/.config/cloudflare-access/browser}"
 SKEW="${CF_ACCESS_SKEW:-600}" # refresh when under this many seconds of life left
+
+# Read from a file, not just the env, so the daemon and an interactive shell agree on
+# which browser opens SSO without the setting being plumbed into launchd as well.
+[ -n "${CF_ACCESS_BROWSER:-}" ] ||
+  CF_ACCESS_BROWSER=$(grep -vE '^[[:space:]]*(#|$)' "$BROWSER_FILE" 2>/dev/null | head -1 || true)
 
 die() {
   echo "cf-access: $*" >&2
@@ -97,7 +103,28 @@ do_login() {
   }
   trap 'restore_stash "$1"' EXIT INT TERM
 
-  cloudflared access login "$1" --quiet --auto-close >/dev/null 2>&1 || true
+  if [ -n "${CF_ACCESS_BROWSER:-}" ]; then
+    # cloudflared has no --no-browser, but when it cannot exec `open` it prints the URL
+    # and keeps waiting for the callback — so hiding `open` hands us the URL, and
+    # $CF_ACCESS_BROWSER decides which browser (or Chrome profile) receives it.
+    cfd=$(command -v cloudflared)
+    out=$(mktemp)
+    PATH=/var/empty "$cfd" access login "$1" --quiet --auto-close >"$out" 2>&1 &
+    cfd_pid=$!
+    i=0
+    url=
+    while [ $i -lt 100 ]; do
+      url=$(grep -oE 'https://[^[:space:]]+/cdn-cgi/access/cli\?[^[:space:]]+' "$out" | head -1)
+      [ -n "$url" ] && break
+      i=$((i + 1))
+      sleep 0.1
+    done
+    [ -n "$url" ] && eval "$CF_ACCESS_BROWSER \"\$url\"" >/dev/null 2>&1
+    wait "$cfd_pid" 2>/dev/null || true
+    rm -f "$out"
+  else
+    cloudflared access login "$1" --quiet --auto-close >/dev/null 2>&1 || true
+  fi
 
   restore_stash "$1"
   trap - EXIT INT TERM

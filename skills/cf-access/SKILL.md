@@ -46,7 +46,7 @@ All of these live in this skill's directory, beside this SKILL.md.
 <skill-dir>/install.sh uninstall    # unload daemon, remove our symlinks; keeps config and tokens
 ```
 
-`--bin-dir DIR` (default `~/.claude/bin`) and `--no-daemon` are the only knobs. Installs are **symlinks**, so editing a script in the skill directory is live immediately — but the daemon holds the old code until it restarts:
+`--bin-dir DIR` (default `~/.claude/bin`) and `--no-daemon` are the only knobs. `CF_ACCESS_HOLD=60 ./install.sh` writes that value into the plist and later plain re-runs preserve it. Installs are **symlinks**, so editing a script in the skill directory is live immediately — but the daemon holds the old code until it restarts:
 
 ```bash
 launchctl kickstart -k gui/$(id -u)/local.cf-access-proxy
@@ -67,6 +67,7 @@ cf-access login
 | `apps` | app origins `login`/`list` operate on. Origins only, no paths |
 | `hosts` | **domain suffixes** the proxy will forward to. Required for the proxy — with no `hosts` file nothing is allowed, and the preload patches nothing |
 | `proxy` | optional fixed ports: `<port> <upstream-origin>` per line, hot-reloaded (polled every 2s, no restart) |
+| `browser` | optional command that opens the SSO page, with the login URL appended — for sending work SSO to a work browser profile instead of the default browser. `CF_ACCESS_BROWSER` overrides it |
 
 `hosts` holds suffixes rather than apps so an app added under the domain next month needs no configuration. It is also the allowlist that keeps the dynamic port from being an open forwarder on loopback — **only put domains you own in it**.
 
@@ -80,6 +81,14 @@ cf-access login
 | `cf-access curl <url> [args…]` | `curl` with `cf-access-token:` injected |
 | `cf-access login [<app>…]` | refresh stale tokens; default is every app in `apps` |
 | `cf-access list` | remaining lifetime per configured app |
+
+**Which browser opens SSO.** `cloudflared` has no `--no-browser` flag and always hands the URL to the default browser — wrong when work lives in a second Chrome profile. Set `browser` (or `CF_ACCESS_BROWSER`) and `cf-access` instead runs `cloudflared` with `open` hidden from `PATH`, which makes it print the URL and wait, then opens that URL with your command:
+
+```
+open -na "Google Chrome" --args --profile-directory="Profile 2"
+```
+
+Profile directory names are the folder names under `~/Library/Application Support/Google/Chrome/`; match them to accounts via that folder's `Local State`. If `open -na` gets swallowed because Chrome is already running, call the binary directly instead: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2"`.
 
 Two details worth knowing, because both look like bugs otherwise: an app URL is truncated to its **origin** (cloudflared caches per hostname, a path would miss the cache), and `login` **clears the cached token first** — `cloudflared access login` otherwise hands back the cached token even seconds from expiry. The cleared token is stashed and restored if the login fails.
 

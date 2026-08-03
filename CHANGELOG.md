@@ -4,6 +4,17 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.2.0] — 2026-08-03
+
+### Added
+
+- **`browser` config file / `CF_ACCESS_BROWSER`** — which browser opens the SSO page, for a work Chrome profile rather than the default browser. `cloudflared` has no `--no-browser` flag, but when it cannot exec `open` it prints the login URL and waits for the callback — so the login runs with `open` hidden from `PATH` and the printed URL is handed to your command. Read from a file as well as the env so an interactive shell and the launchd daemon agree without the setting being plumbed into the plist too. Verified end-to-end: a login with `open` unreachable still minted a 24h token, which is only possible if the configured command opened the URL.
+- **`CF_ACCESS_HOLD` persists across installs** — `install.sh` takes the value from the environment, else from the plist it is about to overwrite (`plutil -extract`), else the default, so `CF_ACCESS_HOLD=60 ./install.sh` survives later plain re-runs.
+
+### Fixed
+
+- **`install.sh` could leave the daemon down.** `launchctl bootout` returns before the job is actually gone, so the immediately following `bootstrap` failed with `Input/output error` (5) and nothing was left loaded. It now waits for the label to disappear first, bounded at 4s.
+
 ## [1.1.0] — 2026-07-29
 
 Found by a real failure: an MCP server behind Access timed out six times in a row at exactly its 30s client timeout, while `curl` to the same host answered in 0.11s. The proxy log had it — `is Access-gated — minting a token` at 01:21:12Z, `token FAILED` at 01:30:03Z. Nine minutes blocked inline on a browser login nobody could tap.

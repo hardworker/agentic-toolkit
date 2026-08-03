@@ -71,6 +71,10 @@ write_plist() {
     exit 1
   }
 
+  # Env wins, then whatever the current plist already carries, then the default — so
+  # `CF_ACCESS_HOLD=60 ./install.sh` sticks across later plain re-runs.
+  hold=${CF_ACCESS_HOLD:-$(plutil -extract EnvironmentVariables.CF_ACCESS_HOLD raw "$PLIST" 2>/dev/null || echo 20)}
+
   mkdir -p "$(dirname "$PLIST")" "$(dirname "$LOG")"
   # launchd starts with a bare PATH; the proxy shells out to cf-access, which needs
   # both cloudflared and node.
@@ -96,6 +100,8 @@ write_plist() {
     <string>$HOME</string>
     <key>CF_ACCESS_BIN</key>
     <string>$BIN_DIR/cf-access</string>
+    <key>CF_ACCESS_HOLD</key>
+    <string>$hold</string>
   </dict>
 
   <key>RunAtLoad</key>
@@ -115,6 +121,13 @@ EOF
 
 load_daemon() {
   launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+  # bootout returns before the job is really gone; bootstrapping into that window fails
+  # with "Input/output error" (5).
+  i=0
+  while launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1 && [ $i -lt 20 ]; do
+    i=$((i + 1))
+    sleep 0.2
+  done
   launchctl bootstrap "gui/$(id -u)" "$PLIST"
   say "loaded  $LABEL (log: $LOG)"
 }
