@@ -14,6 +14,7 @@
 #   curl <url> [curl args...]       curl with the JWT header injected
 #   login [<app>...]                refresh stale tokens (default: all configured)
 #   list                            configured apps and remaining token lifetime
+#   browser                         which browser command SSO will use
 #
 # Apps come from $CF_ACCESS_APPS_FILE (default ~/.config/cloudflare-access/apps).
 set -eu
@@ -64,6 +65,42 @@ cached_token() {
   case "$t" in ey*) printf '%s' "$t" ;; esac
 }
 
+# Chrome's profile *directory* (Default, Profile 2, …) for a signed-in account. The
+# directory name is what --profile-directory wants, but it is opaque and unaffected by
+# renaming the profile in Chrome, so an account address is the stable way to name one.
+chrome_profile_dir() {
+  node -e '
+    const fs = require("fs");
+    const want = String(process.argv[1] || "").toLowerCase();
+    const state = `${process.env.HOME}/Library/Application Support/Google/Chrome/Local State`;
+    try {
+      const cache = JSON.parse(fs.readFileSync(state, "utf8")).profile?.info_cache || {};
+      for (const [dir, v] of Object.entries(cache)) {
+        const who = (v.user_name || v.gaia_name || "").toLowerCase();
+        if (who === want) { process.stdout.write(dir); break }
+      }
+    } catch {}
+  ' "$1" 2>/dev/null
+}
+
+# An account address in place of a command means "the Chrome profile signed in as this".
+# A browser preference must never break a login, so an unresolvable one warns and falls
+# back to the default browser.
+resolve_browser() {
+  case "${CF_ACCESS_BROWSER:-}" in
+    '' | *' '*) return 0 ;;
+    *@*)
+      dir=$(chrome_profile_dir "$CF_ACCESS_BROWSER")
+      if [ -n "$dir" ]; then
+        CF_ACCESS_BROWSER="open -na \"Google Chrome\" --args --profile-directory=\"$dir\""
+      else
+        echo "cf-access: no Chrome profile signed in as $CF_ACCESS_BROWSER — using the default browser" >&2
+        CF_ACCESS_BROWSER=
+      fi
+      ;;
+  esac
+}
+
 # Cache files are named after the *app*, not the requested host — a host covered by a
 # wildcard app (`*.example.com` lands in `-.example.com-<aud>-token`) would survive a
 # host-name glob. The token's own `aud` claim identifies its file unambiguously.
@@ -86,6 +123,7 @@ token_cache_files() {
 # back if the login fails, otherwise a browser-less machine would lose a usable token.
 do_login() {
   echo "cf-access: browser SSO for $1" >&2
+  resolve_browser
   stash=$(mktemp -d)
   token_cache_files "$1" | while IFS= read -r f; do
     [ -n "$f" ] && [ -f "$f" ] && mv "$f" "$stash/" 2>/dev/null
@@ -206,6 +244,11 @@ login)
     ttl=$(jwt_ttl "$t")
     if [ "$ttl" -gt 0 ]; then echo "refreshed $app (${ttl}s)"; else echo "FAILED   $app"; fi
   done
+  ;;
+
+browser)
+  resolve_browser
+  echo "${CF_ACCESS_BROWSER:-<default browser>}"
   ;;
 
 list)

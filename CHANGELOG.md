@@ -4,6 +4,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.3.0] — 2026-08-03
+
+### Added
+
+- **Name the SSO browser by account, not by folder.** `browser` / `CF_ACCESS_BROWSER` now accepts an address like `you@work.example` and resolves it to the Chrome profile signed in as that account, via Chrome's `Local State`. `--profile-directory` wants the profile's folder name (`Default`, `Profile 2`), which is opaque and — the reason this exists — unchanged when the profile is renamed in Chrome, so the folder name is exactly the wrong thing to put in config. A command is still accepted for any other browser. An address matching no profile warns and falls back to the default browser rather than failing the login.
+- **`cf-access browser`** — prints the command SSO will actually use, after resolution. Answers "where will this open?" without triggering a login, and is what `selftest.sh` drives.
+- **`selftest.sh`** — covers the four resolution branches (command passes through, nothing configured, unknown account, account resolves to its profile). No framework; run it after touching `cf-access`. Verified live as well: a forced login through an account-resolved profile minted a 24h token with `open` unreachable to cloudflared.
+
 ## [1.2.0] — 2026-08-03
 
 ### Added

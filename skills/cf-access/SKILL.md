@@ -67,7 +67,7 @@ cf-access login
 | `apps` | app origins `login`/`list` operate on. Origins only, no paths |
 | `hosts` | **domain suffixes** the proxy will forward to. Required for the proxy — with no `hosts` file nothing is allowed, and the preload patches nothing |
 | `proxy` | optional fixed ports: `<port> <upstream-origin>` per line, hot-reloaded (polled every 2s, no restart) |
-| `browser` | optional command that opens the SSO page, with the login URL appended — for sending work SSO to a work browser profile instead of the default browser. `CF_ACCESS_BROWSER` overrides it |
+| `browser` | optional: an account address (resolved to the Chrome profile signed in as it) or a command that opens the SSO page — for sending work SSO to a work profile instead of the default browser. `CF_ACCESS_BROWSER` overrides it |
 
 `hosts` holds suffixes rather than apps so an app added under the domain next month needs no configuration. It is also the allowlist that keeps the dynamic port from being an open forwarder on loopback — **only put domains you own in it**.
 
@@ -81,14 +81,18 @@ cf-access login
 | `cf-access curl <url> [args…]` | `curl` with `cf-access-token:` injected |
 | `cf-access login [<app>…]` | refresh stale tokens; default is every app in `apps` |
 | `cf-access list` | remaining lifetime per configured app |
+| `cf-access browser` | the browser command SSO will use, after resolving an account address |
 
-**Which browser opens SSO.** `cloudflared` has no `--no-browser` flag and always hands the URL to the default browser — wrong when work lives in a second Chrome profile. Set `browser` (or `CF_ACCESS_BROWSER`) and `cf-access` instead runs `cloudflared` with `open` hidden from `PATH`, which makes it print the URL and wait, then opens that URL with your command:
+**Which browser opens SSO.** `cloudflared` has no `--no-browser` flag and always hands the URL to the default browser — wrong when work lives in a second Chrome profile. Set `browser` (or `CF_ACCESS_BROWSER`) and `cf-access` instead runs `cloudflared` with `open` hidden from `PATH`, which makes it print the URL and wait, then opens that URL itself. Two forms:
 
-```
-open -na "Google Chrome" --args --profile-directory="Profile 2"
-```
+| Value | Meaning |
+|---|---|
+| `you@work.example` | the Chrome profile signed in as that account |
+| `open -na "Google Chrome" --args --profile-directory="Profile 2"` | any command; the URL is appended |
 
-Profile directory names are the folder names under `~/Library/Application Support/Google/Chrome/`; match them to accounts via that folder's `Local State`. If `open -na` gets swallowed because Chrome is already running, call the binary directly instead: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2"`.
+Prefer the account address. `--profile-directory` wants the profile's *folder* name (`Default`, `Profile 2`), which is opaque and does not change when the profile is renamed in Chrome — so naming the account is both clearer and rename-proof; `cf-access` resolves it through Chrome's `Local State`. An address that matches no profile warns and falls back to the default browser rather than failing the login.
+
+`cf-access browser` prints what will actually be used. If `open -na` gets swallowed because Chrome is already running, use the binary directly: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2"`.
 
 Two details worth knowing, because both look like bugs otherwise: an app URL is truncated to its **origin** (cloudflared caches per hostname, a path would miss the cache), and `login` **clears the cached token first** — `cloudflared access login` otherwise hands back the cached token even seconds from expiry. The cleared token is stashed and restored if the login fails.
 
