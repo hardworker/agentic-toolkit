@@ -22,6 +22,10 @@ set -eu
 APPS_FILE="${CF_ACCESS_APPS_FILE:-$HOME/.config/cloudflare-access/apps}"
 BROWSER_FILE="${CF_ACCESS_BROWSER_FILE:-$HOME/.config/cloudflare-access/browser}"
 SKEW="${CF_ACCESS_SKEW:-600}" # refresh when under this many seconds of life left
+case "$(uname -s)" in
+  Darwin) PLATFORM_OPENER=open ;;
+  *) PLATFORM_OPENER=xdg-open ;;
+esac
 
 # Read from a file, not just the env, so the daemon and an interactive shell agree on
 # which browser opens SSO without the setting being plumbed into launchd as well.
@@ -65,36 +69,52 @@ cached_token() {
   case "$t" in ey*) printf '%s' "$t" ;; esac
 }
 
-# Chrome's profile *directory* (Default, Profile 2, …) for a signed-in account. The
-# directory name is what --profile-directory wants, but it is opaque and unaffected by
-# renaming the profile in Chrome, so an account address is the stable way to name one.
-chrome_profile_dir() {
+# "<app>|<profile-directory>" for whichever installed Chromium browser is signed in as
+# an account. --profile-directory wants the directory name, which is opaque and unaffected
+# by renaming the profile, so an account address is the stable way to name one.
+# $CF_ACCESS_BROWSER_APPS overrides the search list: "App Name:support-dir" per line.
+browser_profile() {
   node -e '
     const fs = require("fs");
     const want = String(process.argv[1] || "").toLowerCase();
-    const state = `${process.env.HOME}/Library/Application Support/Google/Chrome/Local State`;
-    try {
-      const cache = JSON.parse(fs.readFileSync(state, "utf8")).profile?.info_cache || {};
-      for (const [dir, v] of Object.entries(cache)) {
+    const apps = (process.env.CF_ACCESS_BROWSER_APPS || `
+      Google Chrome:Google/Chrome
+      Google Chrome Beta:Google/Chrome Beta
+      Google Chrome Canary:Google/Chrome Canary
+      Brave Browser:BraveSoftware/Brave-Browser
+      Microsoft Edge:Microsoft Edge
+      Vivaldi:Vivaldi
+      Arc:Arc/User Data
+    `)
+      .split("\n").map((l) => l.trim()).filter(Boolean)
+      .map((l) => [l.slice(0, l.lastIndexOf(":")).trim(), l.slice(l.lastIndexOf(":") + 1).trim()]);
+
+    for (const [app, dir] of apps) {
+      let cache;
+      try {
+        const state = `${process.env.HOME}/Library/Application Support/${dir}/Local State`;
+        cache = JSON.parse(fs.readFileSync(state, "utf8")).profile?.info_cache || {};
+      } catch { continue }
+      for (const [profile, v] of Object.entries(cache)) {
         const who = (v.user_name || v.gaia_name || "").toLowerCase();
-        if (who === want) { process.stdout.write(dir); break }
+        if (who === want) { process.stdout.write(`${app}|${profile}`); process.exit(0) }
       }
-    } catch {}
+    }
   ' "$1" 2>/dev/null
 }
 
-# An account address in place of a command means "the Chrome profile signed in as this".
+# An account address in place of a command means "the browser profile signed in as this".
 # A browser preference must never break a login, so an unresolvable one warns and falls
-# back to the default browser.
+# back to the platform opener.
 resolve_browser() {
   case "${CF_ACCESS_BROWSER:-}" in
     '' | *' '*) return 0 ;;
     *@*)
-      dir=$(chrome_profile_dir "$CF_ACCESS_BROWSER")
-      if [ -n "$dir" ]; then
-        CF_ACCESS_BROWSER="open -na \"Google Chrome\" --args --profile-directory=\"$dir\""
+      found=$(browser_profile "$CF_ACCESS_BROWSER")
+      if [ -n "$found" ]; then
+        CF_ACCESS_BROWSER="open -na \"${found%%|*}\" --args --profile-directory=\"${found#*|}\""
       else
-        echo "cf-access: no Chrome profile signed in as $CF_ACCESS_BROWSER — using the default browser" >&2
+        echo "cf-access: no browser profile signed in as $CF_ACCESS_BROWSER — using the default browser" >&2
         CF_ACCESS_BROWSER=
       fi
       ;;
@@ -141,28 +161,33 @@ do_login() {
   }
   trap 'restore_stash "$1"' EXIT INT TERM
 
-  if [ -n "${CF_ACCESS_BROWSER:-}" ]; then
-    # cloudflared has no --no-browser, but when it cannot exec `open` it prints the URL
-    # and keeps waiting for the callback — so hiding `open` hands us the URL, and
-    # $CF_ACCESS_BROWSER decides which browser (or Chrome profile) receives it.
-    cfd=$(command -v cloudflared)
-    out=$(mktemp)
-    PATH=/var/empty "$cfd" access login "$1" --quiet --auto-close >"$out" 2>&1 &
-    cfd_pid=$!
-    i=0
-    url=
-    while [ $i -lt 100 ]; do
-      url=$(grep -oE 'https://[^[:space:]]+/cdn-cgi/access/cli\?[^[:space:]]+' "$out" | head -1)
-      [ -n "$url" ] && break
-      i=$((i + 1))
-      sleep 0.1
-    done
-    [ -n "$url" ] && eval "$CF_ACCESS_BROWSER \"\$url\"" >/dev/null 2>&1
-    wait "$cfd_pid" 2>/dev/null || true
-    rm -f "$out"
-  else
-    cloudflared access login "$1" --quiet --auto-close >/dev/null 2>&1 || true
+  # cloudflared has no --no-browser, but when it cannot exec an opener it prints the login
+  # URL and waits for the callback. Hiding the opener from it therefore buys two things:
+  # the URL gets reported (the only fallback when no browser appears), and
+  # $CF_ACCESS_BROWSER decides which browser or profile receives it.
+  cfd=$(command -v cloudflared)
+  out=$(mktemp)
+  PATH=/var/empty "$cfd" access login "$1" --quiet --auto-close >"$out" 2>&1 &
+  cfd_pid=$!
+
+  i=0
+  url=
+  while [ $i -lt 100 ]; do
+    url=$(grep -oE 'https://[^[:space:]]+/cdn-cgi/access/cli\?[^[:space:]]+' "$out" | head -1)
+    [ -n "$url" ] && break
+    kill -0 "$cfd_pid" 2>/dev/null || break
+    i=$((i + 1))
+    sleep 0.1
+  done
+
+  if [ -n "$url" ]; then
+    echo "cf-access: if no browser opens, log in here:" >&2
+    echo "  $url" >&2
+    eval "${CF_ACCESS_BROWSER:-$PLATFORM_OPENER} \"\$url\"" >/dev/null 2>&1 || true
   fi
+
+  wait "$cfd_pid" 2>/dev/null || true
+  rm -f "$out"
 
   restore_stash "$1"
   trap - EXIT INT TERM

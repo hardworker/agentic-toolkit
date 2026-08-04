@@ -4,6 +4,19 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.4.0] — 2026-08-03
+
+### Added
+
+- **Every login reports its URL.** The interception that made browser choice possible also means the login URL is always in hand, so it is now printed — the fallback for any case where no browser appears (wrong opener, headless session, a browser that swallowed the launch). Previously a login that failed to open a window left nothing to click.
+- **Any Chromium browser, not just Chrome.** An account address is resolved against Chrome, Chrome Beta/Canary, Brave, Edge, Vivaldi and Arc, in that order. `CF_ACCESS_BROWSER_APPS` replaces the search list (`App Name:support-dir` per line) to reorder it or pin one browser.
+- **The unset case is explicit**: `open` on macOS, `xdg-open` elsewhere, rather than relying on cloudflared's own launch.
+- Two more selftest cases, driven by a stub `cloudflared` so no SSO round-trip is needed: the login reports the URL, and hands it to the opener (asserted on the argument the opener received, since its output is deliberately silenced).
+
+### Changed
+
+- The two login paths (with and without a configured browser) collapsed into one. Same behaviour for an unconfigured machine, less code, and the URL is reported either way.
+
 ## [1.3.0] — 2026-08-03
 
 ### Added

@@ -1,9 +1,12 @@
-# Optional: where the SSO page opens, if the default browser is wrong — a work Chrome
-# profile rather than a personal one, say. Leave this file out to use the default browser.
+# Optional: where the SSO page opens, if the default browser is wrong — a work profile
+# rather than a personal one, say. Leave this file out to use the default browser.
+# Either way the login prints its URL, so a browser that never opens is not a dead end.
 #
-# Either an account address, resolved to the Chrome profile signed in as it:
+# Either an account address, resolved to the profile signed in as it, in whichever
+# Chromium browser has it (Chrome, Chrome Beta/Canary, Brave, Edge, Vivaldi, Arc):
 you@work.example
 #
 # ...or a command, for any other browser. The login URL is appended to it:
 # open -na "Google Chrome" --args --profile-directory="Profile 2"
 # /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2"
+# open -na "Firefox" --args -P work
