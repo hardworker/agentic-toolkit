@@ -206,6 +206,44 @@ Initial release: end-to-end build pipeline (idea → tested code) that debates t
 
 # adversarial-review
 
+## [2.0.0] — 2026-08-13
+
+Plain skill, and a real debate. SKILL.md is now the whole pipeline, executed by the main agent loop — no Workflow tool, no multi-agent opt-in. The two reviewers now argue to a conclusion instead of trading one round of verdicts, while the machinery around them got smaller by three unmeasured mechanisms.
+
+### Added
+
+- **The debate loops until the reviewers agree, deadlock, or hit `--rounds`** (default 3). Round 1 is cross-examination as before. Later rounds carry only the findings still disputed: each side answers the attacks on its own findings and re-judges the defences it received, one call per side per round. Findings an author withdraws are dropped before the judge and reported separately; the rest reach the judge tagged with how they settled.
+  Two rules keep this from becoming a race to agree, which is the documented failure mode of debating to consensus ([The Cost of Consensus](https://arxiv.org/html/2605.00914v1), [Debate or Vote](https://arxiv.org/abs/2508.17536)): conceding requires citing the file evidence that changed your mind — deferring to the other reviewer is explicitly not a resolution — and repeating a claim without new evidence is classified as deadlock rather than argument, which ends the loop instead of extending it. The judge is told that agreement reached mid-debate is weaker evidence than two reviewers finding the same thing independently, and that deadlocks are its to arbitrate in the files.
+  This reinstates, narrowly, the meta-review phase 1.0.0 removed. That version made *every* finding take a rebuttal round and the judge still had to re-verify in the files; this one runs only where the two models actually disagree, so a debate that agrees in round 1 costs exactly what one-round cross-examination cost.
+
+### Removed
+
+- **`adversarial-review.mjs`.** SKILL.md carries the scope rules, every stage prompt, the loop guards and the report format.
+- **The refute panel.** It spent 2–3 agents on every uncorroborated high finding, and its refuters saw only the finding — not the critic's reasoning, not the debate record — so two low-context agents could overrule the one that had seen everything. Its threshold (`floor(votes/2)+1`) also made rejection *easier* at higher effort, where wide-net makes findings more numerous. Never measured, and the only uncorroborated high in the field record was real. The judge's tiering absorbs its job in one line: on a high only one side raised, spend the file read trying to refute it.
+- **Two effort levels.** `xhigh` and `max` differed from `high` only by an issue cap once the reasoning-tier axis went away. Three levels remain; both names still parse and mean `high`.
+- **`--strict`**, which was `--effort low` minus the model choice, and existed only to be arbitrated against it ("strict wins over wide net"). Still parses, means `--effort low`. Same call the repo made dropping `--thorough` in 1.3.0.
+- **The `duplicateOf` tagging channel.** It injected one side's findings into the other side's critic — the one agent whose value is being uncontaminated — and then spent a clause telling it not to adopt them. The judge merges duplicates from the threaded record, which it already had.
+- **The `impact` field**, folded into `description` ("say who or what it affects"). Severity is already merge-anchored and the description already requires a failure scenario; this was the third statement of blast radius, carried through four stages.
+- **The undocumented `files` argument** and the legacy bare keywords (`fix`, `solo`, `iterations <n>`, `base <ref>`). They existed for JSON callers of the Workflow script, which no longer exists. `--repo` still maps to `--cwd`.
+
+### Changed
+
+- **The Codex legs no longer cost an agent.** The main thread runs `codex exec` itself, so Codex's answers reach the judge verbatim instead of through a transcribing runner. Scope stays an agent: resolving a target is trivial work, but doing it inline puts the diff in the context that lives for the whole run and turns "the orchestrator never reviews" from a boundary into an instruction. A one-round debate is 4 subagents plus 2 Codex calls, and 2 more calls per extra round.
+- **`codex exec` now runs with `-o`, `--output-schema` and `-C`.** `-o` plus redirecting the rest keeps Codex's reasoning transcript out of the orchestrator's context; `--output-schema` states the expected answer shape; `-C` sets the working root without a `cd <root> &&` prefix.
+- **JSON output contracts replace `StructuredOutput` schemas** on the Claude legs, one shared shape with the Codex legs. A malformed answer is re-asked from the same agent rather than re-running the stage; twice malformed reports `error`.
+- **Effort selects a model, not a reasoning tier**, since a plain skill's agent spawns expose `model` and not `effort`. 1.x ran the judge above the reviewers at `low`/`medium` and level with them from `high` up, so the presets keep it at or above them at every level.
+- **Loop guards are now the main thread's bookkeeping** — mutation guard, stagnation fingerprint and anti-anchoring memory are instructions rather than script control flow. Enforcement is no longer deterministic. The orchestrator also holds both Codex answers now, which the scope agent and `-o` keep to the findings themselves rather than the diff or the reasoning behind them.
+- **The result JSON is written to a temp file** instead of being returned by the Workflow runtime, once at the end of the run.
+
+### Fixed
+
+- **The mutation guard no longer trips on the target's own dirt.** It compares the fixer's `changedFiles` against a `git status --porcelain` snapshot taken before the fixer ran; previously a `working-tree` target — the default — listed every uncommitted file as the fixer's own and halted iteration 1 as `scope-violation`. Present in 1.x since the guard was added.
+- **Critics are capped at 5 missed issues**, the one fan-out in the pipeline with no bound on its input.
+
+### Note
+
+This pipeline has not been run. The 332k/628k token figures and the 18/32-minute timings in this changelog are 1.0.0 measurements on PR #208, and no `eval/` fixture for this skill has ever been built.
+
 ## [1.3.1] — 2026-07-17
 
 ### Changed

@@ -6,16 +6,17 @@ Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipel
 
 Adversarial Claude-vs-Codex debate review of any target — branch diff, working tree, or documents (specs, proposals, plans). Hunts real defects **and** challenges design decisions, approaches, and implementation paths.
 
-Pipeline (one iteration, 4–6 subagents):
+Pipeline (4 subagents + 2 Codex calls, plus 2 calls per extra debate round):
 
 ```
-Scope → [Claude review ∥ Codex review] → [cross-examination ∥] → Synthesis judge → (Fix loop)
+Scope → [Claude review ∥ Codex review] → debate, both ways, until agreed or stuck → Synthesis judge → (Fix loop)
 ```
 
-- Both reviewers work independently, then attack each other's findings.
-- The synthesis judge re-verifies every disputed finding in the actual files before confirming.
+- Both reviewers work independently, then argue: round 1 is cross-examination, later rounds run only on findings still disputed, until they agree, stop moving, or hit `--rounds` (default 3).
+- Conceding takes cited file evidence — deferring to the other reviewer isn't a resolution, and repeating a claim without new evidence is scored as deadlock, so the loop can't just converge on whoever argues hardest.
+- The synthesis judge arbitrates deadlocks and re-verifies in the actual files. Two reviewers finding something independently counts for more than agreement reached mid-argument.
 - Findings are typed: `defect` (concrete failure scenario required) or `design` (concrete better alternative required).
-- Codex leg degrades gracefully — if the Codex CLI is missing/unauthenticated, the run continues single-model.
+- Codex leg degrades gracefully — if the Codex CLI is missing/unauthenticated, the run continues single-model, with a fresh-context critic standing in so nothing reaches the judge uncontested.
 
 ### Usage
 
@@ -25,15 +26,17 @@ Scope → [Claude review ∥ Codex review] → [cross-examination ∥] → Synth
 /adversarial-review --base develop             # branch diff vs merge-base with develop
 /adversarial-review openspec/changes/foo/      # review documents as they stand
 /adversarial-review --fix --iterations 2       # apply confirmed fixes, re-review, up to 2 rounds
-/adversarial-review --strict                   # low-noise: only merge-blocking findings
+/adversarial-review --rounds 5                 # let the two models argue longer before the judge steps in
 /adversarial-review --no-codex                 # skip Codex leg (cheaper single-model)
 /adversarial-review --effort low               # cheap precision pass: merge-blocking findings only
-/adversarial-review --effort max               # widest net, strongest reasoning, 3-vote panel
+/adversarial-review --effort high              # widest net, strongest model
 /adversarial-review --cwd ~/src/other-repo     # review a checkout outside the cwd
 /adversarial-review focus on the retry logic   # free text becomes reviewer focus
 ```
 
-Requires: Claude Code with the Workflow tool. Optional: [Codex CLI](https://github.com/openai/codex) (`codex login`) for the second model.
+A plain skill — SKILL.md *is* the pipeline, run by the main agent loop, with no orchestrator script.
+
+Requires: an agent that can spawn fresh subagents, read/edit files and run shell commands; only Claude Code has been exercised. Optional: [Codex CLI](https://github.com/openai/codex) (`codex login`) for the second model.
 
 ## crucible
 
@@ -141,4 +144,4 @@ Via Claude Code plugin marketplace:
 /plugin install agentic-toolkit@agentic-toolkit
 ```
 
-For Codex CLI, copy or symlink the skill directories into `.agents/skills/` — crucible runs its playbook path there.
+For Codex CLI, copy or symlink the skill directories into `.agents/skills/`.

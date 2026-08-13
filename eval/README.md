@@ -10,7 +10,7 @@ Measures precision / recall / cost of the skill against fixtures with **known se
 {
   "name": "auth-refactor-seeded",
   "repo": "/abs/path/to/fixture-repo",
-  "target": "main",                 // args.target for the run
+  "target": "main",                 // the target argument for the run
   "seeded": [                       // ground truth
     { "file": "src/auth.ts", "hint": "token expiry uses < instead of <=", "kind": "defect" },
     { "file": "src/db.ts",   "hint": "connection pool never released on error path", "kind": "defect" }
@@ -21,9 +21,9 @@ Measures precision / recall / cost of the skill against fixtures with **known se
 
    The cheapest way to seed: ask a model to inject N subtle bugs into a healthy diff and write the manifest for you, then eyeball it. Keep fixtures small (≤10 files) so runs are cheap; a `--no-codex` run is usually enough for regression purposes.
 
-2. **Run the skill** on the fixture (`repo` + `target` args), save the returned JSON to `results/<fixture>-<variant>.json`.
+2. **Run the skill** on the fixture (`--cwd <repo>` plus the target). It writes a run record to a temp file and reports the path; copy that into `results/<fixture>-<variant>.json`.
 
-3. **Score**: `node eval/score.mjs manifest.json results/run.json`
+3. **Score**: `node eval/score.mjs manifest.json results/run.json <subagent-tokens>`
 
 ## Scoring
 
@@ -31,7 +31,7 @@ Measures precision / recall / cost of the skill against fixtures with **known se
 
 - **recall** — seeded issues found / seeded
 - **precision proxy** — confirmed findings in seeded files / all confirmed (findings in `cleanFiles` are hard false positives; findings elsewhere are "unknown" — triage by hand once, then add them to the manifest as `known` so reruns score them automatically)
-- **cost** — paste the run's subagent token count when prompted (the Workflow usage block reports it)
+- **cost** — not currently measurable per run: the session usage report covers the whole session rather than the review, and Codex CLI tokens are spent in another process entirely. Compare recall and false positives; treat the third argument as a rough note.
 
 ## What to compare
 

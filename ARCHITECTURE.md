@@ -1,160 +1,100 @@
 # agentic-toolkit — Architecture
 
-Two debate pipelines built on one design philosophy — agent output you don't have to re-check, because every claim was attacked before it reached you, at bounded token cost because every mechanism is gated or capped — plus two utility skills that share only the "verify before reporting" half. One pipeline is a Workflow script, the other is pure prose; the philosophy is what they share, not the machinery.
+Two debate pipelines built on one design philosophy — agent output you don't have to re-check, because every claim was attacked before it reached you, at bounded token cost because every mechanism is gated or capped — plus two utility skills that share only the "verify before reporting" half. Both pipelines are pure prose: a SKILL.md that spawns its own agents, no orchestrator script between them.
 
-- [**adversarial-review**](#adversarial-review) — cross-model debate review of an existing target (diff, working tree, documents). Workflow-orchestrated.
-- [**crucible**](#crucible) — end-to-end build pipeline (idea → grilling → challenged assumptions → plan → code → verify) that debates the user before it builds. A pure skill: one SKILL.md, no script.
+- [**adversarial-review**](#adversarial-review) — cross-model debate review of an existing target (diff, working tree, documents). One SKILL.md, no script.
+- [**crucible**](#crucible) — end-to-end build pipeline (idea → grilling → challenged assumptions → plan → code → verify) that debates the user before it builds. Same shape.
 - [**session-migration**](#session-migration) — finds any past session (desktop or terminal, any account) and moves it to the surface you want. No subagents; a store-format tool.
 - [**cf-access**](#cf-access) — keeps CLI tools, Node clients and long-running MCP servers authenticated to Cloudflare Access–gated hosts. No subagents; a credential-plumbing tool.
 
 ## adversarial-review
 
-A cross-model debate review. Two independent reviewers (Claude and OpenAI Codex) review the same target, attack each other's findings, and a judge verifies every contested point in the actual files before anything is reported. The goal is a review you don't have to re-review: hallucinated findings die in cross-examination, real ones arrive with a concrete failure scenario and a fix recommendation.
+A cross-model debate review. Two independent reviewers (Claude and OpenAI Codex) review the same target and then argue about their findings until they agree or deadlock; a judge verifies what survives in the actual files before anything is reported. The goal is a review you don't have to re-review: hallucinated findings die in the argument, real ones arrive with a concrete failure scenario and a fix recommendation.
+
+It is a **plain skill**: SKILL.md is the entire pipeline and the main agent loop executes it, spawning one subagent per debate role and shelling out to the Codex CLI directly. Only Claude Code has been exercised; a runtime that can spawn fresh agents should run it, and where only one model is available the debate structure survives but the cross-model half does not.
 
 ### The pipeline
 
-One iteration (report-only runs do exactly one):
-
 ```
-                ┌─────────┐
-                │  Scope   │  resolve what is under review (low effort)
-                └────┬─────┘
-             ┌───────┴────────┐
+             ┌────────────┐
+             │   Scope    │    a cheap agent: file list, summary, diff command
+             └──────┬─────┘
+             ┌──────┴─────────┐
              ▼                ▼
       ┌────────────┐   ┌────────────┐
-      │   Claude    │   │   Codex    │      independent reviews,
-      │   review    │   │   review   │      neither sees the other
-      └──────┬──────┘   └──────┬─────┘
-             │    findings     │
-             ▼                 ▼
+      │   Claude   │   │   Codex    │      independent reviews,
+      │  subagent  │   │ codex exec │      neither sees the other
+      └─────┬──────┘   └─────┬──────┘
+            ▼                ▼
       ┌────────────┐   ┌────────────┐
-      │  Codex (or  │   │   Claude   │      cross-examination:
-      │ self-critic)│   │  critiques │      every finding verified
-      │  critiques  │   │   Codex    │      against the files,
-      │   Claude    │   │            │      missed issues added
-      └──────┬──────┘   └──────┬─────┘
-             └───────┬─────────┘
-                     ▼
-              ┌────────────┐
-              │  Synthesis  │   judge (high effort): merges duplicates,
-              │    judge    │   re-verifies disputed high/medium findings
-              └──────┬──────┘   in the files itself, assigns agreement
-                     ▼
-              ┌────────────┐
-              │   Panel     │   only for confirmed HIGHs one model raised:
-              │ (as needed) │   2 refuters vote; 2/2 refuted → rejected
-              └──────┬──────┘
-                     ▼
-              ┌────────────┐
-              │    Fix      │   fix mode only: apply confirmed fixes
-              │  (optional) │   (mutation-guarded), loop back to Review
-              └────────────┘
+      │  each side │   │  each side │  ◀─┐  round 1: verdicts on the
+      │  attacks,  │   │  answers,  │    │  other side's findings
+      │  concedes  │   │  re-judges │    │  rounds 2+: only what is
+      └─────┬──────┘   └─────┬──────┘    │  still disputed
+            └───────┬────────┘───────────┘  until agreed, stuck, or capped
+                    ▼
+             ┌────────────┐
+             │ Synthesis  │    judge: arbitrates deadlocks, re-verifies
+             │   judge    │    in the files, confirms
+             └────────────┘
 ```
 
-4–6 subagents per iteration (plus 2 per uncorroborated high finding). Every stage communicates through JSON schemas (`StructuredOutput`), so nothing depends on parsing prose.
+Scope is one cheap agent; the optional fix loop after the judge is one more. That is 4 subagents plus 2 Codex calls for a debate that settles in one round, 2 calls per extra round, and 1 agent with `--fix`. Every stage returns a JSON-only answer against a shape stated in its prompt — one shared contract for both legs, so nothing depends on parsing prose.
 
-#### Scope
+The main thread is strictly an orchestrator: it owns the bookkeeping — whose finding is whose, what is still disputed, whether a round moved anything — and never reads the target or takes a side. This is why scope is an agent rather than a few git commands on the main thread. Resolving a target is trivial work, but doing it inline puts the diff in the one context that survives the whole run, and "run git but don't read what it prints" is a rule rather than a boundary. One target argument covers uncommitted changes, a branch diff, or a set of paths — code and documents alike.
 
-A low-effort agent resolves the `target` argument into a file list, a one-paragraph summary, and (for diffs) the exact `git diff` command reviewers should run. Reviewers run the diff themselves instead of having it embedded in their prompts — for a large PR this is the single biggest token saving. Targets:
+Reviewers hunt two kinds of finding, each with an evidence requirement that is what makes the output trustworthy. A **`defect`** requires a concrete failure scenario — *this input/state → this wrong outcome*; in documents that includes contradictions, ambiguity an implementer can't resolve, and tasks that don't cover the stated intent. A **`design`** finding requires naming a concrete, materially better alternative — reviewers presume every major decision guilty until it survives scrutiny, but "could be nicer" without an alternative is banned. Severity is anchored to merge impact: *high = a maintainer would block the merge*.
 
-| `target` | Meaning |
-|---|---|
-| `auto` (default) | uncommitted changes if any, else branch diff vs. the default branch |
-| `working-tree` | uncommitted changes only (the prompt explicitly forbids widening to the branch diff) |
-| a git ref | `git diff <merge-base(ref, HEAD)>...HEAD` |
-| a dir / file paths | those files as they stand — code or documents; one pipeline for both |
+Round 1 of the debate is cross-examination: each side verifies every one of the other's findings *against the files* — plausibility judgments are forbidden — returning `valid` / `invalid` (with file:line proof) / `uncertain`, plus any issues the other side missed. This is the hallucination filter, and the one stage with a measured kill rate: in the PR #208 field test it killed 3 of Codex's 10 findings with `git show` merge-base evidence.
 
-An explicit `files` argument skips the scope agent entirely.
+Later rounds run only on what is still disputed, and only two moves are legal: concede, citing the file evidence that changed your mind, or defend with evidence you have not already given. Deferring to the other reviewer is explicitly not a resolution, and repeating a claim without new evidence is declared a deadlock rather than an argument — the two rules that keep a convergence loop from converging on whoever argues hardest. The debate stops when nothing is disputed, when a round moves nothing, or at `--rounds` (default 3).
 
-#### Review
+The judge then receives each surviving finding threaded with its final verdict and how it settled. Verification is **tiered** so file reads go where the stakes are: every high is opened and checked, and one nobody independently corroborated must survive an attempt to refute it; mediums ride on their verdict unless deadlocked; lows are decided on the record alone, where a miss costs least. Two reviewers landing on the same finding independently is the strongest signal in the record — agreement reached *during* the debate is not the same thing, and the judge is told to treat it as one reviewer's finding that survived an argument. Deadlocks are the judge's to arbitrate: both sides spent their evidence and neither moved, so only the files will settle it. Confirmed design findings carry the same weight as defects — the judge may not drop them as taste.
 
-Two reviewers get identical instructions (modulo the id prefix) and no knowledge of each other's output beyond "you will be cross-examined". They hunt two kinds of finding:
+With `--fix`, a fixer applies the confirmed recommendations and the pipeline re-reviews, up to `--iterations` (default 3). Three orthogonal guards keep the loop honest: a **mutation guard** stops the run as `scope-violation` when the fixer touches a file no finding names, instead of letting the next iteration bless drift; **anti-anchoring memory** hands iteration 2+ the already-fixed list so fresh passes hunt what was missed; and a **stagnation fingerprint** of the confirmed set stops a loop that is confirming the same things twice.
 
-- **`defect`** — broken behavior. Requires a concrete failure scenario: *this input/state → this wrong outcome*. For documents, defects include contradictions, ambiguity an implementer can't resolve, and tasks/specs that don't cover the stated intent.
-- **`design`** — the decision itself is wrong: needless complexity, wrong abstraction, fighting existing codebase patterns, an unnecessary dependency, a path that bites later. Reviewers are told to presume every major decision guilty until it survives scrutiny. Requires naming a concrete, materially better alternative — "could be nicer" without one is banned.
-
-Every finding carries an **impact** line (blast radius in one sentence), and severity is anchored to merge impact: *high = a maintainer would block the merge*. For diff targets, reviewers may only flag issues the change **introduces or materially worsens** — anything possibly pre-existing must be checked against the merge-base first (in the PR #208 field test, pre-existing-code findings were the entire false-positive class).
-
-Caps keep the debate bounded: ≤ 10 issues per reviewer (≤ 5 in `strict` mode), most important first, ≤ 3 sentences per description. `strict: true` raises the bar end-to-end: reviewers and judge only keep merge-blocking findings — the low-noise mode.
-
-#### Cross-examination
-
-Each side verifies every one of the other's findings *against the files* (plausibility judgments are forbidden) and returns per-issue verdicts — `valid` / `invalid` (with file:line proof) / `uncertain` — plus any real issues the other side missed. A design finding is `invalid` if its alternative isn't materially better or isn't feasible in this codebase.
-
-Each critic also sees a compact `{id, file, title}` list of its own side's findings — for **duplicate-tagging only**: when the other side's issue is the same underlying one, the verdict carries `duplicateOf`, which turns the judge's duplicate-merging from a reasoning task into bookkeeping and makes `both` agreement labels reliable.
-
-In the PR #208 field test this stage killed 3 of Codex's 10 findings with merge-base evidence (`git show` proving the flagged code pre-existed the PR) — this is the hallucination/noise filter that makes the output trustworthy.
-
-#### Synthesis
-
-A high-effort judge receives each finding threaded with its critic's verdict (not the raw debate documents). Verification is **tiered** so file reads go where the stakes are:
-
-- Findings both sides raised independently (or tagged `duplicateOf`) → confirmed once, agreement `both`, duplicates merged.
-- High/medium with `invalid` / `uncertain` / `uncritiqued` verdicts → the judge must open the files and verify itself before deciding.
-- High/medium with `valid` verdicts → confirm unless obviously wrong.
-- Low → decided on the debate record alone, no file reads: `valid` confirms, anything unvetted is rejected (precision over volume at the tier where a miss costs least).
-- Confirmed design findings carry the same weight as defects — the judge may not drop them as taste.
-- Every confirmed finding gets a specific, actionable `fixRecommendation` and an agreement label (`both` / `claude-only` / `codex-only`).
-
-#### Refute panel
-
-A single judge is a single point of failure exactly where stakes are highest, so every confirmed **high** finding that lacks cross-model corroboration (agreement ≠ `both`) gets two fresh refuter agents. Each must produce concrete file-based evidence to refute; 2/2 refuted moves the finding to `rejected`, 1/2 keeps it annotated as contested. Cost is bounded: highs are rare, and corroborated ones skip the panel entirely.
-
-#### Fix loop (opt-in)
-
-With `fix: true`, a fixer agent applies the confirmed recommendations (minimal, targeted; skips anything needing a product decision), then the pipeline re-reviews the now-fixed target — up to `maxIterations` (default 3). Three guards keep the loop honest:
-
-- **Mutation guard.** The fixer must report every file it touched (`git status --porcelain`); an edit to a file no confirmed finding names stops the run as `scope-violation` for human inspection, instead of letting the next iteration bless drift.
-- **Anti-anchoring memory.** Iteration 2+ reviewers receive the already-confirmed-and-fixed list and are told not to re-report those findings — fresh passes hunt what was missed instead of re-debating what was fixed (also the cheapest token cut in the loop).
-- **Stagnation circuit breaker.** A fingerprint of the confirmed set (`file|title` pairs): if an iteration confirms the same set as the previous one, the run stops as `stagnant` instead of burning tokens.
-
-#### Effort levels
-
-`effort: low|medium|high|xhigh|max` (default `medium`) scales the whole pipeline on the same axis as `/code-review` — low/medium buy precision, high and above buy coverage:
-
-| level | issue cap/reviewer | finding bar | reviewer & critic tier | judge tier | refute panel |
-|---|---|---|---|---|---|
-| `low` | 5 | merge-blocking only (strict) | `low` | `medium` | skipped, findings annotated |
-| `medium` | 10 | standard | session default | `high` | 2 votes, unanimous rejects |
-| `high` | 15 | wide net | `high` | `high` | 2 votes, unanimous rejects |
-| `xhigh` | 20 | wide net | `xhigh` | `xhigh` | 3 votes, majority rejects |
-| `max` | 25 | wide net | `max` | `max` | 3 votes, majority rejects |
-
-"Wide net" tells reviewers to also raise suspicions they could not fully verify, labeled as such — breadth enters at the cheapest stage and the cross-examination/judge/panel chain filters it, so output precision holds while recall grows. `--strict` composes: it wins over wide-net and pins the cap at 5. Codex runner agents stay at `low` regardless (they only transcribe), and the scope agent stays at `low`.
+`--effort low|medium|high` scales the pipeline on the same axis as `/code-review` — low buys precision, high buys coverage — moving the per-reviewer issue cap, the finding bar, and the models together. "Wide net" at `high` tells reviewers to also raise labeled suspicions: breadth enters at the cheapest stage and the cross-examination/judge chain filters it. The preset table lives in [SKILL.md](skills/adversarial-review/SKILL.md), which executes it.
 
 ### The Codex leg
 
-Codex participates through a thin runner: a low-effort Claude agent writes the prompt to a temp file, executes
+The main thread runs Codex itself, writing the stage prompt and its JSON schema to temp files:
 
 ```
-codex exec --sandbox read-only - < promptfile
+codex exec --sandbox read-only -C <repo> --output-schema <schema> -o <answer.json> - < promptfile
 ```
 
-(with `cd <repo>` when reviewing an external root, and one retry adding `--disable code_mode_host` for the Homebrew cask that ships without `codex-code-mode-host`), then transcribes Codex's answer into the stage schema *verbatim* — the runner is forbidden to add, drop, soften, or verify anything. Codex prompts end with an explicit plain-text output contract (ISSUE/VERDICT/STANCE blocks) so transcription is mechanical.
+`-o` plus a redirect of the rest keeps Codex's reasoning transcript out of the orchestrator's context — the one context that must survive every iteration — and `--output-schema` states the expected answer shape, though an unparseable answer is still handled as a failed leg. Codex's answer is passed on **verbatim**: nothing added, dropped, softened or verified.
 
-**Degradation is graceful and honest.** Any Codex failure (missing binary, stale auth, timeout) sets `codexAvailable: false` in the result rather than aborting, and the run continues single-model. Crucially, findings still never reach the judge uncontested: when Codex is down — or deliberately skipped via `--no-codex` (`codex: false`) — a fresh Claude agent with no shared context stands in as the critic ("self-critique"). Independence comes from fresh context; hostility from the prompt.
+**Degradation is graceful and honest.** Any Codex failure (missing binary, stale auth, timeout) marks `codexAvailable: false` in the reported result rather than aborting, and the run continues single-model. Crucially, findings still never reach the judge uncontested: when Codex is down — or deliberately skipped via `--no-codex` — a fresh Claude agent with no shared context stands in as the critic ("self-critique"). Independence comes from fresh context; hostility from the prompt.
 
 ### Design decisions
 
-- **No meta-review phase.** The original design let each reviewer answer the critique of its findings before synthesis. In practice the judge must re-verify disputed findings in the files anyway, so the rebuttal round bought little and cost two agents re-reading everything each iteration. Removing it cut agents per iteration from 8 to 4–6.
-- **Reviewers pull the diff; prompts don't carry it.** Prompts carry file lists and a diff command. Each agent reads only what it needs.
-- **Token cost tracks debate volume, not phase count.** Field data: 332k tokens for a solo run confirming 7 findings; 628k for a duo run on the same 66-file PR confirming 13 of 20 candidates. Budget expectations should scale with how contested the change is.
+- **A plain skill, not an orchestrator script.** SKILL.md is the pipeline, so there is one file, no Workflow tool and no multi-agent opt-in, and the Codex runner agents that existed only because a Workflow stage can only be an agent are gone — the main thread shells out itself, so Codex's answers reach the judge verbatim instead of through a transcription. Two things are genuinely worse for it: the loop guards are instructions rather than code, and a malformed Claude-leg answer is re-asked rather than schema-retried. The scope agent survived the conversion for the opposite reason — see below.
+- **Scope is an agent, though it is only git.** The obvious simplification is to resolve the target on the main thread, which already has git; it was written that way and reverted. The scope stage exists for context isolation, not for intelligence: inline, the diff lands in the one context that lives for the whole run, and the orchestrator's "never review the target" invariant degrades from a boundary into an instruction it has to be trusted to follow while looking at the change. A cheap agent buys the invariant back, and a summary written from the actual diff rather than from paths and a `--stat`.
+- **A rebuttal round, but only on disputes.** 1.0.0 removed a meta-review phase that made *every* finding take a rebuttal round, cost two agents re-reading everything each iteration, and left the judge re-verifying in the files anyway. Scoping the loop to what is actually contested is what makes it affordable this time: sides that agree exchange nothing, so a one-round debate costs what cross-examination alone used to. The evidence rules above are not decoration — cross-conditioned debaters converge on agreement rather than truth ([The Cost of Consensus](https://arxiv.org/html/2605.00914v1)) and most measured gains from debate turn out to be voting ([Debate or Vote](https://arxiv.org/abs/2508.17536)), so a loop that rewards yielding would buy the wrong thing. Unmeasured, like everything else here.
+- **Refutation is the judge's job, not a panel's.** A separate refute panel voted on every uncorroborated high finding. Its refuters saw only the finding, never the critic's reasoning or the debate record, so two low-context agents could overrule the one agent that had seen everything — and its vote threshold (`floor(votes/2)+1`) made rejection *easier* at higher effort, where wide-net also makes findings more numerous. It was never measured, and the only uncorroborated high in the field record was real (the `codex-only` privilege-confinement finding the Claude leg missed twice). One line in the judge's tiering does the same work: on a high only one side raised, spend the file read trying to refute it.
+- **Reviewers pull the diff; prompts don't carry it.** Prompts carry file lists and a diff command, so each agent reads only what it needs and the same review works on a 3-file and a 66-file change.
+- **Token cost tracks debate volume, not phase count.** Field data (1.x, PR #208): 332k tokens for a solo run confirming 7 findings; 628k for a duo run on the same 66-file PR confirming 13 of 20 candidates. 2.0.0 has not been measured. Budget expectations should scale with how contested the change is.
 - **One pipeline for code and documents.** Document review differs only in what counts as a defect, which fits in two lines of the reviewer rules — not in a parallel mode with its own prompts and schemas. Anything document-specific goes in `focus` free text.
-- **Structured output everywhere.** Schema validation retries at the tool-call layer, so a malformed agent answer self-corrects instead of corrupting the debate record.
-- **`cwd` argument instead of cwd assumptions.** Workflow subagents inherit the session cwd; reviewing a PR checked out elsewhere threads `git -C <root>` through every prompt. (Legacy `repo` still maps.)
+- **JSON-only stage answers, one contract for both legs.** Every stage prompt ends with the exact shape it must return and nothing else — less to keep in sync than a schema on one side and a text format on the other, and it keeps the debate record machine-readable.
+- **One depth knob.** `--effort` is the only dial; `--strict` and `xhigh`/`max` survive as aliases rather than as levels, because a second spelling of the same idea has to be arbitrated against the first every time both appear.
 
 ### Result contract
+
+Reported as prose and written once to a temp file at the end of the run:
 
 ```jsonc
 {
   "status": "clean | issues-found | stagnant | max-iterations | scope-violation | nothing-to-review | error",
   "target": "origin/main",
   "iterations": 1,
+  "rounds": 2,
   "effort": "medium",
   "codexAvailable": true,
-  "confirmed": [ { "id", "kind", "file", "line", "severity", "title",
-                   "description", "impact", "agreement", "fixRecommendation" } ],
+  "confirmed": [ { "id", "kind", "file", "line", "severity", "title", "description",
+                   "agreement", "settled", "fixRecommendation" } ],
   "rejected":  [ { "id", "reason" } ],
+  "conceded":  [ { "id", "title" } ],
   "fixed":     [ "issue ids (fix mode)" ],
   "summary":   "judge's narrative verdict"
 }
@@ -226,7 +166,7 @@ No orchestrator: the main loop runs the phases, holds the gates, and spawns isol
 - **Simplification is a review angle, not a phase — and it reviews architecture, not just lines.** Everything upstream pushes toward addition: skeptics raise risks, reviewers request fixes, fix rounds add guards. Nothing in the pipeline ever removed a line, and the accumulated result is exactly the over-engineering review is meant to prevent. So every verify round reviews the diff twice over, from opposite ends — correctness (what is broken) and simplification (what should not exist) — as two separate agents, because one reviewer holding both mandates dilutes into neither, the same lens-per-agent rule the skeptic panel runs on. The simplification mandate works at two altitudes: surface waste (dead code the change introduced, one-caller indirection, speculative options), and over-built structure, attacked down a YAGNI ladder — does the construct need to exist at all, does the repo already have the helper it reimplements (the most common agent slop: rewriting what sits a few files over), does the stdlib or platform cover it, would plain code beat the abstraction. Every finding must name the concrete smaller shape with the same behavior; "rewrite it nicer" is not a finding. Keeping the angle inside the loop means the deletions are verified by the next round's suite and reviewer rather than by a post-hoc pass whose only check is the suite; the cost is bounded by the same round cap. Simplifications face the same refutation gate — one that would change behavior, undo a confirmed fix, reach outside the diff, or remove a construct the files prove is load-bearing dies there — and a declined finding is recorded, never re-raised.
 - **Test-first ordering, hollow-test hunting.** Agents left alone write tests that assert whatever the implementation does; planners must schedule failing acceptance tests before implementation when test infra exists, and the reviewer explicitly hunts tests that cannot fail.
 - **Caps, not a budget object.** The Workflow budget API went with the script, so token discipline is stated instead of computed: ≤10 assumptions, ≤8 tasks, ≤6 findings per review round, one page per artifact, read only what a step needs. The counts that used to scale with remaining budget now come from the effort level alone. Multi-agent runs cost ~15× chat ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)), which is why every fan-out here is a fixed small number rather than "as many as it takes".
-- **Three effort levels.** `low | medium | high` (default `medium`; `xhigh`/`max` accepted as aliases) drives one preset table — lenses 2/3/4, competing plans 2/2/3, defender off/on/on, verify rounds 1/2/3, refute votes 0/2/3. The sibling's five levels exist because it can also dial agent reasoning tiers; with no script to pass them through, the top two levels bought one extra refute vote and two more names to document.
+- **Three effort levels.** `low | medium | high` (default `medium`; `xhigh`/`max` accepted as aliases) drives one preset table — lenses 2/3/4, competing plans 2/2/3, defender off/on/on, verify rounds 1/2/3, refute votes 0/2/3. Both pipelines landed on three independently: five levels only paid off while a script could pass a reasoning tier through, and once depth is a model choice the top two names bought nothing but documentation. The axis stays shared with the sibling and `/code-review` — low buys precision, high buys coverage.
 - **Overhead must be earned.** The SKILL.md's first rule is when *not* to run crucible: a one-sentence uncontested change gets built directly. Spec-pipeline tooling's main failure mode is ceremony on well-understood work ([waterfall-strikes-back critique](https://marmelab.com/blog/2025/11/12/spec-driven-development-waterfall-strikes-back.html)); gates sit exactly where the industry converged — after clarification, after plan (Kiro, Spec Kit, Superpowers all gate there).
 
 ### Artifacts and report
@@ -251,7 +191,7 @@ Written tool-agnostically per the [Agent Skills open standard](https://agentskil
 
 ### Validation
 
-Field runs only. The 1.x smoke test (`eval/crucible-smoke.mjs`) executed the Workflow script's control flow under a stub runtime; with the script gone there is no control flow to execute, and prompt-quality changes were never covered by it anyway — the same limitation as the sibling skill's prompt half, which its fixture harness measures instead.
+Field runs only. The 1.x smoke test (`eval/crucible-smoke.mjs`) executed the Workflow script's control flow under a stub runtime; with the script gone there is no control flow to execute, and prompt-quality changes were never covered by it anyway. The sibling has a fixture harness that would measure exactly that, but no fixture has been built for it, so both pipelines are in the same position.
 
 ### Future work
 
@@ -260,7 +200,7 @@ Field runs only. The 1.x smoke test (`eval/crucible-smoke.mjs`) executed the Wor
 
 ## session-migration
 
-The odd one out: no Workflow script, no subagents, no debate. Two mechanisms hide past work. Claude Code Desktop scopes session records by account, so an account switch strands everything created before it; and terminal sessions never get a desktop record at all. Both are invisible to the sidebar, to `list_sessions` and to `search_session_transcripts`. The skill is a locator over every store plus routes between them, and its design work was reading the desktop app's own store and `app.asar` loader instead of guessing at the format.
+The odd one out: no subagents, no debate. Two mechanisms hide past work. Claude Code Desktop scopes session records by account, so an account switch strands everything created before it; and terminal sessions never get a desktop record at all. Both are invisible to the sidebar, to `list_sessions` and to `search_session_transcripts`. The skill is a locator over every store plus routes between them, and its design work was reading the desktop app's own store and `app.asar` loader instead of guessing at the format.
 
 ### What the app actually does
 
@@ -352,8 +292,7 @@ agentic-toolkit/
 │   └── marketplace.json     # ...and as its own marketplace (source "./")
 ├── skills/
 │   ├── adversarial-review/
-│   │   ├── SKILL.md              # trigger description, arg table, report format
-│   │   └── adversarial-review.mjs # the Workflow script (single source of truth)
+│   │   └── SKILL.md              # the whole pipeline: args, stage prompts, guards, report
 │   ├── crucible/
 │   │   └── SKILL.md              # the whole pipeline: phases, gates, caps, report
 │   ├── session-migration/
@@ -375,6 +314,6 @@ agentic-toolkit/
 └── README.md
 ```
 
-adversarial-review instructs the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to its SKILL.md; the script orchestrates all subagents deterministically. crucible is pure prose — its SKILL.md is the pipeline, and it spawns isolated agents itself where they earn it. session-migration is plain Bash over the Python script beside its SKILL.md — macOS only. cf-access is the same shape, except its scripts are also **installed** outside the skill: `install.sh` symlinks them into a bin dir (default `~/.claude/bin`) and loads a launchd agent, so the skill directory stays the single source of truth while the daemon and every wired client run from stable paths. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. Codex CLI discovers the same SKILL.md via `.agents/skills` — crucible runs there in full; adversarial-review requires the Workflow tool.
+Both pipelines are pure prose now: each SKILL.md is its own pipeline, spawning isolated agents where they earn it, with no script to orchestrate them. session-migration is plain Bash over the Python script beside its SKILL.md — macOS only. cf-access is the same shape, except its scripts are also **installed** outside the skill: `install.sh` symlinks them into a bin dir (default `~/.claude/bin`) and loads a launchd agent, so the skill directory stays the single source of truth while the daemon and every wired client run from stable paths. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. Codex CLI discovers the same SKILL.md via `.agents/skills` — crucible runs there in full; adversarial-review should once its Claude Code subagent type and model names are substituted, though it has not been exercised there.
 
-adversarial-review's pipeline changes are validated with the `eval/` harness — seeded-bug fixtures scored for recall/precision/cost — because the research is clear that multi-agent protocol changes don't universally help and must be measured. crucible has no executable surface left to test; its changes are validated by field runs.
+Neither pipeline has an executable surface left to test. `eval/` still holds the seeded-bug fixture protocol and `score.mjs`, which scores an adversarial-review run's record for recall and false positives — but no fixture has ever been built, so every change to that pipeline, the 2.0.0 rewrite included, is so far unvalidated. crucible's changes are validated by field runs. The research is clear that multi-agent protocol changes don't universally help and must be measured, which is the standard both are currently short of.
