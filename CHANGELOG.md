@@ -135,6 +135,30 @@ Initial release: recover Claude Code Desktop sessions stranded in another accoun
 
 # crucible
 
+## [2.0.0] — 2026-08-13
+
+A pure skill. The pipeline existed twice — a 647-line Workflow script and a sequential playbook — and every change had to land in both; nothing in the design actually needed deterministic control flow, since the gates are conversations and the loops are bounded by counts a paragraph can state. One SKILL.md is now the whole skill, which also means it runs wherever the Agent Skills standard does instead of only where the Workflow tool exists. The same pass fixed both ends of the pipeline: nobody was interrogating the user before the panel spent tokens, nobody was defending the idea against the skeptics, nothing ever looked at the diff a second time, and no phase ever deleted a line.
+
+### Added
+
+- **Phase 0 — grill** (interactive, zero agents). Restate the idea, then attack it *to the user*: ≤4 design-changing questions per round, ≤2 rounds, batched. Vague answers get re-asked once, then become recorded unknowns; the rest enter the brief verbatim as `source: user`. The cheapest place to kill a bad premise is the sentence that states it, and the panel can only attack claims the brief contains. Skipped under `--auto`.
+- **Defender step** between the panel and the debate gate (skipped at `low`). One agent tries to refute each consolidated challenge in the actual files — refutation, the verification pattern the design already uses on high findings, not another round of debate. Killed challenges become one-liners in the report; `needs-user` product calls are exempt however well argued.
+- **Verify loop** replaces the one-shot test-then-review phase: `suite → fix failures → review → refute → fix confirmed`, repeated until a round comes back green and clean. Bounded by the effort cap and a stagnation breaker — identical failures or findings two rounds running means report, not grind. A fix that introduces its own defect used to ship unreviewed.
+- **Simplification as a second review angle.** Everything upstream pushes toward addition (skeptics raise risks, reviewers request fixes, fix rounds add guards); nothing ever removed a line. Every verify round now reviews the diff from both ends in parallel — correctness (≤6 merge-blocking findings) and simplification (≤4) — as two agents, since one reviewer holding both mandates dilutes into neither. The simplification mandate covers surface waste (dead code the change introduced, one-caller indirection, speculative options) *and* over-built structure, walked down a YAGNI ladder: does the construct need to exist at all → does the repo already have the helper it reimplements (cited `file:line`) → does the stdlib/platform cover it → would plain code beat the abstraction. Findings must name the concrete smaller shape with the same behavior; "rewrite it nicer" is not a finding. Deletions land inside the loop, so the next round's suite and reviewer verify them. A simplification that would change behavior, undo a confirmed fix, reach outside the diff or remove something the files prove load-bearing is refuted like any other finding; declined ones are recorded and never re-raised.
+
+### Removed
+
+- **`crucible.mjs`** and the Workflow path, **`PLAYBOOK.md`** (absorbed into SKILL.md), and **`eval/crucible-smoke.mjs`** — with no script there is no control flow to stub-test. Crucible is field-run-validated from here.
+- **The JSON result contract and budget accounting.** Fan-outs no longer scale to a token budget; the effort level alone sets the counts, and token discipline is stated as caps (≤10 assumptions, ≤8 tasks, ≤6 findings per round) instead of computed. Statuses collapse to `done` / `done-with-findings` / `challenged` / `blocked`.
+- **`--cwd`, `--focus`, `--phase`.** `--cwd` and its path plumbing served the script; emphasis rides along in the idea text; `--phase` bought a resume protocol and a run-dir discovery rule for a case that is usually "continue in this session". Arg surface is now the idea, `--auto`, `--effort`.
+
+### Changed
+
+- **Isolated agents only where isolation is the mechanism** — recon (read-only, keeps the largest read of the run out of the loop that must survive to the last verify round), each skeptic lens in parallel, the defender, each review angle in each round. Consolidation, plan drafts, implementation and the suite run in the main loop, and every step has a single-loop fallback.
+- **Artifacts moved out of the repo** — `brief.md`, `challenges.md`, `plan.md`, `progress.md` go to the session scratchpad, else `~/.crucible/<repo>/<timestamp>/`. No more `.git/info/exclude` handling, and the reviewer's `git diff` is exactly the change.
+- **Three effort levels** — `low | medium | high` (`xhigh`/`max` accepted as aliases). With no script to pass reasoning tiers through, the top two levels bought one extra refute vote. Presets: lenses 2/3/4, competing plans 2/2/3, defender off/on/on, verify rounds 1/2/3, refute votes 0/2/3.
+- **Lens count unified on the script's presets** (2/3/4) — the playbook ran all four lenses at `medium`, the script ran three.
+
 ## [1.1.0] — 2026-07-17
 
 Args and docs aligned with adversarial-review.

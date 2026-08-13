@@ -1,9 +1,9 @@
 # agentic-toolkit — Architecture
 
-Two debate pipelines built on one design philosophy — agent output you don't have to re-check, because every claim was attacked before it reached you, at bounded token cost because every mechanism is gated or capped — plus two utility skills that share only the "verify before reporting" half.
+Two debate pipelines built on one design philosophy — agent output you don't have to re-check, because every claim was attacked before it reached you, at bounded token cost because every mechanism is gated or capped — plus two utility skills that share only the "verify before reporting" half. One pipeline is a Workflow script, the other is pure prose; the philosophy is what they share, not the machinery.
 
-- [**adversarial-review**](#adversarial-review) — cross-model debate review of an existing target (diff, working tree, documents).
-- [**crucible**](#crucible) — end-to-end build pipeline (idea → challenged assumptions → plan → code → tests) that debates the user before it builds.
+- [**adversarial-review**](#adversarial-review) — cross-model debate review of an existing target (diff, working tree, documents). Workflow-orchestrated.
+- [**crucible**](#crucible) — end-to-end build pipeline (idea → grilling → challenged assumptions → plan → code → verify) that debates the user before it builds. A pure skill: one SKILL.md, no script.
 - [**session-migration**](#session-migration) — finds any past session (desktop or terminal, any account) and moves it to the surface you want. No subagents; a store-format tool.
 - [**cf-access**](#cf-access) — keeps CLI tools, Node clients and long-running MCP servers authenticated to Cloudflare Access–gated hosts. No subagents; a credential-plumbing tool.
 
@@ -162,28 +162,36 @@ codex exec --sandbox read-only - < promptfile
 
 ## crucible
 
-An end-to-end build pipeline that treats the user's idea as a set of attackable claims. Where adversarial-review challenges finished work, crucible challenges the work *before it exists* — assumptions first, then the plan, then the diff — so bad premises die at the cheapest possible point. Its design decisions are anchored in the 2024–2026 multi-agent literature; the citations below are the load-bearing ones.
+An end-to-end build pipeline that treats the user's idea as a set of attackable claims. Where adversarial-review challenges finished work, crucible challenges the work *before it exists* — the user first, then the assumptions, then the plan, then the diff — so bad premises die at the cheapest possible point. Its design decisions are anchored in the 2024–2026 multi-agent literature; the citations below are the load-bearing ones.
 
 ### The pipeline
 
 ```
               ┌─────────┐
-              │  Recon   │  map the repo; distill the idea into a brief whose
-              └────┬─────┘  assumptions are explicit, one attackable claim each
+              │  Grill   │  ≤4 design-changing questions per round, ≤2 rounds,
+              └────┬─────┘  no agents yet; answers become user assumptions
+                   ▼
+              ┌─────────┐
+              │  Recon   │  isolated read-only agent: map the repo; distill the
+              └────┬─────┘  idea into a brief of attackable claims
        ┌───────────┼───────────┬────────────┐
        ▼           ▼           ▼            ▼
   feasibility  necessity     scope      adversary      2–4 isolated skeptics —
        └───────────┴─────┬─────┴────────────┘          no cross-talk, assumptions
                          ▼                             unattributed
                   ┌─────────────┐
-                  │ Consolidate  │  judge merges attacks, verifies contested
+                  │ Consolidate  │  main loop merges attacks, verifies contested
                   └──────┬──────┘  verdicts in the files itself
                          ▼
-                ══ debate gate ══   the main thread argues the challenges with
+                  ┌─────────────┐  one agent tries to refute each challenge in
+                  │   Defend     │  the files; killed ones never reach the user,
+                  └──────┬──────┘  `needs-user` calls always do
+                         ▼
+                ══ debate gate ══   the main loop argues the survivors with
                          ▼          the user; rulings become settled
           ┌──────────┬───┴──────┐
           ▼          ▼          ▼
-       minimal    robust   refactor-first     2–3 independent planners,
+       minimal    robust   refactor-first     2–3 competing drafts,
           └──────────┼──────────┘             forced-apart angles
                      ▼
               ┌─────────────┐
@@ -193,58 +201,57 @@ An end-to-end build pipeline that treats the user's idea as a set of attackable 
                ══ plan gate ══
                      ▼
               ┌─────────────┐
-              │   Develop    │  sequential task agents; each sees the whole
+              │   Develop    │  sequential, one task at a time against the whole
               └──────┬──────┘  plan + prior results; per-task test evidence
                      ▼
-              ┌─────────────┐   full suite → bounded fix loop (stagnation
-              │ Test+Review  │   breaker) → fresh hostile reviewer → 2-vote
-              └─────────────┘   refute on highs → fix confirmed → re-run suite
+              ┌─────────────┐   ⟳ suite → fix failures → two fresh reviewers on
+              │    Verify    │   the diff: correctness ∥ simplification → refute
+              └─────────────┘   → fix ⟳ until green and clean; cap + stagnation
 ```
 
-The script is phase-parameterized (`args.phase`: `surface` / `plan` / `develop` / `test` / `full`): the main thread chains invocations and holds the gates, threading each phase's output into the next via args. `full` is the no-gate mode for autonomous runs — it **halts** (`challenged`) whenever a human ruling is needed, never guesses. There is deliberately no dry-run flag: a plan-only run is just the surface and plan invocations without the rest, and report-only review of an existing change is the sibling skill's job.
+No orchestrator: the main loop runs the phases, holds the gates, and spawns isolated agents only where isolation is the mechanism (recon, each lens, the defender, each review round). Phase artifacts — `brief.md`, `challenges.md`, `plan.md`, `progress.md` — are written to the session scratchpad or `~/.crucible/<repo>/<timestamp>/`, never into the working tree the reviewer inspects; they exist for compaction recovery, not for resumption. `--auto` is the no-human mode: no grill, no gates, and a **halt** (`challenged`) whenever a ruling is needed, never a guess. There is deliberately no dry-run flag: a plan-only run just stops at the plan gate, and report-only review of an existing change is the sibling skill's job.
 
 ### Design decisions (and the evidence behind them)
 
-- **Debate for critique, votes for verification, never for accuracy ensembling.** Budget-matched studies show multi-agent debate loses to cheaper self-consistency for accuracy ([Reasoning in Token Economies](https://arxiv.org/abs/2406.06461)), and most of debate's measured gains are just voting ([Debate or Vote, NeurIPS 2025](https://arxiv.org/abs/2508.17536)). So crucible uses adversarial agents only where dissent itself is the product (skeptic panel, hostile reviewer) and plain 2-vote refutation where verification is (high findings) — never N agents chatting to "improve" an answer.
+- **No orchestrator.** The pipeline used to exist twice — a 647-line Workflow script and a sequential playbook — and every change had to land in both. Nothing in the design needs deterministic control flow: the gates are conversations, the loops are bounded by counts a paragraph can state, and the only thing the script bought that prose can't is structured-output schemas. One SKILL.md is now the whole skill, which also means it runs wherever the Agent Skills standard does instead of only where the Workflow tool exists.
+- **Debate for critique, votes for verification, never for accuracy ensembling.** Budget-matched studies show multi-agent debate loses to cheaper self-consistency for accuracy ([Reasoning in Token Economies](https://arxiv.org/abs/2406.06461)), and most of debate's measured gains are just voting ([Debate or Vote, NeurIPS 2025](https://arxiv.org/abs/2508.17536)). So crucible uses adversarial agents only where dissent itself is the product (skeptic panel, hostile reviewer) and plain refutation where verification is (the defender on challenges, refute votes on high findings) — never N agents chatting to "improve" an answer.
+- **Grill the human before spending a token.** The cheapest place to kill a bad premise is the sentence that states it, and the panel can only attack claims the brief contains — a vague brief buys four agents' worth of attacks on nothing. So Phase 0 is a bounded interrogation (≤4 design-changing questions, ≤2 rounds) whose answers enter the brief verbatim as `source: user`. It runs before recon, not after, because a clarified idea changes what recon should even map.
+- **Recon is delegated, everything downstream isn't.** Mapping a repo is the largest read of the run and its output is one page; running it in the main loop would spend the context that has to survive to the last verify round. It goes to an isolated read-only agent. The main loop then argues the debate gate having read nothing first-hand — acceptable because every challenge is file-cited, so it opens the two or three files a ruling actually turns on.
+- **A defender between the panel and the user.** Skeptics are paid to attack, which means some attacks are wrong; handing all of them to the user makes the user the refuter. One agent takes the consolidated list and tries to kill each challenge in the files — refutation, the verification pattern above, not another round of debate. Product and priority calls (`needs-user`) are exempt however well argued: an agent's job is to check evidence, not to decide what the software should be for.
 - **Skeptics are isolated and see unattributed assumptions.** Cross-conditioning debaters collapses diversity ([The Cost of Consensus](https://arxiv.org/html/2605.00914v1)), so the lenses never see each other; a consolidating judge merges them. And a claim marked as *the user's stated position* measurably increases agreement with it ([SycEval](https://arxiv.org/abs/2502.08177): preemptive positions raise sycophancy 61.75% vs 56.52%), so skeptics get `{id, text}` only — the consolidator alone knows which assumptions are user-stated, because a `wrong` verdict on one of those forces `proceed: "debate"`.
 - **A dedicated disagree-er with a mandate.** Self-critique degenerates once a model is confident ([Degeneration-of-Thought](https://arxiv.org/abs/2305.19118)); each skeptic's prompt defines success as effective critique ("a panel that nods is a wasted panel"), forces steelman-then-attack per assumption, and maps uncertainty to `shaky`, never `holds`.
 - **Best-of-N plans + a verifying judge.** Candidate generation with independent selection is the one multi-model pattern with consistent wins on real coding benchmarks ([SWE-bench leaderboard analysis](https://arxiv.org/abs/2506.17208)); planner angles are forced apart (minimal / robust / refactor-first) and the judge must open files to check the drafts' claims, because a plan naming wrong files is worse than no plan.
-- **Sequential develop; no parallel implementers.** Coding parallelizes poorly and parallel workers make conflicting implicit decisions ([Cognition](https://cognition.com/blog/dont-build-multi-agents), [Anthropic's multi-agent guidance](https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them), [MAST](https://arxiv.org/abs/2503.13657) — most multi-agent failures are coordination failures). Each task agent gets fresh context (no rot on long builds) but sees the whole plan, all completed-task summaries, and their deviations. Blocked tasks stop the run — improvising around a broken plan is how drift starts.
-- **Fresh-context hostile review + default-to-refuted.** Models favor their own output ([self-preference bias](https://arxiv.org/abs/2404.13076)), so the reviewer shares no context with the builders and hunts merge-blocking findings only (reviewer over-reporting drives over-engineering). Every high finding faces 2 independent refuters needing file evidence — the same reproduction-gate philosophy as [Aardvark](https://openai.com/index/introducing-aardvark/)'s discard-on-non-reproduction.
+- **Sequential develop; no parallel implementers.** Coding parallelizes poorly and parallel workers make conflicting implicit decisions ([Cognition](https://cognition.com/blog/dont-build-multi-agents), [Anthropic's multi-agent guidance](https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them), [MAST](https://arxiv.org/abs/2503.13657) — most multi-agent failures are coordination failures). Implementation stays in the main loop, one task at a time against the whole plan, with `progress.md` as the coordination record (files, test evidence, deviations) so a compaction mid-build costs nothing. Blocked tasks stop the run — improvising around a broken plan is how drift starts.
+- **Fresh-context hostile review, looped to convergence.** Models favor their own output ([self-preference bias](https://arxiv.org/abs/2404.13076)), so each review runs in an agent that sees only the diff and the plan, and hunts merge-blocking findings only (reviewer over-reporting drives over-engineering). Every high finding faces independent refuters needing file evidence — the same reproduction-gate philosophy as [Aardvark](https://openai.com/index/introducing-aardvark/)'s discard-on-non-reproduction. One shot was the 1.x weakness: a fix introduces its own defects and nobody looked again. Suite and review are now one loop that repeats until a round comes back green and clean, bounded by the effort cap and a stagnation breaker — identical failures or findings twice means report, not grind.
+- **Simplification is a review angle, not a phase — and it reviews architecture, not just lines.** Everything upstream pushes toward addition: skeptics raise risks, reviewers request fixes, fix rounds add guards. Nothing in the pipeline ever removed a line, and the accumulated result is exactly the over-engineering review is meant to prevent. So every verify round reviews the diff twice over, from opposite ends — correctness (what is broken) and simplification (what should not exist) — as two separate agents, because one reviewer holding both mandates dilutes into neither, the same lens-per-agent rule the skeptic panel runs on. The simplification mandate works at two altitudes: surface waste (dead code the change introduced, one-caller indirection, speculative options), and over-built structure, attacked down a YAGNI ladder — does the construct need to exist at all, does the repo already have the helper it reimplements (the most common agent slop: rewriting what sits a few files over), does the stdlib or platform cover it, would plain code beat the abstraction. Every finding must name the concrete smaller shape with the same behavior; "rewrite it nicer" is not a finding. Keeping the angle inside the loop means the deletions are verified by the next round's suite and reviewer rather than by a post-hoc pass whose only check is the suite; the cost is bounded by the same round cap. Simplifications face the same refutation gate — one that would change behavior, undo a confirmed fix, reach outside the diff, or remove a construct the files prove is load-bearing dies there — and a declined finding is recorded, never re-raised.
 - **Test-first ordering, hollow-test hunting.** Agents left alone write tests that assert whatever the implementation does; planners must schedule failing acceptance tests before implementation when test infra exists, and the reviewer explicitly hunts tests that cannot fail.
-- **Budget is first-class.** Fan-outs scale to the workflow token budget (~70k/agent from this repo's field data, reserve-half rule so early phases can't starve later ones), every phase boundary checks `budget-exhausted` and stops cleanly, and the result reports actual per-phase spend. Multi-agent runs ~15× chat cost ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)) — the pipeline must know what it spent.
-- **Effort levels shared with the sibling.** `effort: low|medium|high|xhigh|max` (default `medium`) drives one preset table — skeptics 2/3/4, planners 2/2/3, test-fix rounds 1/2/3, refute votes 0/2/3 (skipped-with-annotation at `low`, 3-vote majority-rejects at `xhigh`+), and agent reasoning tiers. Same axis as adversarial-review and `/code-review`: low/medium buy precision, high and above buy coverage. The budget floor applies regardless of effort; the suite runner stays at `low` (it only runs commands).
+- **Caps, not a budget object.** The Workflow budget API went with the script, so token discipline is stated instead of computed: ≤10 assumptions, ≤8 tasks, ≤6 findings per review round, one page per artifact, read only what a step needs. The counts that used to scale with remaining budget now come from the effort level alone. Multi-agent runs cost ~15× chat ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)), which is why every fan-out here is a fixed small number rather than "as many as it takes".
+- **Three effort levels.** `low | medium | high` (default `medium`; `xhigh`/`max` accepted as aliases) drives one preset table — lenses 2/3/4, competing plans 2/2/3, defender off/on/on, verify rounds 1/2/3, refute votes 0/2/3. The sibling's five levels exist because it can also dial agent reasoning tiers; with no script to pass them through, the top two levels bought one extra refute vote and two more names to document.
 - **Overhead must be earned.** The SKILL.md's first rule is when *not* to run crucible: a one-sentence uncontested change gets built directly. Spec-pipeline tooling's main failure mode is ceremony on well-understood work ([waterfall-strikes-back critique](https://marmelab.com/blog/2025/11/12/spec-driven-development-waterfall-strikes-back.html)); gates sit exactly where the industry converged — after clarification, after plan (Kiro, Spec Kit, Superpowers all gate there).
 
-### Result contract
+### Artifacts and report
 
-```jsonc
-{
-  "status": "done | done-with-findings | challenged | blocked | test-failures | budget-exhausted | ok | error",
-  "phaseRun": "surface | plan | develop | test | full",
-  "brief":   { "goal", "nonGoals", "assumptions": [{ "id", "text", "source" }], "unknowns", "constraints", "acceptanceCriteria" },
-  "repoMap": { "summary", "keyFiles", "conventions", "testCommand", "lintCommand" },
-  "surface": { "assumptionVerdicts", "challenges": [{ "id", "severity", "title", "evidence", "counterproposal", "recommendation" }], "openQuestions", "proceed" },
-  "plan":    { "goal", "tasks": [{ "id", "title", "intent", "files", "steps", "acceptance", "testPlan", "dependsOn" }], "testStrategy", "risks", "planChallenges", "rationale" },
-  "taskResults": [ { "id", "status", "changedFiles", "summary", "testEvidence", "deviations" } ],
-  "suite":   { "ran", "command", "pass", "failures" },
-  "review":  { "findings": [{ "id", "kind", "file", "severity", "title", "description", "impact", "fixRecommendation" }], "summary" },
-  "fixedFindings": [ "finding ids" ],
-  "changedFiles": [ "every file the run touched" ],
-  "tokens":  { "surface", "plan", "develop", "test", "total" },
-  "effort":  "low | medium | high | xhigh | max"
-}
+The run's state is four files, written to the session scratchpad if the environment provides one, else `~/.crucible/<repo-basename>/<timestamp>/`:
+
+```
+brief.md       goal · non-goals · assumptions table (id | claim | source) · unknowns
+               · constraints · acceptance criteria · the user's settled rulings
+challenges.md  verdict per assumption · surviving challenges (evidence,
+               counterproposal, recommendation) · open questions
+plan.md        ≤8 tasks (id | files | steps | acceptance | test plan | dependsOn)
+               · test strategy · risks
+progress.md    per task: files changed, test evidence, deviations
 ```
 
-Standalone phase invocations return `status: "ok"` — the build verdict belongs to `test`/`full`.
+They exist for compaction recovery — re-read, never recalled — and stay out of the working tree so the reviewer's `git diff` is exactly the change. The final report is prose: status (`done` / `done-with-findings` / `challenged` / `blocked`), the debate record (grill answers, each challenge and its ruling, one line per defender-killed challenge), tasks and deviations, suite command and result, verify rounds run, correctness findings fixed vs remaining with `file:line`, what the simplification angle removed or was declined, and the run directory.
 
-### Fallback without an orchestrator
+### Portability
 
-`PLAYBOOK.md` is the same pipeline as a sequential single-loop protocol, written tool-agnostically per the [Agent Skills open standard](https://agentskills.io/specification) portability rules: no tool names, capability-conditional wording ("if your environment can spawn fresh isolated agents…"), phase artifacts persisted to `.crucible/` files as compaction-proof memory. Codex CLI discovers the same SKILL.md from `.agents/skills/` and lands on the playbook path; its native `codex review` slots in as the fresh-eyes reviewer.
+Written tool-agnostically per the [Agent Skills open standard](https://agentskills.io/specification): no tool names, capability-conditional wording ("if your environment can spawn fresh isolated agents…"), and a single-loop fallback for every step that would otherwise use one. Claude Code and Codex CLI discover the same SKILL.md and run the same pipeline; native review and simplification commands (e.g. `codex review`) slot into the verify loop's two angles where they exist.
 
 ### Validation
 
-`eval/crucible-smoke.mjs` executes the actual workflow script under a stub runtime (canned agent responses, real control flow): 38 checks covering the happy path, the challenged halt, phase chaining, blocked tasks, the stagnant fix loop, refute-panel kills and effort-preset variants, finding fixes, budget floors/exhaustion, and failure surfacing. Zero tokens. Pipeline-behavior changes must keep it green; prompt-quality changes need field runs like the sibling skill's.
+Field runs only. The 1.x smoke test (`eval/crucible-smoke.mjs`) executed the Workflow script's control flow under a stub runtime; with the script gone there is no control flow to execute, and prompt-quality changes were never covered by it anyway — the same limitation as the sibling skill's prompt half, which its fixture harness measures instead.
 
 ### Future work
 
@@ -346,9 +353,7 @@ agentic-toolkit/
 │   │   ├── SKILL.md              # trigger description, arg table, report format
 │   │   └── adversarial-review.mjs # the Workflow script (single source of truth)
 │   ├── crucible/
-│   │   ├── SKILL.md              # dual-path: Workflow orchestration or playbook
-│   │   ├── crucible.mjs          # phase-parameterized Workflow script
-│   │   └── PLAYBOOK.md           # sequential fallback (Codex CLI, no-Workflow)
+│   │   └── SKILL.md              # the whole pipeline: phases, gates, caps, report
 │   ├── session-migration/
 │   │   ├── SKILL.md              # store model, the two recovery paths, safety rules
 │   │   └── ccd_sessions.py       # locator + import/move/job (no orchestration)
@@ -362,13 +367,12 @@ agentic-toolkit/
 │       └── apps.example, hosts.example, browser.example
 ├── eval/
 │   ├── README.md                # seeded-bug fixture protocol (adversarial-review)
-│   ├── score.mjs                # precision/recall scoring vs a fixture manifest
-│   └── crucible-smoke.mjs       # stub-runtime control-flow test (crucible)
+│   └── score.mjs                # precision/recall scoring vs a fixture manifest
 ├── ARCHITECTURE.md
 ├── CHANGELOG.md
 └── README.md
 ```
 
-The two pipeline skills instruct the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to the SKILL.md; the script orchestrates all subagents deterministically. session-migration is plain Bash over the Python script beside its SKILL.md — no Workflow tool, macOS only. cf-access is the same shape, except its scripts are also **installed** outside the skill: `install.sh` symlinks them into a bin dir (default `~/.claude/bin`) and loads a launchd agent, so the skill directory stays the single source of truth while the daemon and every wired client run from stable paths. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. For Codex CLI the same SKILL.md is discovered via `.agents/skills` — crucible degrades to its playbook there; adversarial-review requires the Workflow tool.
+adversarial-review instructs the model to invoke the Claude Code **Workflow tool** with `scriptPath` pointing at the `.mjs` next to its SKILL.md; the script orchestrates all subagents deterministically. crucible is pure prose — its SKILL.md is the pipeline, and it spawns isolated agents itself where they earn it. session-migration is plain Bash over the Python script beside its SKILL.md — macOS only. cf-access is the same shape, except its scripts are also **installed** outside the skill: `install.sh` symlinks them into a bin dir (default `~/.claude/bin`) and loads a launchd agent, so the skill directory stays the single source of truth while the daemon and every wired client run from stable paths. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. Codex CLI discovers the same SKILL.md via `.agents/skills` — crucible runs there in full; adversarial-review requires the Workflow tool.
 
-Pipeline changes are validated with the `eval/` harness — seeded-bug fixtures scored for recall/precision/cost (adversarial-review) and the stub-runtime smoke test (crucible) — because the research is clear that multi-agent protocol changes don't universally help and must be measured.
+adversarial-review's pipeline changes are validated with the `eval/` harness — seeded-bug fixtures scored for recall/precision/cost — because the research is clear that multi-agent protocol changes don't universally help and must be measured. crucible has no executable surface left to test; its changes are validated by field runs.

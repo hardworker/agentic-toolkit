@@ -37,31 +37,31 @@ Requires: Claude Code with the Workflow tool. Optional: [Codex CLI](https://gith
 
 ## crucible
 
-End-to-end build pipeline named after the vessel ore is tested in under fire: an idea goes in, gets its assumptions attacked by a skeptic panel, survives a debate with you, becomes a judged plan, then tested code. Budget-scaled at every fan-out.
+End-to-end build pipeline named after the vessel ore is tested in under fire: an idea goes in, gets grilled, gets its assumptions attacked by a skeptic panel, survives a debate with you, becomes a judged plan, then tested code. One SKILL.md, no orchestrator script.
 
 ```
-Recon → [skeptic panel ∥] → consolidate → ══ debate gate ══
-      → [competing plans ∥] → plan judge → ══ plan gate ══
-      → sequential develop → test suite + fix loop → hostile review → refute votes → fix
+Grill → recon → [skeptic lenses ∥] → consolidate → defend → ══ debate gate ══
+      → competing plans → judge → ══ plan gate ══ → sequential develop
+      → ⟳ suite + [correctness review ∥ simplification review] + refute + fix ⟳
 ```
 
-- Skeptics attack every assumption with file evidence (feasibility / necessity / scope / adversary lenses); you rule on the survivors — rulings are settled, never re-litigated.
+- The grill comes before anything costs tokens: ≤4 design-changing questions per round, 2 rounds max, and the answers become the assumptions the panel attacks.
+- Skeptics attack every assumption with file evidence (feasibility / necessity / scope / adversary lenses), assumptions handed over unattributed; a defender then tries to refute each challenge in the files, so only survivors reach you. Your rulings are settled, never re-litigated.
 - Plans compete (minimal vs robust vs refactor-first); a judge file-verifies their claims and synthesizes one, test-first when test infra exists.
-- Implementation is sequential with per-task test evidence; a fresh hostile reviewer plus a 2-vote refute panel gate the result.
-- Works without the Workflow tool too: [PLAYBOOK.md](skills/crucible/PLAYBOOK.md) is the same pipeline as a sequential protocol for Codex CLI or any Agent-Skills-compatible agent.
+- Implementation is sequential with per-task test evidence, then the verify loop runs suite → review → refute → fix until it comes back green and clean, with a stagnation breaker.
+- Each round reviews the diff from two independent angles: correctness (defects, design errors, unmet criteria, hollow tests) and simplification — surface waste (dead code, one-caller indirection, speculative options) plus over-built structure, walked down a YAGNI ladder: needs to exist at all → repo already has it → stdlib/platform covers it → plain code beats the abstraction. One reviewer asked for both dilutes into neither, and a simplification that changes behavior or undoes a confirmed fix is refuted like any other finding.
+- Phase artifacts are written outside the repo, so the reviewer always sees a clean working tree.
 
 ### Usage
 
 ```
-/crucible add rate limiting to the public API      # gated run: debate → plan gate → build → test
-/crucible --auto migrate configs to TOML           # one-shot; halts instead of guessing when a ruling is needed
-/crucible --effort low ...                         # cheap pass: 2 skeptics, 2 planners, no refute panel
-/crucible --effort high ...                        # wide net: 4 skeptics, 3 planners, 3 fix rounds
-/crucible --phase test                             # re-run a single phase
-/crucible --cwd ~/src/other-repo ...               # build in a checkout outside the cwd
+/crucible add rate limiting to the public API      # grill → debate → plan gate → build → verify loop
+/crucible --auto migrate configs to TOML           # no human: no gates; halts instead of guessing a ruling
+/crucible --effort low ...                         # cheap pass: 2 lenses, 2 plans, no defender, 1 verify round
+/crucible --effort high ...                        # wide net: 4 lenses, 3 plans, 3 verify rounds, 3 refute votes
 ```
 
-Requires: Claude Code with the Workflow tool for the orchestrated path; anything that can read/edit files and run shell commands for the playbook path.
+Requires: any agent that can read files, edit files and run shell commands. Isolated subagents are used for recon, the skeptic lenses, the defender and each review round when the environment has them, and every step falls back to single-loop when it doesn't.
 
 ## session-migration
 
