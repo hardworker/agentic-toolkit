@@ -5,6 +5,7 @@ them in the CLI `claude agents` view."""
 import argparse
 import datetime
 import difflib
+import functools
 import glob
 import json
 import os
@@ -20,6 +21,8 @@ STORE = os.environ.get(
 APP_CONFIG = os.path.expanduser("~/Library/Application Support/Claude/config.json")
 PROJECTS = os.path.expanduser("~/.claude/projects")
 JOBS = os.path.expanduser("~/.claude/jobs")
+
+RV_GLOB = "/tmp/cc-daemon-%d/*/rv/*.sock" % os.getuid()
 
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
 SCAN_LINE_CAP = 400
@@ -198,8 +201,90 @@ def cli_record(cli, meta):
         "lastActivityAt": meta["lastActivityAt"],
         "createdAt": meta["createdAt"] or meta["lastActivityAt"],
         "hasJob": os.path.isdir(os.path.join(JOBS, cli[:8])),
+        "hasBgClaim": cli[:8] in rv_sockets(),
         "source": "cli",
     }
+
+
+@functools.lru_cache(maxsize=1)
+def rv_sockets():
+    return {os.path.basename(p)[:-5]: p for p in glob.glob(RV_GLOB)}
+
+
+def process_lines(pids):
+    try:
+        out = subprocess.run(
+            ["ps", "-o", "pid=,command=", "-p", ",".join(str(p) for p in pids)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    named = {}
+    for line in out.splitlines():
+        parts = line.split()
+        if parts and parts[0].isdigit():
+            named[int(parts[0])] = " ".join(parts[1:3])
+    return named
+
+
+def bg_claim(cli):
+    """A background agent listening on the session's rendezvous socket makes
+    `claude --resume` exit 1, which the desktop app reports as a crash.
+
+    None: no socket. holders None: lsof failed, treat as live. []: stale
+    socket, nothing listening. Otherwise the pids holding it.
+    """
+    sock = rv_sockets().get(cli[:8])
+    if not sock:
+        return None
+    try:
+        out = subprocess.run(
+            ["lsof", "-t", sock], capture_output=True, text=True, timeout=20
+        ).stdout
+        holders = sorted({int(p) for p in out.split() if p.isdigit()})
+    except (OSError, subprocess.SubprocessError, ValueError):
+        holders = None
+    return {"socket": sock, "holders": holders}
+
+
+def resume_command(rec, cli, fork=False):
+    return "cd %s && claude --resume %s%s" % (
+        rec["cwd"] or ".",
+        cli,
+        " --fork-session" if fork else "",
+    )
+
+
+def claim_report(rec, claim):
+    holders = claim["holders"]
+    if holders is None:
+        who = "  holder   unknown (lsof unavailable) — treat as live"
+    elif not holders:
+        who = "  holder   none — the socket is stale, no process is listening"
+    else:
+        named = process_lines(holders)
+        who = "\n".join(
+            "  holder   pid %d  %s" % (pid, named.get(pid) or "?") for pid in holders
+        )
+    if holders:
+        action = """Release the claim first:
+  - if `claude agents` lists it as running, stop it there
+  - a finished job (state.json says done/idle) leaves no Stop control;
+    that is a leftover daemon, so end it yourself:
+      kill -TERM %s
+    (children die with it; nothing is in flight once state is done)""" % " ".join(
+            str(p) for p in holders
+        )
+    else:
+        action = "Remove the stale socket, then retry:\n  rm %s" % claim["socket"]
+    return "  socket   %s\n%s\n\n%s\n\nOr branch a copy, which needs no claim:\n  %s" % (
+        claim["socket"],
+        who,
+        action,
+        resume_command(rec, rec["cliSessionId"], fork=True),
+    )
 
 
 def accounts():
@@ -243,6 +328,7 @@ def load_sessions(include_archived=True, include_cli=True):
                     "lastActivityAt": data.get("lastActivityAt") or 0,
                     "createdAt": data.get("createdAt") or 0,
                     "hasJob": bool(cli) and os.path.isdir(os.path.join(JOBS, cli[:8])),
+                    "hasBgClaim": bool(cli) and cli[:8] in rv_sockets(),
                     "source": "desktop",
                 }
             )
@@ -369,6 +455,8 @@ def fmt(rec, current, show_score=False):
     if rec["isArchived"]:
         marks.append("archived")
     marks.append("cli-job" if rec["hasJob"] else "no-cli-job")
+    if rec["hasBgClaim"]:
+        marks.append("bg-socket")
     head = "%.2f  " % rec["score"] if show_score else ""
     label = rec["title"] or rec["worktreeName"] or rec["cwdBase"] or "(untitled)"
     out = "%s%-42s  %s" % (head, label[:42], rec["sessionId"] or rec["cliSessionId"])
@@ -458,6 +546,14 @@ def build_job(rec, detail=None):
 
 def write_job(rec, detail=None, dry_run=False, force=False):
     state, timeline = build_job(rec, detail)
+    claim = bg_claim(state["resumeSessionId"])
+    if claim and claim["holders"] != []:
+        die(
+            "%s is still claimed by a background agent — its job dir belongs to that "
+            "live daemon\n%s\n\nWriting the entry would overwrite the running agent's "
+            "state.json with a fabricated done/idle,\nwhich is what removes its Stop "
+            "control in `claude agents`." % (state["resumeSessionId"], claim_report(rec, claim))
+        )
     job_dir = os.path.join(JOBS, state["daemonShort"])
     exists = os.path.isdir(job_dir)
     if exists and not force:
@@ -551,6 +647,21 @@ def cmd_import(args):
     if not transcript_path(rec):
         die("no CLI transcript for %s — import reads the transcript, not the record" % cli)
 
+    claim = bg_claim(cli)
+    if claim:
+        if claim["holders"] != []:
+            die(
+                "%s is still claimed by a background agent\n%s\n\n%s"
+                % (
+                    cli,
+                    claim_report(rec, claim),
+                    "Importing now would create the record and then crash the app with\n"
+                    '"Session … is currently running as a background agent (bg)" —\n'
+                    "--force does not help, the refusal comes from the CLI, not from here.",
+                )
+            )
+        print("warning: stale rendezvous socket %s (no listener)" % claim["socket"])
+
     imported_id = "local_" + cli
     owned = {imported_id, rec["sessionId"]} - {""}
     clash = [r for r in sessions if r["account"] == current and r["sessionId"] in owned]
@@ -590,7 +701,14 @@ def cmd_resume(args):
     print("  source     %s" % rec["source"])
     print("  transcript %s" % path)
     print("  cli job    %s" % ("yes" if rec["hasJob"] else "no — run `job` to list it in `claude agents`"))
-    print("\n  cd %s && claude --resume %s" % (rec["cwd"] or ".", cli))
+    claim = bg_claim(cli)
+    if claim and claim["holders"] != []:
+        print("\n%s is still claimed by a background agent — plain --resume will exit 1" % cli)
+        print(claim_report(rec, claim))
+        print("\nOr attach to the running agent instead:  claude agents")
+        return
+
+    print("\n  %s" % resume_command(rec, cli))
     print("  (add --fork-session to branch off instead of continuing in place)")
 
 

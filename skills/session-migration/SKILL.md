@@ -54,6 +54,23 @@ Default to **`import`** when the user wants the session back in front of them no
 
 Doing both produces two sidebar rows for one conversation. Both subcommands refuse when the other has already run; `--force` overrides.
 
+## Blocked by a background agent
+
+Both paths ultimately run `claude --resume <cliSessionId>`, and that refuses while a background agent holds the session:
+
+```
+Error: Session <id> is currently running as a background agent (bg).
+Use `claude agents` to find and attach to it, or add --fork-session to branch off a copy.
+```
+
+The desktop app surfaces this as **"Claude Code crashed"**, and stamps `error` / `errorCategory: process_crashed` on the record it just created. The record is fine; the resume behind it never started.
+
+The claim is a live listener on `/tmp/cc-daemon-<uid>/*/rv/<first-8-of-cliSessionId>.sock`, not anything in the job's `state.json`. So a job whose `state.json` reads `done` / `idle` can still own the session — and because the agents view files it under completed, **it offers no Stop control**. That combination is the trap: nothing looks running, yet every import crashes.
+
+`import` and `resume` preflight this and refuse with the holding pids. `--force` does not override it — the refusal comes from the CLI, not from the script. `job` and `move` refuse too, for a different reason: the job dir is keyed by the same `cli[:8]` as the socket, so it *is* the live daemon's job dir, and writing the synthesized entry would overwrite a running agent's `state.json` with a fabricated `done` / `idle` — manufacturing the very no-Stop-control state described above. Listings mark the session `bg-socket`, socket presence only, since whether it actually blocks depends on a live holder.
+
+To release it: stop the agent in `claude agents` if it appears there, otherwise it is a leftover daemon — `kill -TERM <pids>`, which also ends its child MCP servers. Check `inFlight.tasks` is 0 in `state.json` first; the transcript is on disk either way, so no conversation data rides on the process. Then re-run the import. `claude --resume <id> --fork-session` is the alternative that needs no claim, at the cost of a duplicate transcript under a new id.
+
 ## Tool
 
 `ccd_sessions.py`, in this skill's directory (the same directory as this SKILL.md). Everything below is `python3 <skill-dir>/ccd_sessions.py <subcommand>`; start with:
@@ -72,6 +89,8 @@ python3 <skill-dir>/ccd_sessions.py accounts
 | `move REF [--to ACCOUNT] [--copy] [--no-job] [--force] [--dry-run]` | Relocate the record **and** create the CLI job entry |
 | `job REF [--detail TEXT] [--force] [--dry-run]` | CLI job entry only — no account change |
 
+Listings flag a session `bg-socket` when a rendezvous socket for it exists — see the section above.
+
 `find` scores title, worktree name, branch, cwd basename, and — for untitled sessions — the first real user message from the transcript. For cli-only sessions the title is the CLI's own `ai-title` entry, read from the transcript header. `--search-transcripts` also greps transcript bodies, for when the user remembers content rather than a name. Listings flag `cli-only` and `cli-job` / `no-cli-job`.
 
 The CLI sweep reads the first 400 lines of each transcript (~1s for 160 sessions), so `find` sees terminal sessions the desktop app has never known about.
@@ -85,8 +104,8 @@ The CLI sweep reads the first 400 lines of each transcript (~1s for 160 sessions
 1. **Locate.** `find "<what the user called it>"`. Widen with a shorter query, a lower `--min-score`, or `--search-transcripts` before concluding it is not there. `list --all` is the fallback.
 2. **Confirm with the user** which session, by title + cwd + branch. Never guess between plausible candidates.
 3. **Pick the direction** from the direction table, then — if it is desktop-bound — the path from the tradeoff table; say which one you are using and what it costs.
-4. **Preview** with `--dry-run`, then apply.
-5. **After `import`**: restore the title — the import leaves it untitled, and the script prints what to set. If your environment exposes session management (`set_session_title`), call it with `local_<cliSessionId>`; otherwise tell the user to rename the session in the app.
+4. **Preview** with `--dry-run`, then apply. A background-agent refusal here is the trap above, not a bad ref — release the claim and retry rather than reaching for `--force`.
+5. **After `import`**: restore the title — the import leaves it untitled, and the script prints what to set. If the same `sessionId` was deleted in the app UI earlier in this app run, the row stays out of the sidebar even though the import succeeded: the tombstone is cleared and the map is repopulated, but the renderer's own list keeps the deletion until a relaunch. `list_sessions` reporting the session while the user cannot see it is exactly that case — tell them to quit and reopen rather than importing again. If your environment exposes session management (`set_session_title`), call it with `local_<cliSessionId>`; otherwise tell the user to rename the session in the app.
 6. **CLI view**: `job <REF> --detail "<one-liner>"` if the session should also show in `claude agents`. `move` does this automatically.
 7. **Verify before reporting success**: `list_sessions` must show the session for `import`; `claude agents --json --all` must contain the `cliSessionId` for `job`.
 8. **Refresh instructions**: `move` needs a full desktop restart; the `claude agents` list is read at startup, so it needs a quit and reopen.

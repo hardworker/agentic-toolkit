@@ -80,6 +80,8 @@ Where you can send a session:
 
 `import` and `move` are mutually exclusive — they produce different session ids, so running both duplicates the row in recents. Each refuses when the other has run.
 
+If a background agent still holds the session, `claude --resume` exits 1 and the desktop app shows "Claude Code crashed" over the record it just created. The claim is a socket, not a status, so a job that reads `done` in `claude agents` can still own it — and that view then offers no Stop control. `import` and `resume` check for this first and print the holding pids; `--force` will not push past it. `job` and `move` refuse as well — they would otherwise overwrite the live agent's job state with a fake `done`, which is what removes its Stop control in the first place.
+
 ### Usage
 
 ```

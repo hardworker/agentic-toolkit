@@ -96,6 +96,23 @@ Initial release: keep CLI tools, Node clients and long-running MCP servers authe
 
 # session-migration
 
+## [1.2.0] — 2026-07-29
+
+Preflight the background-agent claim. Importing a session whose background agent was still parked created the desktop record and then crashed the app — `claude --resume` exits 1 with "currently running as a background agent (bg)", which the app reports as "Claude Code crashed" and stamps on the record as `errorCategory: process_crashed`.
+
+### Added
+
+- **Claim detection** — `bg_claim()` looks for a live listener on `/tmp/cc-daemon-<uid>/*/rv/<first-8-of-cliSessionId>.sock` and resolves the holding pids with `lsof`. The claim lives in that socket, not in the job's `state.json`, which is why a job reading `done` / `idle` can still own the session — and why the agents view, which files such a job under completed, offers no Stop control for it.
+- **`import` refuses a claimed session** and prints the socket, the holding pids with their command lines, the `kill -TERM` line, and the `--fork-session` alternative. `--force` deliberately does not override: the refusal originates in the CLI, so forcing only reproduces the crash.
+- **`resume` warns** on the same condition instead of printing a command that would exit 1, and points at `claude agents` to attach.
+- **`job` and `move` refuse a claimed session too**, in `write_job` — the one function both route through. The job dir is keyed by the same `cli[:8]` as the socket, so it is the live daemon's own job dir, and writing the synthesized entry would overwrite a running agent's `state.json` with a fabricated `done` / `idle`: the command would manufacture precisely the missing-Stop-control state that made this bug hard to diagnose.
+- **`bg-socket` mark** in `list` / `find` output, plus `hasBgClaim` on every record. The mark reports socket presence only — whether it blocks depends on a live holder, which the commands establish — so it deliberately asserts less than the refusals do. `rv_sockets()` is `lru_cache`d, so one `glob` per process serves the marks and the guards from a single source; `lsof` runs only on the paths that can refuse.
+
+### Notes
+
+- A socket with no listener is reported as stale and only warns. `lsof` matches unix sockets by path name, so a deleted socket whose original holder is still alive is still treated as held — the conservative side of the trade.
+- **Re-importing an id deleted earlier in the same app run needs a restart.** `--force` clears the `deleted_<uuid>` tombstone and the import repopulates the main-process map — `list_sessions`, which reads that map via `getAllSessions()`, reports the session present — yet the sidebar still hides the row, so the stale state is the renderer's own list, not the map. Only a relaunch clears it. That split (tool sees it, user does not) is the tell; SKILL.md now says so at the post-import step.
+
 ## [1.1.0] — 2026-07-29
 
 Both directions. 1.0.0 only knew about sessions that had a desktop record, which meant it could move a session between accounts but was blind to the 147 terminal-only transcripts on this machine and had nothing to say about reopening a desktop session in the CLI.

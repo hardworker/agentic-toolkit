@@ -291,6 +291,8 @@ Because the transcript is the durable artifact and the other two stores are poin
 
 Only the desktop direction needs a decision, which is why `import` and `move` carry a tradeoff table and refuse to both run. Desktop → CLI is free.
 
+Every route through `claude --resume` has one hard precondition: no background agent may hold the session. The claim is a live listener on `/tmp/cc-daemon-<uid>/*/rv/<first-8-of-cliSessionId>.sock`, and while it exists the resume exits 1 — which the desktop app reports as "Claude Code crashed" over a record it already created. Crucially the claim is not reflected in the job's `state.json`: a job reading `done` / `idle` can still own the socket, and the agents view files that job under completed and shows no Stop control, so nothing in either UI looks running. `import` and `resume` therefore preflight the socket and name the holding pids; `--force` is deliberately powerless against it, because the refusal comes from the CLI. `write_job` preflights it as well, which covers `job` and `move` in one place: the job dir is keyed by the same `cli[:8]` as the socket, so synthesizing an entry over a live daemon would replace its `state.json` with a fabricated `done` / `idle` and strip the Stop control from the one UI that still had it.
+
 The inventory unifies both worlds: desktop records keyed by `cliSessionId`, plus every `~/.claude/projects/*/<uuid>.jsonl` not already claimed by one, tagged `source: cli`. CLI titles come from the transcript's own `ai-title` entry and the location from its `cwd`/`gitBranch` header fields — a header-only read (first 400 lines) that costs ~1s across 160 sessions, cheap enough that no cache exists to go stale.
 
 ### Design decisions
