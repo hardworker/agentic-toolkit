@@ -35,8 +35,9 @@ All of these live in this skill's directory, beside this SKILL.md.
 | `cf-access` | token broker: `token`, `cookie`, `env`, `curl`, `login`, `list` |
 | `cf-access-proxy` | localhost HTTP fronts; injects and renews `cf-access-token` per request |
 | `cf-access-preload.cjs` | `--require` shim: patches `http`/`https`/`fetch` to route allowed hosts into the proxy |
-| `install.sh` | symlinks the three into a bin dir, seeds config, loads the launchd agent |
-| `apps.example`, `hosts.example` | config templates (placeholders — edit after install) |
+| `cf-access-hosts.cjs` | the suffix allowlist, required by both the proxy and the preload so the boundary has one owner |
+| `install.sh` | symlinks them into a bin dir, seeds config, loads the launchd agent |
+| `apps.example`, `hosts.example`, `browser.example` | config templates (placeholders — edit after install) |
 
 ## Install
 
@@ -46,7 +47,7 @@ All of these live in this skill's directory, beside this SKILL.md.
 <skill-dir>/install.sh uninstall    # unload daemon, remove our symlinks; keeps config and tokens
 ```
 
-`--bin-dir DIR` (default `~/.claude/bin`) and `--no-daemon` are the only knobs. `CF_ACCESS_HOLD=60 ./install.sh` writes that value into the plist and later plain re-runs preserve it. Installs are **symlinks**, so editing a script in the skill directory is live immediately — but the daemon holds the old code until it restarts:
+`--bin-dir DIR` (default `~/.claude/bin`) and `--no-daemon` are the only flags. Any `CF_ACCESS_*` knob set in the environment is written into the plist — `CF_ACCESS_HOLD=60 ./install.sh` — and later plain re-runs preserve it. This matters because launchd hands the daemon nothing else: a knob that is not in the plist has no effect on it. Installs are **symlinks**, so editing a script in the skill directory is live immediately — but the daemon holds the old code until it restarts:
 
 ```bash
 launchctl kickstart -k gui/$(id -u)/local.cf-access-proxy
@@ -110,6 +111,7 @@ Two details worth knowing, because both look like bugs otherwise: an app URL is 
 - **Gating is learned, not configured.** The first request to an origin goes out bare; only a redirect to `cdn-cgi/access/login` proves a token is needed. Non-gated hosts therefore never trigger an SSO attempt, and a newly gated host starts getting tokens on its own.
 - **A client's own credential wins.** A request already carrying a service token (`CF-Access-Client-Id` + `CF-Access-Client-Secret`), a `cf-access-token`, or a `CF_Authorization` cookie is forwarded untouched and triggers no SSO. Only if Access *rejects* it does the broker step in and retry — so a working credential is never overridden, and a broken one still gets service.
 - **No request ever waits on a human indefinitely.** A request holds for at most `CF_ACCESS_HOLD` seconds (default 20, under the usual 30s client timeout) and is then answered `511`, while the login keeps running in the background — so the client's retry lands on a token. `CF_ACCESS_HOLD=0` never waits at all. A mint that wedges is abandoned after `CF_ACCESS_LOGIN_DEADLINE` (default 120s); the proxy stops waiting on it whether or not the child can be killed, because `cloudflared` ignores `SIGTERM` and holds its pipe open.
+- **No login waits on a human indefinitely either.** `cf-access` itself abandons an unanswered browser SSO after `CF_ACCESS_LOGIN_DEADLINE`, killing `cloudflared` and its children (`SIGKILL`, and `pkill -P` for the grandchild that holds the pipe). The bound is in the broker, so it protects every caller — a shell, `cf-access env` launching an MCP server, the proxy — not just the proxy. A stashed token is put back when the login is abandoned.
 - **Renewal.** Tokens are cached per origin until 10 min before expiry, minting is single-flight (a stampede collapses into one mint), and a browser login is rate-limited to once a minute so a burst of failures cannot stack up tabs.
 - **Request bodies are buffered** so a token retry replays the request byte-for-byte.
 - Status codes it originates: `511` no token available (run `cf-access login <origin>`), `403` host not in `hosts`, `508` the upstream is the proxy itself, `502` transport error, `400` missing upstream header.
@@ -159,7 +161,7 @@ For a non-Node client, give it a fixed port instead — `8790 https://ci.example
 |---|---|---|
 | client gets a 302 to `cdn-cgi/access/login` | no token, or the client never went through the proxy | `cf-access login <origin>`; check the client is Node (the preload only patches Node) or give it a fixed port |
 | `511 no token for <origin>` from the proxy | SSO needed and not possible headlessly | `cf-access login <origin>` in a session with a browser |
-| `403 <host> is not an allowed upstream` | host missing from `hosts` | add the domain suffix; no restart needed |
+| `403 <host> is not an allowed upstream` | host missing from `hosts` | add the domain suffix; no restart needed — the proxy and already-running preloaded clients both pick it up within 2s |
 | `508 … is this proxy` | an upstream origin points back at a proxy port | fix the `proxy` route or the client's URL |
 | `token FAILED` in the log | login failed, or inside the 60s cooldown | run `cf-access login <origin>` by hand and watch it |
 | worked yesterday, dead today | token expired in a process that snapshotted it | move that client to the proxy or the preload |

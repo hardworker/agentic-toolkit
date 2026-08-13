@@ -8,37 +8,24 @@
 // apps — so a gated app that appears next month is already covered: no route entry,
 // no config, no code change, in any client.
 
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
 const http = require('http');
 const https = require('https');
 
-const HOSTS_FILE =
-  process.env.CF_ACCESS_HOSTS_FILE || path.join(os.homedir(), '.config/cloudflare-access/hosts');
-const PORT = Number(process.env.CF_ACCESS_PROXY_DYNAMIC_PORT || 8780);
-
-let suffixes;
+// This runs inside every Node process on the machine, so a missing or broken sibling must
+// degrade to patching nothing rather than throw.
+let hosts = null;
 try {
-  suffixes = fs
-    .readFileSync(HOSTS_FILE, 'utf8')
-    .split('\n')
-    .map((l) => l.replace(/#.*/, '').trim().replace(/^\*?\./, ''))
-    .filter(Boolean);
-} catch {
-  suffixes = []; // no hosts file: patch nothing rather than guess at a domain
-}
+  hosts = require('./cf-access-hosts.cjs');
+} catch {}
 
-const matches = (host) => {
-  const bare = (host || '').split(':')[0].toLowerCase();
-  return suffixes.some((s) => bare === s || bare.endsWith(`.${s}`));
-};
+const PORT = hosts?.PORT;
+const matches = (host) => hosts.matches(host);
 
 // Never patch the proxy itself: it is the thing that reaches the real hosts, so
 // rewriting its outbound requests would point it at its own port forever.
 const isProxy = /(^|\/)cf-access-proxy$/.test(process.argv[1] || '');
 
-if (suffixes.length > 0 && !isProxy) {
+if (hosts && hosts.suffixes().length > 0 && !isProxy) {
   const UP = 'x-cf-access-upstream';
   const SCHEME = 'x-cf-access-scheme';
 

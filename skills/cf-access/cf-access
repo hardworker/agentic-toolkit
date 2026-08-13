@@ -21,7 +21,8 @@ set -eu
 
 APPS_FILE="${CF_ACCESS_APPS_FILE:-$HOME/.config/cloudflare-access/apps}"
 BROWSER_FILE="${CF_ACCESS_BROWSER_FILE:-$HOME/.config/cloudflare-access/browser}"
-SKEW="${CF_ACCESS_SKEW:-600}" # refresh when under this many seconds of life left
+SKEW="${CF_ACCESS_SKEW:-600}"                          # refresh when under this many seconds of life left
+LOGIN_DEADLINE="${CF_ACCESS_LOGIN_DEADLINE:-120}"      # kill an unanswered browser SSO after this
 case "$(uname -s)" in
   Darwin) PLATFORM_OPENER=open ;;
   *) PLATFORM_OPENER=xdg-open ;;
@@ -49,19 +50,28 @@ configured_apps() {
   sed -E 's/#.*//; s/[[:space:]]+//g' "$APPS_FILE" | grep -E '^https?://' || true
 }
 
-# Seconds of life left in a JWT; -1 when absent or unparseable.
+# One claim out of a JWT payload; empty when absent or unparseable. An array claim
+# (`aud`) yields its first element.
 # stdout.write, not console.log: console.log colorizes numbers under FORCE_COLOR,
 # and the ANSI codes break the numeric tests downstream.
-jwt_ttl() {
+jwt_claim() {
   node -e '
-    const out = (n) => process.stdout.write(String(n));
-    const p = (process.argv[1] || "").split(".")[1];
-    if (!p) { out(-1); process.exit(0) }
+    const p = (process.argv[2] || "").split(".")[1];
+    if (!p) process.exit(0);
     try {
-      const { exp } = JSON.parse(Buffer.from(p, "base64url").toString());
-      out(Number.isFinite(exp) ? Math.floor(exp - Date.now() / 1000) : -1);
-    } catch { out(-1) }
-  ' "$1" 2>/dev/null || echo -1
+      const v = JSON.parse(Buffer.from(p, "base64url").toString())[process.argv[1]];
+      process.stdout.write(String(Array.isArray(v) ? v[0] : (v ?? "")));
+    } catch {}
+  ' "$1" "$2" 2>/dev/null
+}
+
+# Seconds of life left in a JWT; -1 when absent or unparseable.
+jwt_ttl() {
+  exp=$(jwt_claim exp "$1")
+  case "$exp" in
+    '' | *[!0-9]*) echo -1 ;;
+    *) echo $((exp - $(date +%s))) ;;
+  esac
 }
 
 cached_token() {
@@ -127,13 +137,7 @@ resolve_browser() {
 token_cache_files() {
   t=$(cached_token "$1")
   [ -n "$t" ] || return 0
-  aud=$(node -e '
-    const p = (process.argv[1] || "").split(".")[1];
-    try {
-      const { aud } = JSON.parse(Buffer.from(p, "base64url").toString());
-      process.stdout.write(String(Array.isArray(aud) ? aud[0] : aud || ""));
-    } catch {}
-  ' "$t" 2>/dev/null)
+  aud=$(jwt_claim aud "$t")
   [ -n "$aud" ] || return 0
   ls "$HOME/.cloudflared/"*-"$aud"-token 2>/dev/null || true
 }
@@ -186,6 +190,20 @@ do_login() {
     eval "${CF_ACCESS_BROWSER:-$PLATFORM_OPENER} \"\$url\"" >/dev/null 2>&1 || true
   fi
 
+  # cloudflared waits for the SSO callback forever, so a login nobody completes would hang
+  # its caller for good — a shell, or an MCP launcher via `cf-access env`. The bound lives
+  # here, where every caller routes through, rather than in one caller. SIGKILL and
+  # `pkill -P`: cloudflared ignores SIGTERM, and the grandchild is what holds the pipe.
+  deadline=$(($(date +%s) + LOGIN_DEADLINE))
+  while kill -0 "$cfd_pid" 2>/dev/null; do
+    if [ "$(date +%s)" -ge "$deadline" ]; then
+      echo "cf-access: no login within ${LOGIN_DEADLINE}s — abandoning $1" >&2
+      pkill -9 -P "$cfd_pid" 2>/dev/null || true
+      kill -9 "$cfd_pid" 2>/dev/null || true
+      break
+    fi
+    sleep 0.5
+  done
   wait "$cfd_pid" 2>/dev/null || true
   rm -f "$out"
 
@@ -199,13 +217,17 @@ get_token() {
   app=$(app_origin "$2")
 
   t=$(cached_token "$app")
-  if [ -z "$t" ] || [ "$(jwt_ttl "$t")" -lt "$SKEW" ]; then
+  ttl=-1
+  [ -z "$t" ] || ttl=$(jwt_ttl "$t")
+  if [ "$ttl" -lt "$SKEW" ]; then
     [ "$allow_login" = yes ] || return 1
     do_login "$app"
     t=$(cached_token "$app")
+    ttl=-1
+    [ -z "$t" ] || ttl=$(jwt_ttl "$t")
   fi
 
-  [ -n "$t" ] && [ "$(jwt_ttl "$t")" -gt 0 ] || return 1
+  [ "$ttl" -gt 0 ] || return 1
   printf '%s' "$t"
 }
 

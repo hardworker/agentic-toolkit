@@ -4,7 +4,7 @@
 #
 # Either an account address, resolved to the profile signed in as it, in whichever
 # Chromium browser has it (Chrome, Chrome Beta/Canary, Brave, Edge, Vivaldi, Arc):
-you@work.example
+# you@work.example
 #
 # ...or a command, for any other browser. The login URL is appended to it:
 # open -na "Google Chrome" --args --profile-directory="Profile 2"

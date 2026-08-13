@@ -17,7 +17,7 @@ LABEL=local.cf-access-proxy
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/cf-access-proxy.log"
 DYNAMIC_PORT="${CF_ACCESS_PROXY_DYNAMIC_PORT:-8780}"
-SCRIPTS="cf-access cf-access-proxy cf-access-preload.cjs"
+SCRIPTS="cf-access cf-access-proxy cf-access-preload.cjs cf-access-hosts.cjs"
 
 cmd=install
 daemon=yes
@@ -49,18 +49,37 @@ link_scripts() {
     ln -sfn "$SKILL_DIR/$s" "$BIN_DIR/$s"
     say "linked  $BIN_DIR/$s -> $SKILL_DIR/$s"
   done
-  chmod +x "$SKILL_DIR/cf-access" "$SKILL_DIR/cf-access-proxy"
 }
 
 seed_configs() {
   mkdir -p "$CONFIG_DIR"
-  for f in apps hosts; do
+  # Driven by the .example files, so adding one seeds it with no edit here.
+  for ex in "$SKILL_DIR"/*.example; do
+    f=$(basename "$ex" .example)
     if [ -f "$CONFIG_DIR/$f" ]; then
       say "kept    $CONFIG_DIR/$f"
     else
-      cp "$SKILL_DIR/$f.example" "$CONFIG_DIR/$f"
+      cp "$ex" "$CONFIG_DIR/$f"
       say "seeded  $CONFIG_DIR/$f (edit it: the examples are placeholders)"
     fi
+  done
+}
+
+# launchd hands the daemon nothing but what the plist carries, so every knob the runtime
+# reads has to be listed here or it silently does nothing under launchd. Env wins, then
+# whatever the current plist already carries — so `CF_ACCESS_HOLD=60 ./install.sh` sticks
+# across later plain re-runs. Defaults stay owned by the runtime: an unset knob is absent.
+TUNABLES="CF_ACCESS_HOLD CF_ACCESS_SKEW CF_ACCESS_LOGIN_COOLDOWN CF_ACCESS_LOGIN_DEADLINE
+  CF_ACCESS_PROXY_DYNAMIC_PORT CF_ACCESS_HOSTS_FILE CF_ACCESS_PROXY_CONFIG
+  CF_ACCESS_APPS_FILE CF_ACCESS_BROWSER_FILE"
+
+plist_env() {
+  for v in $TUNABLES; do
+    eval "val=\${$v:-}"
+    [ -n "$val" ] ||
+      val=$(plutil -extract "EnvironmentVariables.$v" raw "$PLIST" 2>/dev/null || true)
+    [ -n "$val" ] || continue
+    printf '    <key>%s</key>\n    <string>%s</string>\n' "$v" "$val"
   done
 }
 
@@ -71,9 +90,8 @@ write_plist() {
     exit 1
   }
 
-  # Env wins, then whatever the current plist already carries, then the default — so
-  # `CF_ACCESS_HOLD=60 ./install.sh` sticks across later plain re-runs.
-  hold=${CF_ACCESS_HOLD:-$(plutil -extract EnvironmentVariables.CF_ACCESS_HOLD raw "$PLIST" 2>/dev/null || echo 20)}
+  # Read before the heredoc truncates the file it reads from.
+  cf_env=$(plist_env)
 
   mkdir -p "$(dirname "$PLIST")" "$(dirname "$LOG")"
   # launchd starts with a bare PATH; the proxy shells out to cf-access, which needs
@@ -100,8 +118,7 @@ write_plist() {
     <string>$HOME</string>
     <key>CF_ACCESS_BIN</key>
     <string>$BIN_DIR/cf-access</string>
-    <key>CF_ACCESS_HOLD</key>
-    <string>$hold</string>
+$cf_env
   </dict>
 
   <key>RunAtLoad</key>
@@ -177,17 +194,23 @@ case "$cmd" in
     done
 
     say "config  $CONFIG_DIR"
-    for f in apps hosts; do
-      if [ -f "$CONFIG_DIR/$f" ]; then
-        n=$(grep -cvE '^\s*(#|$)' "$CONFIG_DIR/$f" || true)
-        say "  $f ($n entries)"
-      else
-        say "  $f MISSING"
-      fi
+    for ex in "$SKILL_DIR"/*.example; do
+      f=$(basename "$ex" .example)
+      [ -f "$CONFIG_DIR/$f" ] || say "  $f MISSING"
+    done
+    # Every file, not a hardcoded pair: `proxy` has no example and is the one the 508 in the
+    # troubleshooting table points at. Lines, not entries — each consumer parses its own.
+    for f in "$CONFIG_DIR"/*; do
+      [ -f "$f" ] || continue
+      n=$(grep -cvE '^[[:space:]]*(#|$)' "$f" || true)
+      say "  $(basename "$f") ($n lines)"
     done
 
     command -v cloudflared >/dev/null 2>&1 && say "cloudflared $(cloudflared --version 2>&1 | head -1)" ||
       say "cloudflared MISSING"
+
+    # From the layer that owns resolution, so status can't disagree with what SSO will do.
+    say "browser $("$BIN_DIR/cf-access" browser 2>/dev/null || echo '<unresolved>')"
 
     if [ "$(uname -s)" = Darwin ]; then
       if launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then

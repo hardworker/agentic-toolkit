@@ -37,22 +37,18 @@ check "unknown account falls back" "<default browser>" \
 # Skipped when no Chromium browser on this machine has a signed-in profile.
 state="$HOME/Library/Application Support/Google/Chrome/Local State"
 if [ -f "$state" ]; then
-  account=$(node -e '
+  # One pass for both halves of the fixture: an account and its directory read separately
+  # could disagree, and the expectation below is only meaningful if they match.
+  pair=$(node -e '
     const fs = require("fs");
-    const cache = JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profile?.info_cache || {};
-    for (const v of Object.values(cache)) {
-      const who = v.user_name || v.gaia_name;
-      if (who) { process.stdout.write(who); break }
-    }
-  ' "$state")
-  dir=$(node -e '
-    const fs = require("fs");
-    const want = process.argv[2].toLowerCase();
     const cache = JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profile?.info_cache || {};
     for (const [d, v] of Object.entries(cache)) {
-      if ((v.user_name || v.gaia_name || "").toLowerCase() === want) { process.stdout.write(d); break }
+      const who = v.user_name || v.gaia_name;
+      if (who) { process.stdout.write(`${who}|${d}`); break }
     }
-  ' "$state" "$account")
+  ' "$state")
+  account=${pair%%|*}
+  dir=${pair#*|}
   check "account resolves to its profile" \
     "open -na \"Google Chrome\" --args --profile-directory=\"$dir\"" \
     "$(CF_ACCESS_BROWSER="$account" "$CF" browser)"

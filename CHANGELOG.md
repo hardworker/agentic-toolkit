@@ -4,6 +4,28 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.5.0] — 2026-08-13
+
+### Added
+
+- **No login hangs forever.** `cloudflared` waits for the SSO callback indefinitely, so a login nobody completes used to wedge its caller for good — a shell, or an MCP server launched through `cf-access env`. `cf-access` now abandons one after `CF_ACCESS_LOGIN_DEADLINE` (default 120s, the same knob the proxy uses), killing `cloudflared` and the grandchild that holds the pipe (`SIGKILL`, then `pkill -P`), and putting the stashed token back. The proxy already bounded its own mints; the bound now sits in the broker, where every caller routes through.
+- **`status` sees the whole config dir**, not a hardcoded `apps`/`hosts` pair — so the `proxy` routes file, the one the `508` troubleshooting row points at, finally appears. It also prints the resolved SSO browser by asking `cf-access browser`, so the diagnostic cannot disagree with what a login will actually do. Counts are labelled `lines` rather than `entries`: each consumer parses the file its own way, and the old count claimed more apps than the broker used.
+- **`browser.example` is seeded** with the other templates; its placeholder is commented out, so a seeded copy is inert instead of making every login warn.
+
+### Changed
+
+- **The suffix allowlist has one implementation** (`cf-access-hosts.cjs`, required by the proxy and the preload). It is the security boundary, and it existed twice — already diverged on freshness: the proxy re-read the file on *every request* while the preload read it once at startup and never again. Now cached for 2s in one place, which also makes the troubleshooting table's "no restart needed" true for already-running preloaded clients, and takes the only per-request disk read off the proxy's hot path. Deliberately a TTL rather than `fs.watchFile`: a watcher inside a `NODE_OPTIONS` shim would keep every Node process on the machine from exiting.
+- **`install.sh` carries every `CF_ACCESS_*` knob into the plist**, not just `CF_ACCESS_HOLD`. Persistence across plain re-runs is unchanged and now applies to all of them; unset knobs stay absent so defaults remain owned by the runtime.
+- **The proxy finds `cf-access` beside itself** (`__dirname`) instead of falling back to a hardcoded `~/.claude/bin/cf-access`.
+- One `jwt_claim` helper replaces the two payload decoders in `cf-access`, and a token's TTL is computed once per read instead of twice on the happy path — one less `node` start per `cf-access token`, which is every proxy mint.
+- `forward()` lost its `keepClientAuth` flag: passing the client's own token through as the value it already had does the same job with one parameter and one branch fewer.
+- `selftest.sh` reads its browser fixture once instead of twice, so the account and the profile directory it asserts on cannot disagree.
+
+### Fixed
+
+- **`CF_ACCESS_PROXY_DYNAMIC_PORT` did nothing under launchd.** `install.sh` read it for its own health check but never wrote it to the plist, so `CF_ACCESS_PROXY_DYNAMIC_PORT=9000 ./install.sh` booted the daemon on 8780, probed 9000, and reported `WARNING proxy not answering`. Same shape for `CF_ACCESS_HOSTS_FILE` and `CF_ACCESS_SKEW` — the latter meaning a shell-exported skew moved the broker's refresh threshold but not the daemon's cache.
+- **`--bin-dir` outside `~/.claude/bin` broke the non-launchd path.** The proxy's hardcoded fallback was live in exactly the case `install.sh` tells non-macOS users to use ("supervise it yourself"), where nothing sets `CF_ACCESS_BIN` — so it shelled out to a `cf-access` that wasn't there.
+
 ## [1.4.0] — 2026-08-03
 
 ### Added
