@@ -42,6 +42,23 @@ const LOGIN_DEADLINE = Number(process.env.CF_ACCESS_LOGIN_DEADLINE || 120) * 100
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 
+// Quoted and bounded: anything as the user can reach the port and forge a line shaped like ours.
+const q = (s, n = 128) => JSON.stringify(String(s ?? '').slice(0, n));
+
+// The broker prints the SSO URL on failure; this log is world-readable and never rotated.
+const redact = (s) => s.replace(/https:\/\/\S*\/cdn-cgi\/access\/cli\?\S*/g, '<sso-url redacted>');
+
+const clientTag = (req) =>
+  req.headers['x-cf-access-client']
+    ? q(req.headers['x-cf-access-client'])
+    : `peer :${req.socket.remotePort}`;
+
+// Query strings carry signatures and tokens. `?…` distinguishes "none" from "withheld".
+const routeOf = (url) => {
+  const [route, query] = String(url ?? '').split('?');
+  return q(route, 200) + (query === undefined ? '' : '?…');
+};
+
 // Never exits on a bad or missing config: under launchd's KeepAlive that would be a
 // restart loop. It logs, keeps serving what it has, and reconciles when the file changes.
 function readRoutes() {
@@ -89,8 +106,13 @@ class TokenSource {
     return this.jwt && this.exp - Date.now() / 1000 > SKEW;
   }
 
-  mint(allowLogin) {
+  // Every browser window starts here, the one place that can name the cause. It fires *before*
+  // the attempt: waiting for the mint would report it LOGIN_DEADLINE late, or never.
+  mint(allowLogin, why = '', session = '') {
     const args = allowLogin ? ['token', this.app] : ['token', '--no-login', this.app];
+    if (allowLogin) {
+      log(`sso ${this.app} — starting browser sign-in for ${why}${session && ` session=${session}`}`);
+    }
     return new Promise((resolve) => {
       let killer;
       let settled = false;
@@ -101,11 +123,16 @@ class TokenSource {
         }
       };
 
-      const child = execFile(CF_ACCESS, args, (err, stdout, stderr) => {
+      const env = {
+        ...process.env,
+        CF_ACCESS_TRACE: allowLogin ? why : '',
+        CF_ACCESS_SESSION: allowLogin ? session : '',
+      };
+      const child = execFile(CF_ACCESS, args, { env }, (err, stdout, stderr) => {
         clearTimeout(killer);
         const jwt = (stdout || '').trim();
         if (err || !jwt.startsWith('ey')) {
-          if (allowLogin) log(`token FAILED ${this.app}: ${(stderr || err?.message || '').trim()}`);
+          if (allowLogin) log(`token FAILED ${this.app}: ${redact((stderr || err?.message || '').trim())}`);
           settle(null);
           return;
         }
@@ -130,7 +157,7 @@ class TokenSource {
     });
   }
 
-  get({ force = false, holdMs = 0 } = {}) {
+  get({ force = false, holdMs = 0, why = '', session = '' } = {}) {
     if (!force && this.fresh()) return Promise.resolve(this.jwt);
 
     if (!this.inflight) {
@@ -144,7 +171,7 @@ class TokenSource {
         // requests would otherwise stack up browser tabs.
         if (Date.now() - this.lastLogin < LOGIN_COOLDOWN) return null;
         this.lastLogin = Date.now();
-        return this.mint(true);
+        return this.mint(true, why, session);
       })().finally(() => {
         this.inflight = null;
       });
@@ -178,14 +205,17 @@ const HOP_BY_HOP = new Set([
 function forward({ upstream, req, body, jwt }) {
   const agent = upstream.protocol === 'https:' ? https : http;
   const headers = {};
+  // The whole `x-cf-access-` namespace, not the names known today: the next one added to the
+  // preload would otherwise ship to the origin until the daemon was restarted. Filtering while
+  // building beats deleting after, and the token is set only from `jwt` below.
   for (const [k, v] of Object.entries(req.headers)) {
-    if (!HOP_BY_HOP.has(k.toLowerCase())) headers[k] = v;
+    const lk = k.toLowerCase();
+    if (!HOP_BY_HOP.has(lk) && !lk.startsWith('x-cf-access-') && lk !== 'cf-access-token') {
+      headers[k] = v;
+    }
   }
   headers.host = upstream.host;
   if (jwt) headers['cf-access-token'] = jwt;
-  else delete headers['cf-access-token'];
-  delete headers['x-cf-access-upstream'];
-  delete headers['x-cf-access-scheme'];
   if (body) headers['content-length'] = String(body.length);
 
   return new Promise((resolve, reject) => {
@@ -263,8 +293,10 @@ async function proxyRequest({ req, res, upstream, body }) {
 
   const tokens = tokenSourceFor(origin);
   const state = gating.get(origin) || 'unknown';
+  const why = `${req.method} ${routeOf(req.url)} ← ${clientTag(req)}`;
+  const session = req.headers['x-cf-access-session'] ? q(req.headers['x-cf-access-session'], 64) : '';
 
-  let jwt = state === 'gated' ? await tokens.get({ holdMs: HOLD }) : null;
+  let jwt = state === 'gated' ? await tokens.get({ holdMs: HOLD, why, session }) : null;
   let upRes = await forward({ upstream, req, body, jwt });
 
   if (isAccessRedirect(upRes)) {
@@ -275,7 +307,7 @@ async function proxyRequest({ req, res, upstream, body }) {
       log(`stale token for ${origin} — refreshing`);
     }
     upRes.resume();
-    jwt = await tokens.get({ force: state === 'gated', holdMs: HOLD });
+    jwt = await tokens.get({ force: state === 'gated', holdMs: HOLD, why, session });
     if (!jwt) {
       res.writeHead(511, { 'content-type': 'text/plain' });
       res.end(
@@ -301,7 +333,7 @@ const withBody = (handler) => (req, res) => {
     try {
       await handler(req, res, chunks.length ? Buffer.concat(chunks) : null);
     } catch (err) {
-      log(`proxy error ${req.method} ${req.url}: ${err.message}`);
+      log(`proxy error ${req.method} ${routeOf(req.url)}: ${err.message}`);
       res.writeHead(502, { 'content-type': 'text/plain' });
       res.end(`cf-access-proxy: ${err.message}\n`);
     }
@@ -365,7 +397,7 @@ http
         return Promise.resolve();
       }
       if (!hosts.matches(host)) {
-        log(`refused ${host} (not in ${HOSTS_FILE})`);
+        log(`refused ${q(host)} (not in ${HOSTS_FILE})`);
         res.writeHead(403, { 'content-type': 'text/plain' });
         res.end(`cf-access-proxy: ${host} is not an allowed upstream\n`);
         return Promise.resolve();

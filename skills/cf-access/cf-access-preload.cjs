@@ -23,11 +23,28 @@ const matches = (host) => hosts.matches(host);
 
 // Never patch the proxy itself: it is the thing that reaches the real hosts, so
 // rewriting its outbound requests would point it at its own port forever.
-const isProxy = /(^|\/)cf-access-proxy$/.test(process.argv[1] || '');
+const script = process.argv[1] || '';
+const isProxy = /(^|\/)cf-access-proxy$/.test(script);
 
 if (hosts && hosts.suffixes().length > 0 && !isProxy) {
   const UP = 'x-cf-access-upstream';
   const SCHEME = 'x-cf-access-scheme';
+  const CLIENT_H = 'x-cf-access-client';
+  const SESSION_H = 'x-cf-access-session';
+
+  // Built at load from memory only: this runs in every Node process, so no disk, spawn or
+  // ancestry walk. An allowlist, never argv or env wholesale — both carry credentials. Under
+  // `node -e` argv[1] is a user argument, so the name is taken only when Node runs a file; both
+  // halves are needed, since an argument can look like a path and `\w` is the base64url alphabet.
+  const evalled = process.execArgv.some((a) => /^(-e|--eval|-p|--print)$/.test(a));
+  const name =
+    !evalled && script.startsWith('/')
+      ? script.slice(script.lastIndexOf('/') + 1).replace(/[^\w.-]/g, '').slice(0, 32)
+      : 'node';
+  const CLIENT = `pid=${process.pid} ppid=${process.ppid} ${name}`;
+
+  const raw = process.env.CLAUDE_CODE_SESSION_ID || '';
+  const SESSION = /^[0-9a-f-]{8,64}$/i.test(raw) ? raw : '';
 
   const patchModule = (mod, name) => {
     const original = mod[name];
@@ -69,7 +86,13 @@ if (hosts && hosts.suffixes().length > 0 && !isProxy) {
         host: undefined,
         port: PORT,
         path: target,
-        headers: { ...(opts?.headers || {}), [UP]: host, [SCHEME]: scheme },
+        headers: {
+          ...(opts?.headers || {}),
+          [UP]: host,
+          [SCHEME]: scheme,
+          [CLIENT_H]: CLIENT,
+          ...(SESSION && { [SESSION_H]: SESSION }),
+        },
       };
       delete opts.servername;
       delete opts.ca;
@@ -94,6 +117,8 @@ if (hosts && hosts.suffixes().length > 0 && !isProxy) {
           const headers = new Headers(init?.headers || (input?.headers ?? undefined));
           headers.set(UP, u.host);
           headers.set(SCHEME, u.protocol.replace(':', ''));
+          headers.set(CLIENT_H, CLIENT);
+          if (SESSION) headers.set(SESSION_H, SESSION);
           const local = `http://127.0.0.1:${PORT}${u.pathname}${u.search}`;
           // A Request instance carries method/body/etc; spread it, then override.
           const base = typeof input === 'string' || input instanceof URL ? {} : input;

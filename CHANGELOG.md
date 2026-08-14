@@ -4,95 +4,122 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.6.0] — 2026-08-14
+
+**Restart the daemon when updating** (`install.sh`): the preload goes live at once, only the new proxy strips its new headers.
+
+### Added
+
+- **Every SSO browser window says what caused it** — one line, from the funnel every SSO path crosses:
+
+  ```
+  sso https://ci.example.com — starting browser sign-in for GET "/api/jobs"?… ← "pid=8123 ppid=8100 server.mjs" session="<uuid>"
+  ```
+- **The window opens on a local page** naming app, session and trigger, linking on to Cloudflare. Not an iframe: the IdP sends `X-Frame-Options: DENY`.
+- **Clients name themselves** via `x-cf-access-client` / `x-cf-access-session`, and sessions resolve to the name the app shows. Unreached clients show `peer :<port>`.
+- **`selftest.sh` grew a proxy harness**: stub broker, fake gated upstream, free ports.
+
+### Fixed
+
+- **An abandoned login wedged every later one, silently.** `cloudflared` leaves a lock behind when killed — which the deadline does — so the next login blocked with no output (63s, against 1s once cleared). Now cleared when no login is running.
+
+### Security
+
+- Request path only, never the query string.
+- Script name only when Node runs a script, never under `node -e`.
+- `x-cf-access-*` stripped in `forward()` — the namespace, not today's names.
+- Wire values quoted and bounded, else a loopback client can forge a log line.
+- SSO urls redacted from captured stderr. Never argv, env or headers.
+
+### Notes
+
+- A warm org session mints silently, so an `sso` line with no window is normal. `redact()` untested; log rotation still absent.
+
 ## [1.5.0] — 2026-08-13
 
 ### Added
 
-- **No login hangs forever.** `cloudflared` waits for the SSO callback indefinitely, so a login nobody completes used to wedge its caller for good — a shell, or an MCP server launched through `cf-access env`. `cf-access` now abandons one after `CF_ACCESS_LOGIN_DEADLINE` (default 120s, the same knob the proxy uses), killing `cloudflared` and the grandchild that holds the pipe (`SIGKILL`, then `pkill -P`), and putting the stashed token back. The proxy already bounded its own mints; the bound now sits in the broker, where every caller routes through.
-- **`status` sees the whole config dir**, not a hardcoded `apps`/`hosts` pair — so the `proxy` routes file, the one the `508` troubleshooting row points at, finally appears. It also prints the resolved SSO browser by asking `cf-access browser`, so the diagnostic cannot disagree with what a login will actually do. Counts are labelled `lines` rather than `entries`: each consumer parses the file its own way, and the old count claimed more apps than the broker used.
-- **`browser.example` is seeded** with the other templates; its placeholder is commented out, so a seeded copy is inert instead of making every login warn.
+- **No login hangs forever.** `cf-access` abandons an unanswered SSO after `CF_ACCESS_LOGIN_DEADLINE`, killing `cloudflared` and the grandchild holding the pipe, and restoring the stashed token. The bound sits in the broker, where every caller routes through.
+- **`status` sees the whole config dir**, so the `proxy` routes file appears, and prints the resolved SSO browser by asking `cf-access browser`.
+- **`browser.example` is seeded** with the other templates, its placeholder commented out so a seeded copy is inert.
 
 ### Changed
 
-- **The suffix allowlist has one implementation** (`cf-access-hosts.cjs`, required by the proxy and the preload). It is the security boundary, and it existed twice — already diverged on freshness: the proxy re-read the file on *every request* while the preload read it once at startup and never again. Now cached for 2s in one place, which also makes the troubleshooting table's "no restart needed" true for already-running preloaded clients, and takes the only per-request disk read off the proxy's hot path. Deliberately a TTL rather than `fs.watchFile`: a watcher inside a `NODE_OPTIONS` shim would keep every Node process on the machine from exiting.
-- **`install.sh` carries every `CF_ACCESS_*` knob into the plist**, not just `CF_ACCESS_HOLD`. Persistence across plain re-runs is unchanged and now applies to all of them; unset knobs stay absent so defaults remain owned by the runtime.
-- **The proxy finds `cf-access` beside itself** (`__dirname`) instead of falling back to a hardcoded `~/.claude/bin/cf-access`.
-- One `jwt_claim` helper replaces the two payload decoders in `cf-access`, and a token's TTL is computed once per read instead of twice on the happy path — one less `node` start per `cf-access token`, which is every proxy mint.
-- `forward()` lost its `keepClientAuth` flag: passing the client's own token through as the value it already had does the same job with one parameter and one branch fewer.
-- `selftest.sh` reads its browser fixture once instead of twice, so the account and the profile directory it asserts on cannot disagree.
+- **The suffix allowlist has one implementation** (`cf-access-hosts.cjs`, shared by proxy and preload). It had existed twice and already diverged on freshness. Now cached on a 2s TTL — not a watcher, which would stop every Node process exiting.
+- **`install.sh` carries every `CF_ACCESS_*` knob into the plist**, not just `CF_ACCESS_HOLD`.
+- **The proxy finds `cf-access` beside itself** (`__dirname`) instead of a hardcoded bin path.
+- One `jwt_claim` helper replaces two payload decoders; TTL computed once per read. `forward()` lost its `keepClientAuth` flag. `selftest.sh` reads its browser fixture once.
 
 ### Fixed
 
-- **`CF_ACCESS_PROXY_DYNAMIC_PORT` did nothing under launchd.** `install.sh` read it for its own health check but never wrote it to the plist, so `CF_ACCESS_PROXY_DYNAMIC_PORT=9000 ./install.sh` booted the daemon on 8780, probed 9000, and reported `WARNING proxy not answering`. Same shape for `CF_ACCESS_HOSTS_FILE` and `CF_ACCESS_SKEW` — the latter meaning a shell-exported skew moved the broker's refresh threshold but not the daemon's cache.
-- **`--bin-dir` outside `~/.claude/bin` broke the non-launchd path.** The proxy's hardcoded fallback was live in exactly the case `install.sh` tells non-macOS users to use ("supervise it yourself"), where nothing sets `CF_ACCESS_BIN` — so it shelled out to a `cf-access` that wasn't there.
+- **`CF_ACCESS_PROXY_DYNAMIC_PORT` did nothing under launchd** — read for the health check, never written to the plist, so the daemon booted on 8780 and the probe reported failure. Same for `CF_ACCESS_HOSTS_FILE` and `CF_ACCESS_SKEW`.
+- **`--bin-dir` outside `~/.claude/bin` broke the non-launchd path**, where nothing sets `CF_ACCESS_BIN`.
 
 ## [1.4.0] — 2026-08-03
 
 ### Added
 
-- **Every login reports its URL.** The interception that made browser choice possible also means the login URL is always in hand, so it is now printed — the fallback for any case where no browser appears (wrong opener, headless session, a browser that swallowed the launch). Previously a login that failed to open a window left nothing to click.
-- **Any Chromium browser, not just Chrome.** An account address is resolved against Chrome, Chrome Beta/Canary, Brave, Edge, Vivaldi and Arc, in that order. `CF_ACCESS_BROWSER_APPS` replaces the search list (`App Name:support-dir` per line) to reorder it or pin one browser.
-- **The unset case is explicit**: `open` on macOS, `xdg-open` elsewhere, rather than relying on cloudflared's own launch.
-- Two more selftest cases, driven by a stub `cloudflared` so no SSO round-trip is needed: the login reports the URL, and hands it to the opener (asserted on the argument the opener received, since its output is deliberately silenced).
+- **Every login reports its URL** — the fallback whenever no browser appears. Previously a failed launch left nothing to click.
+- **Any Chromium browser**: Chrome, Chrome Beta/Canary, Brave, Edge, Vivaldi, Arc, in that order. `CF_ACCESS_BROWSER_APPS` replaces the search list.
+- **The unset case is explicit**: `open` on macOS, `xdg-open` elsewhere.
+- Two selftest cases on a stub `cloudflared`: the URL is reported, and handed to the opener.
 
 ### Changed
 
-- The two login paths (with and without a configured browser) collapsed into one. Same behaviour for an unconfigured machine, less code, and the URL is reported either way.
+- The two login paths collapsed into one. Same behaviour unconfigured, less code, URL reported either way.
 
 ## [1.3.0] — 2026-08-03
 
 ### Added
 
-- **Name the SSO browser by account, not by folder.** `browser` / `CF_ACCESS_BROWSER` now accepts an address like `you@work.example` and resolves it to the Chrome profile signed in as that account, via Chrome's `Local State`. `--profile-directory` wants the profile's folder name (`Default`, `Profile 2`), which is opaque and — the reason this exists — unchanged when the profile is renamed in Chrome, so the folder name is exactly the wrong thing to put in config. A command is still accepted for any other browser. An address matching no profile warns and falls back to the default browser rather than failing the login.
-- **`cf-access browser`** — prints the command SSO will actually use, after resolution. Answers "where will this open?" without triggering a login, and is what `selftest.sh` drives.
-- **`selftest.sh`** — covers the four resolution branches (command passes through, nothing configured, unknown account, account resolves to its profile). No framework; run it after touching `cf-access`. Verified live as well: a forced login through an account-resolved profile minted a 24h token with `open` unreachable to cloudflared.
+- **Name the SSO browser by account, not by folder.** `CF_ACCESS_BROWSER` accepts `you@work.example` and resolves it to the profile signed in as that account. Folder names (`Profile 2`) are opaque and survive renames, so they are the wrong thing to put in config. A command is still accepted; an unmatched address warns and falls back rather than failing the login.
+- **`cf-access browser`** prints the command SSO will use, without triggering a login.
+- **`selftest.sh`** covers the four resolution branches. No framework.
 
 ## [1.2.0] — 2026-08-03
 
 ### Added
 
-- **`browser` config file / `CF_ACCESS_BROWSER`** — which browser opens the SSO page, for a work Chrome profile rather than the default browser. `cloudflared` has no `--no-browser` flag, but when it cannot exec `open` it prints the login URL and waits for the callback — so the login runs with `open` hidden from `PATH` and the printed URL is handed to your command. Read from a file as well as the env so an interactive shell and the launchd daemon agree without the setting being plumbed into the plist too. Verified end-to-end: a login with `open` unreachable still minted a 24h token, which is only possible if the configured command opened the URL.
-- **`CF_ACCESS_HOLD` persists across installs** — `install.sh` takes the value from the environment, else from the plist it is about to overwrite (`plutil -extract`), else the default, so `CF_ACCESS_HOLD=60 ./install.sh` survives later plain re-runs.
+- **`browser` config / `CF_ACCESS_BROWSER`** — which browser opens the SSO page. `cloudflared` has no `--no-browser`, but with `open` hidden from `PATH` it prints the URL instead, which is then handed to your command. Read from a file as well as the env, so shell and daemon agree without plumbing it into the plist.
+- **`CF_ACCESS_HOLD` persists across installs** — taken from the env, else the plist being overwritten, else the default.
 
 ### Fixed
 
-- **`install.sh` could leave the daemon down.** `launchctl bootout` returns before the job is actually gone, so the immediately following `bootstrap` failed with `Input/output error` (5) and nothing was left loaded. It now waits for the label to disappear first, bounded at 4s.
+- **`install.sh` could leave the daemon down.** `launchctl bootout` returns before the job is gone, so the following `bootstrap` failed with `Input/output error`. Now waits for the label to disappear, bounded at 4s.
 
 ## [1.1.0] — 2026-07-29
 
-Found by a real failure: an MCP server behind Access timed out six times in a row at exactly its 30s client timeout, while `curl` to the same host answered in 0.11s. The proxy log had it — `is Access-gated — minting a token` at 01:21:12Z, `token FAILED` at 01:30:03Z. Nine minutes blocked inline on a browser login nobody could tap.
-
 ### Fixed
 
-- **A request can no longer hang on an interactive login.** `execFile`'s `timeout` sends `SIGTERM`, which `cloudflared` ignores while keeping its pipe open — so the callback never fired and a 120s cap became a 9-minute stall. The deadline now settles the mint itself; the kill is best-effort cleanup (`pkill -P`, because the hang is in the grandchild, and `detached: true` was verified *not* to produce a killable process group — the child inherits the parent's `PGID`, so `kill(-pid)` fails with `ESRCH`). A late success still lands in the cache for the client's retry.
-- **A client that brings its own Access credential is no longer overridden.** A service token (`CF-Access-Client-Id` + `CF-Access-Client-Secret`), a `cf-access-token`, or a `CF_Authorization` cookie is forwarded untouched and triggers no SSO — previously the learned-gating state was per origin and unconditional, so one credential-less client poisoned every credentialed one on that host.
-- **…but a rejected credential still gets service.** If Access refuses the client's own credential, the broker takes over and retries rather than handing the client a Cloudflare login page. This is not hypothetical: the MCP server above sends a service token that Access reports as `service_token_status: false`, so it had been silently depending on an injected browser token all along.
+- **A request can no longer hang on an interactive login.** `execFile`'s `timeout` sends `SIGTERM`, which `cloudflared` ignores while holding its pipe open — a 120s cap became a 9-minute stall. The deadline now settles the mint itself; the kill is best-effort cleanup. A late success still lands in the cache for the retry.
+- **A client that brings its own Access credential is no longer overridden.** Learned gating had been per origin and unconditional, so one credential-less client poisoned every credentialed one on that host.
+- **…but a rejected credential still gets service.** If Access refuses the client's own credential the broker takes over, rather than handing back a login page.
 
 ### Added
 
-- **`CF_ACCESS_HOLD`** (default 20s) — how long a request may wait for a token before being answered `511` while the login continues in the background, so the client's retry finds a token. Default sits under the common 30s MCP client timeout; `0` disables waiting entirely.
-- **`CF_ACCESS_LOGIN_DEADLINE`** (default 120s) — hard cap on a single mint, after which the proxy stops waiting whether or not the child could be killed.
-- Troubleshooting rows for the three symptoms this release produces or explains: repeated timeouts at exactly the client's timeout, `client credential rejected by Access`, and an unwired client appearing in the proxy because `NODE_OPTIONS` is set globally.
+- **`CF_ACCESS_HOLD`** (default 20s) — how long a request waits before a `511` while the login continues; `0` disables waiting.
+- **`CF_ACCESS_LOGIN_DEADLINE`** (default 120s) — hard cap on one mint.
+- Troubleshooting rows for the three symptoms this release explains.
 
 ## [1.0.0] — 2026-07-29
 
-Initial release: keep CLI tools, Node clients and long-running MCP servers authenticated to Cloudflare Access–gated hosts. Packaged from a working local setup that had been running as loose scripts in a bin directory; every mechanism below is there because the obvious version of it failed in practice.
+Initial release: keep CLI tools, Node clients and long-running MCP servers authenticated to Cloudflare Access–gated hosts.
 
 ### Added
 
-- **`cf-access`** — the broker: `token`, `cookie`, `env`, `curl`, `login`, `list`. Truncates app URLs to their origin (cloudflared caches per hostname, so a path misses the cache), reports remaining token lifetime, and refreshes anything under 10 minutes of life. `env <app> <VAR> -- <cmd…>` uses `env(1)` rather than `export` so header-name variables may contain hyphens.
-- **`cf-access login` purges before it logs in.** `cloudflared access login` hands back the cached app token even seconds from expiry, so a refresh without a purge is a no-op. The purged token is stashed and restored on any exit path — including a timeout or Ctrl-C — so a failed refresh cannot cost a browser-less machine a usable token. Cache files are identified by the token's own `aud` claim, because a wildcard-policy app lands in a filename a host-name glob would miss.
-- **`cf-access-proxy`** — localhost HTTP fronts that inject a fresh `cf-access-token` per request, for clients that snapshot their credential at startup and cannot renew it. A dynamic port (default 8780) takes the upstream from an `x-cf-access-upstream` header; optional fixed `<port> <origin>` routes serve clients that can only be pointed at a URL. Token caches are per origin, single-flight, with a 60s login cooldown so a burst of failures cannot stack up SSO tabs; request bodies are buffered so a token retry replays a POST byte-for-byte.
-- **Learned gating.** The first request to an origin goes out bare and only a redirect to `cdn-cgi/access/login` marks it gated — so non-gated hosts never trigger an SSO attempt and a newly gated one starts getting tokens on its own, with no configuration.
-- **`cf-access-preload.cjs`** — `NODE_OPTIONS=--require` shim patching `http`/`https`/`fetch` to route allowed hosts into the proxy, so an unmodifiable Node client (an MCP server, a vendored SDK) keeps its real URL and needs no code change. Refuses to patch the proxy itself, which would aim it at its own port forever.
-- **Suffix allowlist** (`~/.config/cloudflare-access/hosts`) — domains, not apps, so an app added under the domain later is covered for free. It is also the security boundary that stops the dynamic port from being an open forwarder on loopback; a missing file allows nothing rather than defaulting to a domain.
-- **`install.sh`** — symlinks the three scripts into a bin dir (default `~/.claude/bin`), seeds the config files from templates without overwriting, writes the launchd plist with the detected `node` plus an explicit `PATH`/`CF_ACCESS_BIN` (launchd starts with a bare environment, and the proxy shells out to `cf-access`), then loads the agent and health-checks the port. `status` reports links, config, `cloudflared`, daemon state, port liveness and per-app token TTL; `uninstall` unloads and unlinks only its own symlinks, keeping config and tokens.
-- **SKILL.md** — layer-selection table (per-invocation token vs fixed port vs preload), MCP wiring patterns for both the launcher and preload forms, and a troubleshooting table mapping each originated status code (`511`/`403`/`508`/`400`/`502`) to its cause.
+- **`cf-access`** — the broker: `token`, `cookie`, `env`, `curl`, `login`, `list`. Truncates app URLs to their origin, reports token lifetime, refreshes under 10 minutes. `env` uses `env(1)`, so header-name variables may contain hyphens.
+- **`cf-access login` purges before it logs in**, since `cloudflared` otherwise returns the cached token. The purged token is stashed and restored on any exit path. Cache files are identified by the token's own `aud`, which a hostname glob would miss under a wildcard policy.
+- **`cf-access-proxy`** — localhost fronts injecting a fresh token per request. Dynamic port (8780) takes the upstream from a header; optional fixed `<port> <origin>` routes serve clients that can only take a URL. Caches are per origin, single-flight, with a 60s login cooldown; bodies are buffered so a retry replays a POST byte-for-byte.
+- **Learned gating** — the first request goes out bare, and only a login redirect marks the origin gated.
+- **`cf-access-preload.cjs`** — `NODE_OPTIONS` shim patching `http`/`https`/`fetch`, so an unmodifiable Node client keeps its real URL. Refuses to patch the proxy itself.
+- **Suffix allowlist** (`~/.config/cloudflare-access/hosts`) — domains, not apps. Also the boundary stopping the dynamic port being an open forwarder; a missing file allows nothing.
+- **`install.sh`** — symlinks the scripts, seeds config without overwriting, writes the plist with the detected `node` plus explicit `PATH`/`CF_ACCESS_BIN`, loads the agent, health-checks the port. `status` reports links, config, daemon, port, token TTLs; `uninstall` removes only its own symlinks.
+- **SKILL.md** — layer-selection table, MCP wiring patterns, and a troubleshooting table per originated status code.
 
 ### Security
 
-- Config never carries a token; JWTs are passed by env or header only, and the skill's rules forbid printing one into a transcript, commit or log.
-- The proxy binds `127.0.0.1` exclusively, and forwards only to hosts matching the operator's own suffix allowlist.
+- Config never carries a token; JWTs pass by env or header only, and never into a transcript, commit or log.
+- The proxy binds `127.0.0.1` only, forwarding solely to allowlisted hosts.
 
 # session-migration
 

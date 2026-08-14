@@ -114,6 +114,7 @@ Three layers; pick by what the client can do:
 - The proxy **learns** which origins are gated — the first request goes out bare, and only a Cloudflare login redirect makes it mint. Non-gated hosts never trigger SSO.
 - A client that brings its own credential (service token, cookie) is forwarded untouched; the broker only steps in when Access rejects it. No request waits on a human longer than `CF_ACCESS_HOLD` (default 20s) — it gets a `511` while the login finishes in the background, so the retry succeeds.
 - The allowlist is a **domain suffix** list, so an app added under the domain next month needs no config; that same list is what keeps the loopback port from being an open forwarder.
+- **A browser window never appears unexplained.** It opens on a local page naming the app, the session and the request that triggered it, with a link on to Cloudflare; the proxy logs the same. The client names itself, so "which of the dozen things running caused this" is answered when it happens.
 - `install.sh status` is the one diagnostic — links, config, daemon, port, per-app token TTL — because "no token", "daemon down" and "host not allowed" look identical from the client.
 
 ### Usage

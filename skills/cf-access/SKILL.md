@@ -53,6 +53,8 @@ All of these live in this skill's directory, beside this SKILL.md.
 launchctl kickstart -k gui/$(id -u)/local.cf-access-proxy
 ```
 
+This matters when the preload and proxy change together: a header the new preload sends is only stripped by a new enough daemon. Restart as part of updating, not after.
+
 Requires `cloudflared` (`brew install cloudflared`) and `node`. Then one interactive step:
 
 ```bash
@@ -112,7 +114,21 @@ Two details worth knowing, because both look like bugs otherwise: an app URL is 
 - **A client's own credential wins.** A request already carrying a service token (`CF-Access-Client-Id` + `CF-Access-Client-Secret`), a `cf-access-token`, or a `CF_Authorization` cookie is forwarded untouched and triggers no SSO. Only if Access *rejects* it does the broker step in and retry — so a working credential is never overridden, and a broken one still gets service.
 - **No request ever waits on a human indefinitely.** A request holds for at most `CF_ACCESS_HOLD` seconds (default 20, under the usual 30s client timeout) and is then answered `511`, while the login keeps running in the background — so the client's retry lands on a token. `CF_ACCESS_HOLD=0` never waits at all. A mint that wedges is abandoned after `CF_ACCESS_LOGIN_DEADLINE` (default 120s); the proxy stops waiting on it whether or not the child can be killed, because `cloudflared` ignores `SIGTERM` and holds its pipe open.
 - **No login waits on a human indefinitely either.** `cf-access` itself abandons an unanswered browser SSO after `CF_ACCESS_LOGIN_DEADLINE`, killing `cloudflared` and its children (`SIGKILL`, and `pkill -P` for the grandchild that holds the pipe). The bound is in the broker, so it protects every caller — a shell, `cf-access env` launching an MCP server, the proxy — not just the proxy. A stashed token is put back when the login is abandoned.
-- **Renewal.** Tokens are cached per origin until 10 min before expiry, minting is single-flight (a stampede collapses into one mint), and a browser login is rate-limited to once a minute so a burst of failures cannot stack up tabs.
+- **Every browser window says what caused it.** One line as the proxy decides SSO is needed:
+
+```
+sso https://ci.example.com — starting browser sign-in for GET "/api/jobs"?… ← "pid=8123 ppid=8100 server.mjs" session="<uuid>"
+```
+
+  The only signal a round-trip happened — `token ok` covers cached reads too. Fires before the attempt; a failure follows as `token FAILED`.
+
+  **The window opens on a local page** naming app, session and trigger, linking on to Cloudflare. Proxy-opened logins only. Not an iframe: the IdP sends `X-Frame-Options: DENY`.
+
+  The **session name** comes from the desktop record (`claude-code-sessions/`, matched on `cliSessionId`), else the CLI's derived `name`; unresolved shows the raw id.
+
+  Path only, never the query string. Identity is `x-cf-access-client` + `x-cf-access-session`; unreached clients show `peer :<port>`.
+
+- **Renewal.** Tokens are cached per origin until 10 min before expiry, minting is single-flight (a stampede collapses into one mint), and a browser login is rate-limited to once a minute so a burst of failures cannot stack up tabs. Single-flight is also what makes the trace honest: the request that creates the mint is named, and the ones that join it are not — they did not cause the window.
 - **Request bodies are buffered** so a token retry replays the request byte-for-byte.
 - Status codes it originates: `511` no token available (run `cf-access login <origin>`), `403` host not in `hosts`, `508` the upstream is the proxy itself, `502` transport error, `400` missing upstream header.
 
@@ -167,7 +183,10 @@ For a non-Node client, give it a fixed port instead — `8790 https://ci.example
 | worked yesterday, dead today | token expired in a process that snapshotted it | move that client to the proxy or the preload |
 | an MCP server times out at exactly its client timeout (30s), repeatedly, while `curl` to the same host is fine | the client is being held behind an SSO the proxy cannot complete headlessly | check the log for `is Access-gated — minting a token` with no `token ok` after it; run `cf-access login <origin>` once, then retry. Lower `CF_ACCESS_HOLD` to fail faster |
 | log says `client credential rejected by Access` | the client's service token is not on the app's policy (Access reports `service_token_status: false` on its login page) | fix the service token in Cloudflare, or accept the broker fallback — but know the client now depends on a browser token |
-| a client you never wired is going through the proxy | `NODE_OPTIONS` is set globally (e.g. in `~/.claude/settings.json`), so **every** Node process is patched | intended for blanket coverage; scope it to one client's `env` if you want it narrower |
+| an `sso` line but no window | the org session was warm, so `cloudflared` minted silently — no human needed. A `token ok` for the same origin follows within seconds | none |
+| a browser window appeared and you don't know who asked | — | the window names its cause; after the fact `grep sso ~/Library/Logs/cf-access-proxy.log` |
+| the trace says `peer :<port>` | not Node, or uses `undici`/`node:http2`, which the preload does not patch | `lsof -nP -iTCP:<port>` while the request is open |
+| a client you never wired is going through the proxy | `NODE_OPTIONS` is set globally (e.g. in `~/.claude/settings.json`), so **every** Node process is patched | intended for blanket coverage; scope it to one client's `env` if you want it narrower. The `sso` trace names which client it was |
 | `cf-access list` shows `no token` right after a successful login | login was for a different origin (path or scheme mismatch) | use the exact origin, no path |
 | no browser window appears during a login | wrong or swallowed opener command | open the URL the login printed; then fix it with `cf-access browser` as the check |
 | SSO opens in the wrong browser profile | `browser` names a command or an account whose profile lives elsewhere | set it to the work account address; confirm with `cf-access browser` |
@@ -176,6 +195,7 @@ For a non-Node client, give it a fixed port instead — `8790 https://ci.example
 ## Rules
 
 - A JWT is a bearer credential for a whole app. Never print one into a shared transcript, a commit, an issue, or a log. Pass tokens by env or header; `cf-access token` exists for piping, not for pasting.
+- The proxy log is world-readable and never rotated, so what reaches it is an **allowlist, never a dump**: pid, script name, session id, request path. Never argv, environment values or headers — the proxy holds the client's `CF_Authorization` at that point. Wire values are quoted and bounded.
 - Never widen `hosts` to a domain the user does not control — every entry is a host the loopback proxy will forward to on behalf of anything running as the user.
 - The proxy binds `127.0.0.1` only. Do not change that, and do not add an auth-free route to a host outside the user's org.
 - Do not hand-edit files in `~/.cloudflared/` — they are cloudflared's cache, keyed by the token's own `aud`.

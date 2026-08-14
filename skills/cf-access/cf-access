@@ -17,6 +17,9 @@
 #   browser                         which browser command SSO will use
 #
 # Apps come from $CF_ACCESS_APPS_FILE (default ~/.config/cloudflare-access/apps).
+#
+# $CF_ACCESS_TRACE and $CF_ACCESS_SESSION are set by cf-access-proxy on the child it spawns, not
+# by you. Absent from install.sh's TUNABLES, which carries launchd→daemon knobs only.
 set -eu
 
 APPS_FILE="${CF_ACCESS_APPS_FILE:-$HOME/.config/cloudflare-access/apps}"
@@ -153,9 +156,8 @@ do_login() {
     [ -n "$f" ] && [ -f "$f" ] && mv "$f" "$stash/" 2>/dev/null
   done
 
-  # Restore on any exit path: a login killed by a timeout or Ctrl-C must not swallow
-  # the token it set aside.
-  restore_stash() {
+  # A login killed by a timeout must not swallow the token it set aside. The page shares the dir.
+  cleanup() {
     if [ -d "$stash" ] && [ -z "$(cached_token "$1")" ]; then
       for f in "$stash"/*-token; do
         [ -f "$f" ] && mv "$f" "$HOME/.cloudflared/" 2>/dev/null
@@ -163,12 +165,22 @@ do_login() {
     fi
     rm -rf "$stash"
   }
-  trap 'restore_stash "$1"' EXIT INT TERM
+  trap 'cleanup "$1"' EXIT INT TERM
 
   # cloudflared has no --no-browser, but when it cannot exec an opener it prints the login
   # URL and waits for the callback. Hiding the opener from it therefore buys two things:
   # the URL gets reported (the only fallback when no browser appears), and
   # $CF_ACCESS_BROWSER decides which browser or profile receives it.
+  # cloudflared takes a lock per app plus one for the org token and leaves it behind when killed —
+  # which the deadline below does. A stale lock makes every later login block silently and forever
+  # (measured: 63s, no output, no browser), and the org one wedges every app at once. With no login
+  # running, any lock is stale, so clearing them here self-heals a machine already wedged by an
+  # abandoned login.
+  # ponytail: skipped while another login holds a lock legitimately; the next attempt clears it.
+  pgrep -f 'cloudflared access login' >/dev/null 2>&1 ||
+    rm -f "$HOME"/.cloudflared/*.lock 2>/dev/null ||
+    true
+
   cfd=$(command -v cloudflared)
   out=$(mktemp)
   PATH=/var/empty "$cfd" access login "$1" --quiet --auto-close >"$out" 2>&1 &
@@ -184,10 +196,100 @@ do_login() {
     sleep 0.1
   done
 
+  # No url means cloudflared never offered one — usually the app is unreachable. Say so, or the
+  # caller waits out the deadline with nothing on screen and nothing in the log.
+  if [ -z "$url" ]; then
+    echo "cf-access: cloudflared printed no login url — no browser will open; is $1 reachable?" >&2
+  fi
+
   if [ -n "$url" ]; then
     echo "cf-access: if no browser opens, log in here:" >&2
     echo "  $url" >&2
-    eval "${CF_ACCESS_BROWSER:-$PLATFORM_OPENER} \"\$url\"" >/dev/null 2>&1 || true
+    # A window nobody asked for gets a page naming its cause. Not an iframe: the IdP sends
+    # X-Frame-Options: DENY.
+    target=$url
+    # ponytail: "has a trace" stands in for "nobody asked for this", true only while the proxy is
+    # the sole producer — add `[ ! -t 2 ]` once another caller sets one.
+    if [ -n "${CF_ACCESS_TRACE:-}" ]; then
+      # Quoted heredoc, so this is ordinary JS, not JS escaped for sh.
+      cat >"$stash/page.cjs" <<'PAGE'
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const [out, url, trace, app, sessionId] = process.argv.slice(2);
+
+const esc = (s) =>
+  String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[c]);
+
+// A uuid names nothing to a human. Desktop record first, else the CLI's derived name. Here, not
+// in the preload, which every Node process would pay for. Another product's private layout —
+// session-migration/ccd_sessions.py reads the same tree.
+// ponytail: reads every record; a keyed lookup pays off at thousands.
+const newest = (dir, match, stamp, field) => {
+  let best = null;
+  try {
+    const walk = (d) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith('.json')) {
+          try {
+            const o = JSON.parse(fs.readFileSync(p, 'utf8'));
+            if (match(o) && o[field] && (!best || (o[stamp] || 0) > (best[stamp] || 0))) best = o;
+          } catch {}
+        }
+      }
+    };
+    walk(dir);
+  } catch {}
+  return best ? String(best[field]) : '';
+};
+
+const home = os.homedir();
+// Account-scoped and nested per org, hence the walk; a switched account still resolves.
+const sessionName = !sessionId
+  ? ''
+  : newest(
+      path.join(home, 'Library/Application Support/Claude/claude-code-sessions'),
+      (o) => o.cliSessionId === sessionId,
+      'lastActivityAt',
+      'title'
+    ) ||
+    // A resumed session writes a second record under its new pid; newest wins.
+    newest(path.join(home, '.claude/sessions'), (o) => o.sessionId === sessionId, 'startedAt', 'name');
+
+fs.writeFileSync(out, `<!doctype html><meta charset="utf-8">
+<title>cf-access: sign-in needed</title>
+<style>
+  :root { color-scheme: light dark }
+  body { font: 15px/1.6 system-ui, sans-serif; max-width: 34rem; margin: 12vh auto; padding: 0 1.5rem }
+  h1 { font-size: 1.25rem; margin: 0 0 1.5rem }
+  dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; opacity: .6; margin-top: 1rem }
+  dd { margin: .15rem 0 0; font-family: ui-monospace, monospace; font-size: .85rem; word-break: break-all }
+  dd.name { font-family: inherit; font-size: 1rem; font-weight: 600 }
+  a.go { display: inline-block; margin-top: 2rem; padding: .7rem 1.4rem; border-radius: .5rem;
+         background: light-dark(#1a1a1a, #f0f0f0); color: light-dark(#fff, #111); text-decoration: none; font-weight: 600 }
+  p.note { margin-top: 2rem; font-size: .8rem; opacity: .6 }
+</style>
+<h1>Something needs you to sign in.</h1>
+<dl>
+  <dt>Application</dt><dd>${esc(app)}</dd>
+  ${sessionName ? `<dt>Session</dt><dd class="name">${esc(sessionName)}</dd>` : ''}
+  <dt>Triggered by</dt><dd>${esc(trace)}${sessionName ? '' : esc(sessionId ? ` session=${sessionId}` : '')}</dd>
+</dl>
+<a class="go" href="${esc(url)}">Continue to sign-in</a>
+<p class="note">Opened by cf-access. If this was not something you expected, close this tab &mdash;
+nothing is signed in until you continue.</p>
+`);
+PAGE
+      if node "$stash/page.cjs" "$stash/sso.html" "$url" "$CF_ACCESS_TRACE" "$1" \
+        "${CF_ACCESS_SESSION:-}" 2>/dev/null; then
+        target="file://$stash/sso.html"
+      fi
+    fi
+    eval "${CF_ACCESS_BROWSER:-$PLATFORM_OPENER} \"\$target\"" >/dev/null 2>&1 || true
   fi
 
   # cloudflared waits for the SSO callback forever, so a login nobody completes would hang
@@ -207,7 +309,7 @@ do_login() {
   wait "$cfd_pid" 2>/dev/null || true
   rm -f "$out"
 
-  restore_stash "$1"
+  cleanup "$1"
   trap - EXIT INT TERM
 }
 
