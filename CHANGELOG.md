@@ -206,6 +206,12 @@ Initial release: end-to-end build pipeline (idea → tested code) that debates t
 
 # adversarial-review
 
+## [2.0.1] — 2026-08-14
+
+### Removed
+
+- **Eval harness (`eval/`)** — the seeded-bug fixture protocol and `score.mjs`. Added in 1.1.0 to score pipeline changes for recall / false positives / cost, it never had a fixture built for it, so it measured nothing across every release since, the 2.0.0 rewrite included. The skill itself is unchanged. Measuring protocol changes is still the right standard; the protocol is in git history for whoever builds the first fixture.
+
 ## [2.0.0] — 2026-08-13
 
 Plain skill, and a real debate. SKILL.md is now the whole pipeline, executed by the main agent loop — no Workflow tool, no multi-agent opt-in. The two reviewers now argue to a conclusion instead of trading one round of verdicts, while the machinery around them got smaller by three unmeasured mechanisms.

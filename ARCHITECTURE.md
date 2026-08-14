@@ -191,7 +191,7 @@ Written tool-agnostically per the [Agent Skills open standard](https://agentskil
 
 ### Validation
 
-Field runs only. The 1.x smoke test (`eval/crucible-smoke.mjs`) executed the Workflow script's control flow under a stub runtime; with the script gone there is no control flow to execute, and prompt-quality changes were never covered by it anyway. The sibling has a fixture harness that would measure exactly that, but no fixture has been built for it, so both pipelines are in the same position.
+Field runs only. The 1.x smoke test (`eval/crucible-smoke.mjs`) executed the Workflow script's control flow under a stub runtime; with the script gone there is no control flow to execute, and prompt-quality changes were never covered by it anyway. The sibling's fixture harness would have measured exactly that; it is gone too, so both pipelines are in the same position.
 
 ### Future work
 
@@ -306,9 +306,6 @@ agentic-toolkit/
 │       ├── cf-access-hosts.cjs   # the suffix allowlist, shared by proxy and preload
 │       ├── install.sh            # symlinks + config seed + launchd agent; status/uninstall
 │       └── apps.example, hosts.example, browser.example
-├── eval/
-│   ├── README.md                # seeded-bug fixture protocol (adversarial-review)
-│   └── score.mjs                # precision/recall scoring vs a fixture manifest
 ├── ARCHITECTURE.md
 ├── CHANGELOG.md
 └── README.md
@@ -316,4 +313,4 @@ agentic-toolkit/
 
 Both pipelines are pure prose now: each SKILL.md is its own pipeline, spawning isolated agents where they earn it, with no script to orchestrate them. session-migration is plain Bash over the Python script beside its SKILL.md — macOS only. cf-access is the same shape, except its scripts are also **installed** outside the skill: `install.sh` symlinks them into a bin dir (default `~/.claude/bin`) and loads a launchd agent, so the skill directory stays the single source of truth while the daemon and every wired client run from stable paths. Install via `npx skills add hardworker/agentic-toolkit` (scans for `SKILL.md`) or `/plugin marketplace add hardworker/agentic-toolkit`. On this machine the local installs are symlinks into this repo — `~/.claude/skills/<name>` (Claude Code) and `~/.agents/skills/<name>` (Codex CLI) both point at `skills/<name>`, so edits go live on the next session with no update step; don't run `npx skills update` over them. Codex CLI discovers the same SKILL.md via `.agents/skills` — crucible runs there in full; adversarial-review should once its Claude Code subagent type and model names are substituted, though it has not been exercised there.
 
-Neither pipeline has an executable surface left to test. `eval/` still holds the seeded-bug fixture protocol and `score.mjs`, which scores an adversarial-review run's record for recall and false positives — but no fixture has ever been built, so every change to that pipeline, the 2.0.0 rewrite included, is so far unvalidated. crucible's changes are validated by field runs. The research is clear that multi-agent protocol changes don't universally help and must be measured, which is the standard both are currently short of.
+Neither pipeline has an executable surface left to test, and neither has a harness. `eval/` — the seeded-bug fixture protocol plus `score.mjs`, which scored an adversarial-review run's record for recall and false positives — was dropped: no fixture was ever built for it, so it measured nothing, and a protocol nobody has run is not validation. Both pipelines are validated by field runs. The research is clear that multi-agent protocol changes don't universally help and must be measured, which is the standard both are short of; the removed protocol is in git history for whoever builds the first fixture.
