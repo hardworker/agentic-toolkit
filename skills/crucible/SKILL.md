@@ -95,23 +95,29 @@ Task by task, in dependency order:
 
 ## Phase 5 — Verify (loop)
 
-One loop, up to the effort level's rounds:
+One procedure, run again from the top until an exit condition fires. The loop's state is the `## Verify` section of `progress.md`, never your memory of the last round — so a compacted, restarted or handed-off context resumes mid-loop instead of starting over or mistaking round 1 for a finished job. Read, run, append, check, repeat.
 
+0. **Read** the `## Verify` section of `progress.md`: the last round number, the findings already declined and why, and the previous round's failures. This round is `last recorded + 1`; with no section yet, it is round 1.
 1. **Suite** — the full test command, plus lint/typecheck if the repo has them. Fix failures minimally; change a test only when the test itself is wrong for the new intended behavior, and say so.
 2. **Review the complete diff from two angles, independently.** One hunts what is broken, the other what should not exist; one reviewer asked for both dilutes into neither. Best available fresh context per angle: an agent that sees only the diff + `plan.md`, or a native review/simplify command, or — single-loop — two separate read-throughs, one mandate each, as someone who distrusts the builder.
    - *correctness* — merge-blocking only, ≤ 6 findings: defects (concrete failure scenario required), design errors (materially better alternative required), acceptance criteria the diff does not actually satisfy, hollow tests (tests that assert whatever the code does, or that cannot fail).
    - *simplification* — ≤ 4 findings, only on code this run touched, at two altitudes. Surface waste: dead code and unused exports the change introduced, indirection with a single caller, speculative options and config, comments restating the code. Over-built structure — walk the ladder against every new construct: does it need to exist at all (YAGNI); does the repo already have a helper, util or pattern this reimplements (cite it, `file:line`); does the stdlib or the platform cover it; would plain code beat the new abstraction or dependency. Each finding names the concrete smaller shape — the thing to delete, the helper to reuse, the API to call, the layers to collapse — with the same behavior; "rewrite it nicer" is not a finding.
 3. **Refute** each high correctness finding — try to disprove it in the files; drop it only on concrete evidence it is wrong. A simplification finding is refuted when applying it would change behavior, undo a confirmed fix, reach outside the diff, or when the files show the construct earns its place (a real second caller, an acceptance criterion that needs it). At `low` (0 votes) the step is skipped and findings are reported as unvetted.
-4. **Fix** confirmed findings — correctness first, then simplifications — and start the next round. A finding you decline is recorded with the reason and never raised again.
+4. **Fix** confirmed findings — correctness first, then simplifications. A finding you decline is recorded with the reason and never raised again.
+5. **Append the round to `progress.md`** — number, suite result, findings raised / confirmed / declined-with-reason / fixed, files touched — *before* deciding anything about the next round. A round with no written record did not happen; redo it rather than reasoning from recall.
+6. **Check the exits against what you just wrote**, and name the one that fires:
+   - `clean` — this round ended green, with no merge-blocking correctness findings and no unapplied simplifications.
+   - `capped` — the effort level's round count is reached.
+   - `stagnant` — the record shows the same failures or the same findings two rounds running. Report them; do not grind.
 
-Exit when a round ends green with no merge-blocking correctness findings and no unapplied simplifications, at the round cap, or when the same failures or findings come back two rounds running — then stop and report them rather than grinding.
+   None of the three fired → go back to step 0 and run the whole procedure again. There is no other way out of this loop, and step 4 is never the end of a round.
 
 ## Report
 
 - Status: `done` / `done-with-findings` / `challenged` / `blocked`.
 - The debate record: grill answers, each challenge and the user's ruling (or the halt reason under `--auto`), plus one line per challenge the defender killed.
 - What was built: tasks completed, files changed, deviations the implementation recorded.
-- Evidence: suite command and result, verify rounds run, correctness findings fixed vs remaining with `file:line`, and what the simplification angle removed or was declined. Name any phase that ran single-loop instead of in a fresh agent, and why.
+- Evidence: suite command and result, verify rounds run and which exit fired (`clean` / `capped` / `stagnant`), correctness findings fixed vs remaining with `file:line`, and what the simplification angle removed or was declined. Name any phase that ran single-loop instead of in a fresh agent, and why.
 - The run directory path.
 
 Do NOT re-review confirmed findings — they were already refuted once. Do NOT commit or push unless the user asks.

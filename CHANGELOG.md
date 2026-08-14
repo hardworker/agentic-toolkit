@@ -152,6 +152,12 @@ Initial release: recover Claude Code Desktop sessions stranded in another accoun
 
 # crucible
 
+## [2.1.0] — 2026-08-14
+
+### Changed
+
+- **The verify loop is now an explicit [Ralph loop](https://ghuntley.com/ralph/) over a file**, not a prose loop over the agent's memory. It was four steps and a sentence of exit conditions at the end — a shape you leave by deciding you are done, which after one round of fixes is an easy thing to decide, and which a compaction mid-loop erases the round count, the declined findings and the previous failures from in one go. Each pass now starts by reading the `## Verify` section of `progress.md` (round number, findings already declined and why, last round's failures), appends its own round record *before* evaluating anything, and only then checks three named exits — `clean`, `capped`, `stagnant` — against what it just wrote. None fires and the procedure runs again from step 0; step 4 is explicitly never the end of a round. The report names the exit that fired. Same round caps, same cost. No new artifact: `progress.md` already existed as the build's coordination record and already survived compaction, so the loop writes a section of it — which as a side effect makes the verify phase resumable by a fresh context, the one place in crucible where that is worth having.
+
 ## [2.0.1] — 2026-08-14
 
 ### Fixed
