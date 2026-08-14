@@ -4,6 +4,12 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.6.1] — 2026-08-14
+
+### Fixed
+
+- **The sign-in page showed a raw session id instead of the name.** The proxy quoted the session with `q()` for the log line and handed that same quoted string to the page generator, so the lookup compared `"<uuid>"` against `<uuid>` and matched nothing. Raw in the env now, quoted only at the log boundary. The stub broker in `selftest.sh` records what it was handed, so this cannot regress silently.
+
 ## [1.6.0] — 2026-08-14
 
 **Restart the daemon when updating** (`install.sh`): the preload goes live at once, only the new proxy strips its new headers.

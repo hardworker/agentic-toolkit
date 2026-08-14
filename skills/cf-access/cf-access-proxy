@@ -111,7 +111,7 @@ class TokenSource {
   mint(allowLogin, why = '', session = '') {
     const args = allowLogin ? ['token', this.app] : ['token', '--no-login', this.app];
     if (allowLogin) {
-      log(`sso ${this.app} — starting browser sign-in for ${why}${session && ` session=${session}`}`);
+      log(`sso ${this.app} — starting browser sign-in for ${why}${session && ` session=${q(session, 64)}`}`);
     }
     return new Promise((resolve) => {
       let killer;
@@ -294,7 +294,9 @@ async function proxyRequest({ req, res, upstream, body }) {
   const tokens = tokenSourceFor(origin);
   const state = gating.get(origin) || 'unknown';
   const why = `${req.method} ${routeOf(req.url)} ← ${clientTag(req)}`;
-  const session = req.headers['x-cf-access-session'] ? q(req.headers['x-cf-access-session'], 64) : '';
+  // Raw, not quoted: this is compared against session records downstream, and q() would make it
+  // match nothing. Quoted at the log boundary instead, where the injection risk actually is.
+  const session = String(req.headers['x-cf-access-session'] || '').slice(0, 64);
 
   let jwt = state === 'gated' ? await tokens.get({ holdMs: HOLD, why, session }) : null;
   let upRes = await forward({ upstream, req, body, jwt });

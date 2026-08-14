@@ -148,6 +148,7 @@ JWT=eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDAsImF1ZCI6WyJ0ZXN0YXVkIl19.sig
 
 cat >"$work/cf-access" <<STUB
 #!/bin/sh
+printf %s "\${CF_ACCESS_SESSION:-}" >"$work/env-session"
 case "\$*" in
   *--no-login*) exit 1 ;;
   token*) echo "$JWT" ;;
@@ -210,6 +211,9 @@ matches "sso trace names the request, the client and its session" \
   '*GET "/probe"?…*selftest-client.js*session="11111111-2222-3333-4444-555555555555"*' \
   "$(grep 'sso ' "$work/log" || true)"
 lacks "the query string never reaches the log" '*leakcanary*' "$(cat "$work/log")"
+# The broker compares this against session records, so a quoted value would match nothing.
+matches "the session reaches the broker unquoted" '11111111-2222-3333-4444-555555555555' \
+  "$(cat "$work/env-session" 2>/dev/null || true)"
 matches "an eval argument never becomes the client name" 'pid=* ppid=* node' \
   "$(cat "$work/hdr" 2>/dev/null || true)"
 [ "$fails" -eq 0 ] || exit 1
