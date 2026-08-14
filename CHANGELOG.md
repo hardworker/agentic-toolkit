@@ -152,6 +152,12 @@ Initial release: recover Claude Code Desktop sessions stranded in another accoun
 
 # crucible
 
+## [2.0.1] — 2026-08-14
+
+### Fixed
+
+- **The skeptic panel ran inside the context it exists to be independent of.** A field run (`/crucible --auto`, Claude Code Desktop) spawned zero agents: recon, all three lenses, the defender and both review angles happened in the main loop, and the report never said so. The host's own system prompt carries "do not call the AgentTool unless the user requested it", which outranks skill text; the ground rule's capability-conditional phrasing ("if your environment can spawn fresh isolated agents… every step also works single-loop") read as permission to resolve the tension by not spawning. The run's own reasoning names both halves of it. The rule now states that invoking crucible **is** the user asking, restricts the fallback to a spawn mechanism that is absent or actually fails, and makes the report name any phase that took it — a silent downgrade to one context grading its own homework is the failure mode worth surfacing, since the output looks identical either way.
+
 ## [2.0.0] — 2026-08-13
 
 A pure skill. The pipeline existed twice — a 647-line Workflow script and a sequential playbook — and every change had to land in both; nothing in the design actually needed deterministic control flow, since the gates are conversations and the loops are bounded by counts a paragraph can state. One SKILL.md is now the whole skill, which also means it runs wherever the Agent Skills standard does instead of only where the Workflow tool exists. The same pass fixed both ends of the pipeline: nobody was interrogating the user before the panel spent tokens, nobody was defending the idea against the skeptics, nothing ever looked at the diff a second time, and no phase ever deleted a line.
@@ -205,6 +211,12 @@ Initial release: end-to-end build pipeline (idea → tested code) that debates t
 - **Stub-runtime smoke test (`eval/crucible-smoke.mjs`)** — executes the real script's control flow with canned agent responses (30 checks: chaining, gates, blocked tasks, stagnation, refute kills, budget floors, error surfacing) at zero token cost.
 
 # adversarial-review
+
+## [2.0.2] — 2026-08-14
+
+### Fixed
+
+- **Same subagent-suppression hole as crucible 2.0.1**, prophylactically. A host system prompt that withholds subagents until the user asks for them can silently turn every "spawn one `general-purpose` agent" into the orchestrator doing it inline — which for this skill means the reviewer reads the target it must never see. The preamble now says the invocation is the request, and that an absent spawn mechanism is an `error`, not an invitation to self-review. No field failure observed here; the wording was already imperative, but it did not neutralize the rule it was competing with.
 
 ## [2.0.1] — 2026-08-14
 

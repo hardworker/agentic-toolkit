@@ -12,7 +12,7 @@ Two independent reviewers — a fresh agent and the Codex CLI — review the sam
 
 This runs long: 4 subagents and 2 Codex calls minimum, plus 2 calls per extra debate round and 1 agent with `--fix`. Say the review is running; don't block on it if the user has more requests.
 
-Agent spawns below name Claude Code's `general-purpose` subagent type and Claude model names; on another runtime, substitute its own fresh-agent mechanism and model tiers. A runtime that cannot spawn fresh agents cannot run this pipeline — every role depends on starting cold.
+Agent spawns below name Claude Code's `general-purpose` subagent type and Claude model names; on another runtime, substitute its own fresh-agent mechanism and model tiers. A runtime that cannot spawn fresh agents cannot run this pipeline — every role depends on starting cold, so a session rule that withholds fresh agents until the user asks for them is satisfied by this invocation. If the spawn mechanism is genuinely absent, report `error` rather than reviewing the target yourself.
 
 ## Arguments
 

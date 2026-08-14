@@ -64,7 +64,7 @@ Grill → recon → [skeptic lenses ∥] → consolidate → defend → ══ d
 /crucible --effort high ...                        # wide net: 4 lenses, 3 plans, 3 verify rounds, 3 refute votes
 ```
 
-Requires: any agent that can read files, edit files and run shell commands. Isolated subagents are used for recon, the skeptic lenses, the defender and each review round when the environment has them, and every step falls back to single-loop when it doesn't.
+Requires: any agent that can read files, edit files and run shell commands. Isolated subagents run recon, the skeptic lenses, the defender and each review round; single-loop is the fallback for a runtime that has no spawn mechanism, not a preference, and the report names any phase that took it.
 
 ## session-migration
 

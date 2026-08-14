@@ -32,7 +32,7 @@ The debate is the point. When the evidence contradicts the user's idea, argue it
 ## Ground rules
 
 - **Artifacts live outside the repo.** Write `brief.md`, `challenges.md`, `plan.md` and `progress.md` to your session's scratchpad directory if your environment provides one, else `~/.crucible/<repo-basename>/<timestamp>/`; tell the user the path once. They are your memory — re-read them after any context compaction instead of trusting recall, and update them the moment a decision changes. Nothing crucible writes may land in the working tree; the review phase inspects it.
-- **Isolation where it earns its keep.** If your environment can spawn fresh isolated agents, use them for recon, for each skeptic lens (in parallel, no cross-talk), for the defender, and for each review angle in each verify round — those are the steps whose value comes from *not* sharing your context. Consolidation, plan drafts, implementation and the suite run in your own loop. Every step also works single-loop; do it yourself where agents are unavailable.
+- **Isolation where it earns its keep, and invoking crucible is the request for it.** Spawn fresh isolated agents for recon, for each skeptic lens (in parallel, no cross-talk), for the defender, and for each review angle in each verify round — those are the steps whose value comes from *not* sharing your context. A session rule that withholds fresh agents until the user asks for them is satisfied by this invocation; do not read it as a reason to run the panel inside your own context. Consolidation, plan drafts, implementation and the suite run in your own loop. Fall back to single-loop only where no spawn mechanism exists or the spawn actually fails — never as a preference — and name the fallback in the report: one context attacking its own brief is the weakest form of this pipeline.
 - **Read-only until Develop.** Grill, recon, surface and plan touch no project file.
 - **Token discipline.** Read only the files a step needs, never re-read unchanged files, keep each artifact under a page. Caps: ≤ 10 assumptions, ≤ 8 tasks, ≤ 6 correctness and ≤ 4 simplification findings per verify round.
 - **No human (`--auto`, cron, restricted session)?** Wherever a phase says STOP, halt and report instead of guessing — a wrong guess wastes the whole build.
@@ -111,7 +111,7 @@ Exit when a round ends green with no merge-blocking correctness findings and no 
 - Status: `done` / `done-with-findings` / `challenged` / `blocked`.
 - The debate record: grill answers, each challenge and the user's ruling (or the halt reason under `--auto`), plus one line per challenge the defender killed.
 - What was built: tasks completed, files changed, deviations the implementation recorded.
-- Evidence: suite command and result, verify rounds run, correctness findings fixed vs remaining with `file:line`, and what the simplification angle removed or was declined.
+- Evidence: suite command and result, verify rounds run, correctness findings fixed vs remaining with `file:line`, and what the simplification angle removed or was declined. Name any phase that ran single-loop instead of in a fresh agent, and why.
 - The run directory path.
 
 Do NOT re-review confirmed findings — they were already refuted once. Do NOT commit or push unless the user asks.

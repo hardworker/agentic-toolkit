@@ -187,7 +187,7 @@ They exist for compaction recovery — re-read, never recalled — and stay out 
 
 ### Portability
 
-Written tool-agnostically per the [Agent Skills open standard](https://agentskills.io/specification): no tool names, capability-conditional wording ("if your environment can spawn fresh isolated agents…"), and a single-loop fallback for every step that would otherwise use one. Claude Code and Codex CLI discover the same SKILL.md and run the same pipeline; native review and simplification commands (e.g. `codex review`) slot into the verify loop's two angles where they exist.
+Written tool-agnostically per the [Agent Skills open standard](https://agentskills.io/specification): no tool names, and a single-loop fallback for every step that would otherwise use a fresh agent. That fallback is for a runtime with no spawn mechanism, and the wording has to say so — phrased as a capability condition ("if your environment can spawn fresh isolated agents…") it reads as permission, and a host whose own system prompt says *don't spawn subagents unless the user asked* resolves the tension by taking the fallback: the skeptic panel then runs inside the context it was built to be independent of, and nothing in the output shows it happened. So the ground rule states that invoking crucible **is** the user asking, restricts the fallback to a spawn that is absent or fails, and requires the report to name any phase that took it. Claude Code and Codex CLI discover the same SKILL.md and run the same pipeline; native review and simplification commands (e.g. `codex review`) slot into the verify loop's two angles where they exist.
 
 ### Validation
 
