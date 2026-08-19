@@ -12,7 +12,7 @@ Pipeline (4 subagents + 2 Codex calls, plus 2 calls per extra debate round):
 Scope → [Claude review ∥ Codex review] → debate, both ways, until agreed or stuck → Synthesis judge → (Fix loop)
 ```
 
-- Both reviewers work independently, then argue: round 1 is cross-examination, later rounds run only on findings still disputed, until they agree, stop moving, or hit `--rounds` (default 3).
+- Both reviewers work independently, then argue: round 1 is cross-examination, later rounds run only on findings still disputed, until they agree, stop moving, or hit the 3-round cap.
 - Conceding takes cited file evidence — deferring to the other reviewer isn't a resolution, and repeating a claim without new evidence is scored as deadlock, so the loop can't just converge on whoever argues hardest.
 - The synthesis judge arbitrates deadlocks and re-verifies in the actual files. Two reviewers finding something independently counts for more than agreement reached mid-argument.
 - Findings are typed: `defect` (concrete failure scenario required) or `design` (concrete better alternative required).
@@ -23,14 +23,12 @@ Scope → [Claude review ∥ Codex review] → debate, both ways, until agreed o
 ```
 /adversarial-review                            # auto: uncommitted changes, else branch diff vs default branch
 /adversarial-review working-tree               # uncommitted changes only
-/adversarial-review --base develop             # branch diff vs merge-base with develop
+/adversarial-review develop                    # branch diff vs merge-base with develop
 /adversarial-review openspec/changes/foo/      # review documents as they stand
-/adversarial-review --fix --iterations 2       # apply confirmed fixes, re-review, up to 2 rounds
-/adversarial-review --rounds 5                 # let the two models argue longer before the judge steps in
+/adversarial-review --fix                      # apply confirmed fixes, re-review, up to 3 iterations
 /adversarial-review --no-codex                 # skip Codex leg (cheaper single-model)
 /adversarial-review --effort low               # cheap precision pass: merge-blocking findings only
 /adversarial-review --effort high              # widest net, strongest model
-/adversarial-review --cwd ~/src/other-repo     # review a checkout outside the cwd
 /adversarial-review focus on the retry logic   # free text becomes reviewer focus
 ```
 

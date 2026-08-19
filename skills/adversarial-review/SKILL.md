@@ -1,7 +1,7 @@
 ---
 name: adversarial-review
 description: Adversarial Claude-vs-Codex debate review of any target — a branch diff, the working tree, or documents (specs, proposals, plans). Hunts real defects AND challenges design decisions, approaches, and implementation paths. Use when the user asks for an adversarial review, debate review, cross-model review, or hostile scrutiny of code or plans.
-argument-hint: "[path | working-tree] [--base <ref>] [--fix] [--iterations <n>] [--rounds <n>] [--effort <level>] [--no-codex] [--cwd <path>] [focus text]"
+argument-hint: "[path | working-tree | git ref] [--fix] [--effort low|medium|high] [--no-codex] [focus text]"
 ---
 
 # Adversarial Review
@@ -20,15 +20,14 @@ Agent spawns below name Claude Code's `general-purpose` subagent type and Claude
 |---|---|---|
 | _(nothing)_ | `target = auto` | uncommitted changes if any, else branch diff vs the default branch |
 | `working-tree` | `target = working-tree` | uncommitted changes only |
-| `--base <ref>` (or a bare git ref) | `target = <ref>` | branch diff vs merge-base with `<ref>` |
+| a git ref | `target = <ref>` | branch diff vs merge-base with `<ref>` |
 | a directory or file paths | `target = <paths>` | review those files as they stand — code or documents (e.g. `openspec/changes/<name>/`) |
-| `--fix` | fix loop on | debate → apply confirmed fixes → re-review |
-| `--iterations <n>` | fix-loop cap | max fix → re-review rounds, default 3 |
-| `--rounds <n>` | debate cap | max cross-examination rounds, default 3; the debate stops earlier the moment it agrees or stops moving |
+| `--fix` | fix loop on | debate → apply confirmed fixes → re-review, max 3 iterations |
 | `--no-codex` | solo | skip the Codex leg; a fresh critic still cross-examines |
 | `--effort <level>` | `effort = <level>` | `low` \| `medium` (default) \| `high` — see below |
-| `--cwd <path>` | external root | review a checkout outside the session cwd; it must already be at the right commit |
 | remaining free text | `focus` | extra lens for the reviewers (e.g. "these are OpenSpec artifacts; check tasks cover the specs") |
+
+The debate is capped at 3 rounds; both caps are backstops — each loop stops earlier the moment it agrees or stops moving.
 
 ### Effort presets
 
@@ -38,14 +37,13 @@ Agent spawns below name Claude Code's `general-purpose` subagent type and Claude
 | `medium` | 10 | standard | inherit | `opus` |
 | `high` | 20 | wide net | `opus` | `opus` |
 
-"inherit" = omit the model so the agent runs on the session model. `xhigh` and `max` are accepted and mean `high`; `--strict` and `--repo` are accepted and mean `--effort low` and `--cwd`.
+"inherit" = omit the model so the agent runs on the session model. `xhigh` and `max` are accepted and mean `high`.
 
 ## Step 1 — Scope
 
 Spawn one `general-purpose` agent, model `sonnet`. It resolves the target and nothing else — the diff must never enter your context, and it is not a rule you can follow by being careful, so a separate context holds it.
 
 > You resolve the scope of a review. Do NOT review anything yourself and do not judge what you see.
-> [when `--cwd`: Repository root: `<root>` — run every git command as `git -C <root> ...` and treat every path as relative to it.]
 > Target spec: "`<target>`". Resolve it:
 > - `auto`: run `git status --porcelain`; if there are uncommitted changes treat as `working-tree`, else diff HEAD against the repo default branch (treat as a ref target).
 > - `working-tree`: UNCOMMITTED changes only. files = changed and untracked paths. diffCommand = `git diff HEAD && git status --porcelain`, plus a note that untracked files must be read directly. Do NOT widen the scope to the branch diff even if the uncommitted delta is tiny.
@@ -61,7 +59,6 @@ Spawn one `general-purpose` agent, model `sonnet`. It resolves the target and no
 
 Step 1 produces the preamble every stage prompt starts with, the fixer included. Assemble it once and paste it into all of them:
 
-> [when `--cwd`: Repository root: `<root>` — file paths are relative to it; run every git command as `git -C <root> ...` and read files under that root.]
 > Target: `<the one-paragraph summary>`
 > [diff target: Changed files: `<list>`]
 > [diff target: See the changes: run `<diffCommand>`]
@@ -113,7 +110,7 @@ Both legs get the identical brief, differing only in id prefix. Neither sees the
 
 1. Write the brief (prefix `codex`) to a temp file, and the stage's JSON schema to a second one.
 2. Run with a 600000 ms Bash timeout:
-   `codex exec --sandbox read-only [-C <cwd>] --output-schema <schema> -o <answer.json> - < <brief> >/tmp/codex-log 2>&1`
+   `codex exec --sandbox read-only --output-schema <schema> -o <answer.json> - < <brief> >/tmp/codex-log 2>&1`
 3. Read `<answer.json>` — Codex's answer, and the only part you read. The redirect keeps its reasoning transcript out of your context; the log is for the failure path.
 4. On any failure, retry **once** adding `--disable code_mode_host` (the Homebrew cask ships without `codex-code-mode-host`).
 5. Missing binary, unauthenticated, non-zero exit, unparseable answer, or timeout → read the log, note the exact error, mark Codex unavailable for the rest of the run, and continue single-model. Never substitute your own review for Codex's.
@@ -145,7 +142,7 @@ Codex down or `--no-codex` → spawn a *fresh* `general-purpose` agent as critic
 
 **Disputed** = a finding whose latest verdict is `invalid` or `uncertain` and whose author has not conceded it. No disputes → go to Step 4.
 
-**Rounds 2..`<rounds>`** (default 3 total). Each side gets one call and does two jobs: answer the attacks on its own findings, and re-verdict the defences it received last round.
+**Rounds 2–3.** Each side gets one call and does two jobs: answer the attacks on its own findings, and re-verdict the defences it received last round.
 
 > Round `<n>` of an adversarial review debate. You are "`<side>`".
 > `<the context block>`
@@ -162,7 +159,7 @@ After each round, settle what you can and stop when any of these holds:
 
 - **No disputes left** — every finding is agreed valid, or its author conceded it.
 - **Nothing moved** — a whole round in which no stance changed and no `newEvidence` was offered. That is deadlock; the judge arbitrates.
-- **`<rounds>` reached.**
+- **Round 3 reached.**
 
 Then: conceded findings are dropped and never reach the judge. Surviving findings carry `settled` — `agreed` (the critic came to `valid`), `conceded-by-critic` (the critic withdrew an `invalid`), or `deadlocked` — plus the round number that settled them.
 
@@ -213,14 +210,14 @@ Three guards, then loop back to Step 2:
 - **Anti-anchoring memory.** Accumulate `{file, title}` for every finding actually fixed and pass the list into the next iteration's review brief, so fresh passes hunt what was missed instead of re-debating what was fixed.
 - **Stagnation breaker.** Fingerprint the confirmed set as sorted `file|title` pairs. An iteration confirming the same set as the previous one, or a fixer that fixed nothing → stop as `stagnant`.
 
-Iterations exhausted with findings still open → `max-iterations`.
+Three iterations exhausted with findings still open → `max-iterations`.
 
 ## Report
 
 Write the run record — `{status, target, iterations, rounds, effort, codexAvailable, confirmed, rejected, conceded, fixed, summary}` — to a temp file and give the path: a 30-minute run should leave a machine-readable artifact rather than only prose.
 
 - Status — `clean` / `issues-found` / `stagnant` / `max-iterations` / `scope-violation` / `nothing-to-review` / `error` — and iterations run. If the Codex leg never ran, say the debate was single-model and why (`codex login` restores it). `scope-violation` = the fixer touched files no finding names; the run stopped.
-- How the debate ended: rounds run, and whether it agreed, deadlocked, or hit `--rounds`. Name anything the judge had to arbitrate — that is where the two models could not be reconciled, and it is worth the user's attention.
+- How the debate ended: rounds run, and whether it agreed, deadlocked, or hit the round cap. Name anything the judge had to arbitrate — that is where the two models could not be reconciled, and it is worth the user's attention.
 - Each confirmed finding: kind (`defect`/`design`), severity, `file:line`, title, agreement (`both`/`claude-only`/`codex-only`), how it settled, fixRecommendation.
 - Findings one side withdrew: id and title only, one line. They were real enough to raise and are worth a glance.
 - Fix mode: fixed vs. still open.

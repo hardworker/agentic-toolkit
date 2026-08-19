@@ -251,6 +251,13 @@ Initial release: end-to-end build pipeline (idea → tested code) that debates t
 
 # adversarial-review
 
+## [3.0.0] — 2026-08-19
+
+### Removed
+
+- **Four flags: `--base`, `--iterations`, `--rounds`, `--cwd`** — none had ever been reached for, and each was either a duplicate or a dial on a constant. `--base <ref>` duplicated the bare-ref target (`/adversarial-review develop`), which stays. `--iterations` and `--rounds` tuned caps whose loops already stop earlier on their own — agreement, stagnation, concession — so both are now fixed constants of 3 and the flags' only real job (backstop) is intact. `--cwd` reviewed a checkout outside the session cwd; start the session in that repo instead. Its removal also deletes the two `[when --cwd]` conditionals from the stage prompts and `-C` from the Codex invocation.
+- **The legacy aliases `--strict` and `--repo`** (for `--effort low` and `--cwd`). `xhigh`/`max` still parse and mean `high`, since `--effort` shares its axis with `/code-review`.
+
 ## [2.0.2] — 2026-08-14
 
 ### Fixed
