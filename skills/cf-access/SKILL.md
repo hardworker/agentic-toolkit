@@ -69,7 +69,7 @@ cf-access login
 |---|---|
 | `apps` | app origins `login`/`list` operate on. Origins only, no paths |
 | `hosts` | **domain suffixes** the proxy will forward to. Required for the proxy — with no `hosts` file nothing is allowed, and the preload patches nothing |
-| `proxy` | optional fixed ports: `<port> <upstream-origin>` per line, hot-reloaded (polled every 2s, no restart) |
+| `proxy` | optional fixed ports: `<port> <upstream-origin>` per line, hot-reloaded (polled every 2s, no restart). A trailing `# label` names the route, for clients that cannot name themselves |
 | `browser` | optional: an account address (resolved to the browser profile signed in as it) or a command that opens the SSO page — for sending work SSO to a work profile instead of the default browser. `CF_ACCESS_BROWSER` overrides it |
 
 `hosts` holds suffixes rather than apps so an app added under the domain next month needs no configuration. It is also the allowlist that keeps the dynamic port from being an open forwarder on loopback — **only put domains you own in it**.
@@ -93,7 +93,7 @@ cf-access: if no browser opens, log in here:
   https://<team>.cloudflareaccess.com/cdn-cgi/access/cli?...
 ```
 
-— and `browser` / `CF_ACCESS_BROWSER` decides who receives it. Three forms:
+— and `browser` / `CF_ACCESS_BROWSER` decides who receives it. Every login opens on the local page below and logs one `sso` line, direct calls included. Except at a terminal (stderr is a tty): you already know who asked, so the browser goes straight through. Three forms:
 
 | Value | Meaning |
 |---|---|
@@ -117,16 +117,18 @@ Two details worth knowing, because both look like bugs otherwise: an app URL is 
 - **Every browser window says what caused it.** One line as the proxy decides SSO is needed:
 
 ```
-sso https://ci.example.com — starting browser sign-in for GET "/api/jobs"?… ← "pid=8123 ppid=8100 server.mjs" session="<uuid>"
+sso https://ci.example.com GET "/api/jobs"?… ← "pid=8123 ppid=8100 server.mjs" session="<uuid>"
 ```
 
   The only signal a round-trip happened — `token ok` covers cached reads too. Fires before the attempt; a failure follows as `token FAILED`.
 
-  **The window opens on a local page** naming app, session and trigger, linking on to Cloudflare. Proxy-opened logins only. Not an iframe: the IdP sends `X-Frame-Options: DENY`.
+  **The window opens on a local page** naming app, session and trigger, linking on to Cloudflare. Not an iframe: the IdP sends `X-Frame-Options: DENY`.
 
-  The **session name** comes from the desktop record (`claude-code-sessions/`, matched on `cliSessionId`), else the CLI's derived `name`; unresolved shows the raw id.
+  A **direct call names itself** — `cf-access curl pid=… ppid=…`, session from `CLAUDE_CODE_SESSION_ID` — into the same log, so one `grep sso` covers both.
 
-  Path only, never the query string. Identity is `x-cf-access-client` + `x-cf-access-session`; unreached clients show `peer :<port>`.
+  The **session name** comes from the desktop record (matched on either id), else the CLI's `name`; with no title yet, its worktree or directory. A coarse name beats a uuid.
+
+  Path only, never the query string. Identity is `x-cf-access-client` + `x-cf-access-session`; a fixed-port client can send neither, so its route answers instead — `fixed port 8790 ("admin panel MCP")`, or `peer :<port>` unlabelled.
 
 - **Renewal.** Tokens are cached per origin until 10 min before expiry, minting is single-flight (a stampede collapses into one mint), and a browser login is rate-limited to once a minute so a burst of failures cannot stack up tabs. Single-flight is also what makes the trace honest: the request that creates the mint is named, and the ones that join it are not — they did not cause the window.
 - **Request bodies are buffered** so a token retry replays the request byte-for-byte.
@@ -169,7 +171,7 @@ MCP configs generally do not expand `~` or `$HOME` — write the absolute path.
 }
 ```
 
-For a non-Node client, give it a fixed port instead — `8790 https://ci.example.com` in `~/.config/cloudflare-access/proxy`, then point the client at `http://127.0.0.1:8790`.
+For a non-Node client, give it a fixed port instead — `8790 https://ci.example.com   # the CI dashboard` in `~/.config/cloudflare-access/proxy`, then point the client at `http://127.0.0.1:8790`. Label the line: it is the only name that traffic gets.
 
 ## Troubleshooting
 
@@ -185,7 +187,7 @@ For a non-Node client, give it a fixed port instead — `8790 https://ci.example
 | log says `client credential rejected by Access` | the client's service token is not on the app's policy (Access reports `service_token_status: false` on its login page) | fix the service token in Cloudflare, or accept the broker fallback — but know the client now depends on a browser token |
 | an `sso` line but no window | the org session was warm, so `cloudflared` minted silently — no human needed. A `token ok` for the same origin follows within seconds | none |
 | a browser window appeared and you don't know who asked | — | the window names its cause; after the fact `grep sso ~/Library/Logs/cf-access-proxy.log` |
-| the trace says `peer :<port>` | not Node, or uses `undici`/`node:http2`, which the preload does not patch | `lsof -nP -iTCP:<port>` while the request is open |
+| the trace says `peer :<port>` | a fixed route with no label; otherwise not Node, or `undici`/`node:http2`, which the preload does not patch | label the route in `proxy`; else `lsof -nP -iTCP:<port>` while the request is open |
 | a client you never wired is going through the proxy | `NODE_OPTIONS` is set globally (e.g. in `~/.claude/settings.json`), so **every** Node process is patched | intended for blanket coverage; scope it to one client's `env` if you want it narrower. The `sso` trace names which client it was |
 | `cf-access list` shows `no token` right after a successful login | login was for a different origin (path or scheme mismatch) | use the exact origin, no path |
 | no browser window appears during a login | wrong or swallowed opener command | open the URL the login printed; then fix it with `cf-access browser` as the check |
@@ -195,7 +197,7 @@ For a non-Node client, give it a fixed port instead — `8790 https://ci.example
 ## Rules
 
 - A JWT is a bearer credential for a whole app. Never print one into a shared transcript, a commit, an issue, or a log. Pass tokens by env or header; `cf-access token` exists for piping, not for pasting.
-- The proxy log is world-readable and never rotated, so what reaches it is an **allowlist, never a dump**: pid, script name, session id, request path. Never argv, environment values or headers — the proxy holds the client's `CF_Authorization` at that point. Wire values are quoted and bounded.
+- The log is world-readable, never rotated, and written by both proxy and broker, so what reaches it is an **allowlist, never a dump**: pid, script name, session id, route label, request path. Never argv, environment values or headers — the proxy holds the client's `CF_Authorization` at that point. Wire values are quoted and bounded; a session id not shaped like one is dropped, not escaped at every use.
 - Never widen `hosts` to a domain the user does not control — every entry is a host the loopback proxy will forward to on behalf of anything running as the user.
 - The proxy binds `127.0.0.1` only. Do not change that, and do not add an auth-free route to a host outside the user's org.
 - Do not hand-edit files in `~/.cloudflared/` — they are cloudflared's cache, keyed by the token's own `aud`.

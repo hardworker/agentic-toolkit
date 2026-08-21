@@ -18,14 +18,16 @@
 #
 # Apps come from $CF_ACCESS_APPS_FILE (default ~/.config/cloudflare-access/apps).
 #
-# $CF_ACCESS_TRACE and $CF_ACCESS_SESSION are set by cf-access-proxy on the child it spawns, not
-# by you. Absent from install.sh's TUNABLES, which carries launchd→daemon knobs only.
+# $CF_ACCESS_TRACE and $CF_ACCESS_SESSION are set by cf-access-proxy on the child it spawns, and
+# read by do_login. Absent from install.sh's TUNABLES, which carries launchd→daemon knobs only.
 set -eu
 
 APPS_FILE="${CF_ACCESS_APPS_FILE:-$HOME/.config/cloudflare-access/apps}"
 BROWSER_FILE="${CF_ACCESS_BROWSER_FILE:-$HOME/.config/cloudflare-access/browser}"
 SKEW="${CF_ACCESS_SKEW:-600}"                          # refresh when under this many seconds of life left
 LOGIN_DEADLINE="${CF_ACCESS_LOGIN_DEADLINE:-120}"      # kill an unanswered browser SSO after this
+# The daemon's log on purpose: one grep answers "who opened that window".
+LOG_FILE="${CF_ACCESS_LOG:-$HOME/Library/Logs/cf-access-proxy.log}"
 case "$(uname -s)" in
   Darwin) PLATFORM_OPENER=open ;;
   *) PLATFORM_OPENER=xdg-open ;;
@@ -39,6 +41,12 @@ esac
 die() {
   echo "cf-access: $*" >&2
   exit 1
+}
+
+# No log dir (any non-macOS box) means no line, never a failed login.
+log_line() {
+  [ -d "${LOG_FILE%/*}" ] || return 0
+  printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >>"$LOG_FILE" 2>/dev/null || true
 }
 
 command -v cloudflared >/dev/null 2>&1 || die "cloudflared not installed (brew install cloudflared)"
@@ -150,6 +158,16 @@ token_cache_files() {
 # back if the login fails, otherwise a browser-less machine would lose a usable token.
 do_login() {
   echo "cf-access: browser SSO for $1" >&2
+  trace=${CF_ACCESS_TRACE:-}
+  session=${CF_ACCESS_SESSION:-${CLAUDE_CODE_SESSION_ID:-}}
+  # Reaches a world-readable log and a web page; the shape the preload already demands.
+  case "$session" in *[!0-9A-Fa-f-]*) session= ;; esac
+  # An untraced login is exactly the window nobody could account for, so it names itself and says
+  # so — the proxy already logged the ones it started. $cmd is global, from the dispatch below.
+  if [ -z "$trace" ]; then
+    trace="cf-access $cmd pid=$$ ppid=$PPID"
+    log_line "sso $1 $trace${session:+ session=\"$session\"}"
+  fi
   resolve_browser
   stash=$(mktemp -d)
   token_cache_files "$1" | while IFS= read -r f; do
@@ -208,9 +226,8 @@ do_login() {
     # A window nobody asked for gets a page naming its cause. Not an iframe: the IdP sends
     # X-Frame-Options: DENY.
     target=$url
-    # ponytail: "has a trace" stands in for "nobody asked for this", true only while the proxy is
-    # the sole producer — add `[ ! -t 2 ]` once another caller sets one.
-    if [ -n "${CF_ACCESS_TRACE:-}" ]; then
+    # A tty means you already know who asked, so the page would be one click in the way.
+    if [ ! -t 2 ]; then
       # Quoted heredoc, so this is ordinary JS, not JS escaped for sh.
       cat >"$stash/page.cjs" <<'PAGE'
 const fs = require('fs');
@@ -226,8 +243,9 @@ const esc = (s) =>
 // A uuid names nothing to a human. Desktop record first, else the CLI's derived name. Here, not
 // in the preload, which every Node process would pay for. Another product's private layout —
 // session-migration/ccd_sessions.py reads the same tree.
+// `pick`, not a field name: freshness has to be judged on what actually resolves.
 // ponytail: reads every record; a keyed lookup pays off at thousands.
-const newest = (dir, match, stamp, field) => {
+const newest = (dir, match, stamp, pick) => {
   let best = null;
   try {
     const walk = (d) => {
@@ -237,28 +255,34 @@ const newest = (dir, match, stamp, field) => {
         else if (e.name.endsWith('.json')) {
           try {
             const o = JSON.parse(fs.readFileSync(p, 'utf8'));
-            if (match(o) && o[field] && (!best || (o[stamp] || 0) > (best[stamp] || 0))) best = o;
+            if (match(o) && pick(o) && (!best || (o[stamp] || 0) > (best[stamp] || 0))) best = o;
           } catch {}
         }
       }
     };
     walk(dir);
   } catch {}
-  return best ? String(best[field]) : '';
+  return best ? String(pick(best)) : '';
 };
 
 const home = os.homedir();
-// Account-scoped and nested per org, hence the walk; a switched account still resolves.
+// Account-scoped and nested per org, hence the walk; a switched account still resolves. A title
+// lands only after the first turn, so every step falls through: a coarse name beats a uuid.
 const sessionName = !sessionId
   ? ''
   : newest(
       path.join(home, 'Library/Application Support/Claude/claude-code-sessions'),
-      (o) => o.cliSessionId === sessionId,
+      (o) => o.cliSessionId === sessionId || o.sessionId === sessionId,
       'lastActivityAt',
-      'title'
+      (o) => o.title || o.worktreeName || path.basename(o.cwd || '') || o.branch
     ) ||
     // A resumed session writes a second record under its new pid; newest wins.
-    newest(path.join(home, '.claude/sessions'), (o) => o.sessionId === sessionId, 'startedAt', 'name');
+    newest(
+      path.join(home, '.claude/sessions'),
+      (o) => o.sessionId === sessionId,
+      'startedAt',
+      (o) => o.name || path.basename(o.cwd || '')
+    );
 
 fs.writeFileSync(out, `<!doctype html><meta charset="utf-8">
 <title>cf-access: sign-in needed</title>
@@ -280,12 +304,11 @@ fs.writeFileSync(out, `<!doctype html><meta charset="utf-8">
   <dt>Triggered by</dt><dd>${esc(trace)}${sessionName ? '' : esc(sessionId ? ` session=${sessionId}` : '')}</dd>
 </dl>
 <a class="go" href="${esc(url)}">Continue to sign-in</a>
-<p class="note">Opened by cf-access. If this was not something you expected, close this tab &mdash;
-nothing is signed in until you continue.</p>
+<p class="note">Opened by cf-access. Not expecting it? Close the tab &mdash; nothing is signed
+in until you continue.</p>
 `);
 PAGE
-      if node "$stash/page.cjs" "$stash/sso.html" "$url" "$CF_ACCESS_TRACE" "$1" \
-        "${CF_ACCESS_SESSION:-}" 2>/dev/null; then
+      if node "$stash/page.cjs" "$stash/sso.html" "$url" "$trace" "$1" "$session" 2>/dev/null; then
         target="file://$stash/sso.html"
       fi
     fi

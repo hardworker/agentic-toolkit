@@ -108,31 +108,50 @@ exit 0
 STUB
 chmod +x "$stub/cloudflared"
 
+# A version-manager `node` shim lives in the real HOME, so the faked HOME below breaks it (126).
+ln -sf "$(node -e 'process.stdout.write(process.execPath)')" "$stub/node"
+
 # The opener's own output is silenced (browsers must not spam the terminal), so the
-# recorded argument is what proves it ran.
+# recorded argument is what proves it ran. It keeps the page too: the checks below read it.
 opened="$work/opened"; : >"$opened"
-login_out=$(PATH="$stub:$PATH" CF_ACCESS_BROWSER="/bin/sh -c 'printf %s \"\$1\" >\"$opened\"' opener" \
+opener="/bin/sh -c 'printf %s \"\$1\" >\"$opened\"; cp \"\${1#file://}\" \"$work/page.html\" 2>/dev/null' opener"
+
+# Direct mode. Stderr is a pipe, which stands in for "no human watching"; HOME is faked so the
+# record below is the only one in reach.
+mkdir -p "$work/home/.claude/sessions"
+SESSION=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+echo "{\"sessionId\":\"$SESSION\",\"cwd\":\"/tmp/projects/my-worktree\",\"startedAt\":1}" \
+  >"$work/home/.claude/sessions/1.json"
+login_out=$(PATH="$stub:$PATH" HOME="$work/home" CF_ACCESS_LOG="$work/broker.log" \
+  CLAUDE_CODE_SESSION_ID="$SESSION" CF_ACCESS_BROWSER="$opener" \
   "$CF" login https://stub.example 2>&1 || true)
+direct_page=$(cat "$work/page.html" 2>/dev/null || true)
 
 matches "login reports the url" '*cdn-cgi/access/cli?token=stub*' "$login_out"
-check "login hands the url to the opener" \
-  "https://example.cloudflareaccess.com/cdn-cgi/access/cli?token=stub" "$(cat "$opened")"
+matches "an untraced login still opens the sign-in page" 'file://*sso.html' "$(cat "$opened")"
+matches "an untraced login names itself" '*cf-access login pid=*' "$direct_page"
+matches "an untraced login records itself in the log" \
+  '*sso https://stub.example*cf-access login pid=*' "$(cat "$work/broker.log" 2>/dev/null || true)"
+# A directory beats a bare uuid.
+matches "a nameless session falls back to its directory" '*>my-worktree<*' "$direct_page"
 
 # The trace must reach the page as text, never markup. The session id names no record.
 trace='GET "/probe" ← "pid=1 ppid=2 <script>alert(1)</script>"'
+: >"$opened"; : >"$work/page.html"
 CF_ACCESS_TRACE="$trace" CF_ACCESS_SESSION=00000000-0000-0000-0000-000000000000 PATH="$stub:$PATH" \
-  CF_ACCESS_BROWSER="/bin/sh -c 'printf %s \"\$1\" >\"$opened\"; cp \"\${1#file://}\" \"$work/page.html\" 2>/dev/null' opener" \
+  CF_ACCESS_LOG="$work/traced.log" CF_ACCESS_BROWSER="$opener" \
   "$CF" login https://stub.example >/dev/null 2>&1 || true
 
 page=$(cat "$work/page.html" 2>/dev/null || true)
-matches "a traced login opens the sign-in page" 'file://*sso.html' "$(cat "$opened")"
 matches "the sign-in page escapes the trace" '*&lt;script&gt;*' "$page"
 lacks "the trace never reaches the page as markup" '*<script>alert*' "$page"
 matches "the sign-in page links to the sso url" '*cdn-cgi/access/cli?token=stub*' "$page"
 matches "an unnameable session still yields a page" '*session=00000000-*' "$page"
+# The proxy logged this one already.
+check "a traced login leaves the log to the proxy" "" "$(cat "$work/traced.log" 2>/dev/null || true)"
 
 # Asked for: fixed ports once collided with a real service, and the harness tested against it.
-read -r UP_PORT PX_PORT <<PORTS
+read -r UP_PORT PX_PORT FX_PORT <<PORTS
 $(node -e '
   const net = require("net");
   const grab = () => new Promise((r) => {
@@ -141,14 +160,14 @@ $(node -e '
       s.close(() => r(port));
     });
   });
-  Promise.all([grab(), grab()]).then((p) => process.stdout.write(p.join(" ")));
+  Promise.all([grab(), grab(), grab()]).then((p) => process.stdout.write(p.join(" ")));
 ')
 PORTS
 JWT=eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDAsImF1ZCI6WyJ0ZXN0YXVkIl19.sig
 
 cat >"$work/cf-access" <<STUB
 #!/bin/sh
-printf %s "\${CF_ACCESS_SESSION:-}" >"$work/env-session"
+printf '%s\n' "\${CF_ACCESS_SESSION:-}" >>"$work/env-session"
 case "\$*" in
   *--no-login*) exit 1 ;;
   token*) echo "$JWT" ;;
@@ -156,17 +175,18 @@ esac
 STUB
 chmod +x "$work/cf-access"
 echo localhost >"$work/hosts"
-: >"$work/routes"
+# A labelled fixed route: its client can never name itself. A different origin from the dynamic
+# test's, so it gets its own token cache instead of that one's warm state.
+printf '%s http://127.0.0.1:%s   # stub route\n' "$FX_PORT" "$UP_PORT" >"$work/routes"
 
-# Redirect first (forcing a mint), then echo headers. It records `x-cf-access-client` only when
-# a request bypassed the proxy — the eval case below, so no third server is needed.
+# Gated the way a real host is: no token, no service. It records `x-cf-access-client` only when a
+# request bypassed the proxy — the eval case below, so no third server is needed.
 node -e '
   const fs = require("fs");
-  let seen = 0;
   require("http").createServer((req, res) => {
     const client = req.headers["x-cf-access-client"];
     if (client) fs.writeFileSync(process.argv[2], String(client));
-    if (seen++ === 0) {
+    if (!req.headers["cf-access-token"]) {
       res.writeHead(302, { location: "https://team.cloudflareaccess.com/cdn-cgi/access/login/x" });
       return res.end();
     }
@@ -202,6 +222,8 @@ CF_ACCESS_HOSTS_FILE="$work/hosts" CF_ACCESS_PROXY_DYNAMIC_PORT="$UP_PORT" CLAUD
   /var/run/secrets/tok_AKIAIOSFODNN7EXAMPLE >/dev/null 2>&1 || true
 wait_for '[ -s "$work/hdr" ]' || true
 
+curl -s -o /dev/null -m 2 "http://127.0.0.1:$FX_PORT/fixed" || true
+
 kill "$px_pid" "$up_pid" 2>/dev/null || true
 wait "$px_pid" "$up_pid" 2>/dev/null || true
 
@@ -212,9 +234,11 @@ matches "sso trace names the request, the client and its session" \
   "$(grep 'sso ' "$work/log" || true)"
 lacks "the query string never reaches the log" '*leakcanary*' "$(cat "$work/log")"
 # The broker compares this against session records, so a quoted value would match nothing.
-matches "the session reaches the broker unquoted" '11111111-2222-3333-4444-555555555555' \
+matches "the session reaches the broker unquoted" '*11111111-2222-3333-4444-555555555555*' \
   "$(cat "$work/env-session" 2>/dev/null || true)"
 matches "an eval argument never becomes the client name" 'pid=* ppid=* node' \
   "$(cat "$work/hdr" 2>/dev/null || true)"
+matches "a fixed route lends its label to the trace" "*fixed port $FX_PORT*stub route*" \
+  "$(grep 'sso ' "$work/log" || true)"
 [ "$fails" -eq 0 ] || exit 1
 echo "all good"

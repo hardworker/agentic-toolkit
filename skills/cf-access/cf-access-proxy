@@ -10,7 +10,7 @@
 // `x-cf-access-upstream` header and allows any host matching a suffix in
 // ~/.config/cloudflare-access/hosts. Optional fixed ports for clients that cannot send
 // that header live in $CF_ACCESS_PROXY_CONFIG (default ~/.config/cloudflare-access/proxy),
-// one `<port> <upstream-origin>` pair per line.
+// one `<port> <upstream-origin>` pair per line, plus an optional trailing `# label`.
 //
 // Tokens are minted by `cf-access`, cached until SKEW seconds before expiry, and
 // refreshed once (single-flight, rate-limited) when a response still comes back as a
@@ -48,10 +48,12 @@ const q = (s, n = 128) => JSON.stringify(String(s ?? '').slice(0, n));
 // The broker prints the SSO URL on failure; this log is world-readable and never rotated.
 const redact = (s) => s.replace(/https:\/\/\S*\/cdn-cgi\/access\/cli\?\S*/g, '<sso-url redacted>');
 
-const clientTag = (req) =>
+// A fixed-port client sits on loopback and knows nothing about cf-access, so it can never name
+// itself. The route is the only identity left.
+const clientTag = (req, route) =>
   req.headers['x-cf-access-client']
     ? q(req.headers['x-cf-access-client'])
-    : `peer :${req.socket.remotePort}`;
+    : route || `peer :${req.socket.remotePort}`;
 
 // Query strings carry signatures and tokens. `?…` distinguishes "none" from "withheld".
 const routeOf = (url) => {
@@ -71,14 +73,17 @@ function readRoutes() {
 
   const routes = [];
   for (const raw of text.split('\n')) {
-    const line = raw.replace(/#.*/, '').trim();
+    const [head, ...note] = raw.split('#');
+    const line = head.trim();
     if (!line) continue;
     const [port, upstream] = line.split(/\s+/);
     if (!/^\d+$/.test(port || '') || !/^https?:\/\//.test(upstream || '')) {
       log(`ignoring malformed line: ${raw.trim()}`);
       continue;
     }
-    routes.push({ port: Number(port), upstream: new URL(upstream) });
+    const label = note.join('#').trim();
+    const route = `fixed port ${port}${label ? ` (${q(label, 48)})` : ''}`;
+    routes.push({ port: Number(port), upstream: new URL(upstream), route });
   }
   return routes;
 }
@@ -111,7 +116,7 @@ class TokenSource {
   mint(allowLogin, why = '', session = '') {
     const args = allowLogin ? ['token', this.app] : ['token', '--no-login', this.app];
     if (allowLogin) {
-      log(`sso ${this.app} — starting browser sign-in for ${why}${session && ` session=${q(session, 64)}`}`);
+      log(`sso ${this.app} ${why}${session && ` session=${q(session, 64)}`}`);
     }
     return new Promise((resolve) => {
       let killer;
@@ -267,7 +272,7 @@ const isSelf = (u) =>
   ['127.0.0.1', 'localhost', '::1'].includes(u.hostname) &&
   ownPorts.has(Number(u.port || (u.protocol === 'https:' ? 443 : 80)));
 
-async function proxyRequest({ req, res, upstream, body }) {
+async function proxyRequest({ req, res, upstream, body, route }) {
   // Defence in depth against the loop above: refuse to forward to ourselves.
   if (isSelf(upstream)) {
     log(`loop refused: ${upstream.origin}`);
@@ -293,7 +298,7 @@ async function proxyRequest({ req, res, upstream, body }) {
 
   const tokens = tokenSourceFor(origin);
   const state = gating.get(origin) || 'unknown';
-  const why = `${req.method} ${routeOf(req.url)} ← ${clientTag(req)}`;
+  const why = `${req.method} ${routeOf(req.url)} ← ${clientTag(req, route)}`;
   // Raw, not quoted: this is compared against session records downstream, and q() would make it
   // match nothing. Quoted at the log boundary instead, where the injection risk actually is.
   const session = String(req.headers['x-cf-access-session'] || '').slice(0, 64);
@@ -342,9 +347,9 @@ const withBody = (handler) => (req, res) => {
   });
 };
 
-function serve({ port, upstream }) {
+function serve({ port, upstream, route }) {
   const server = http.createServer(
-    withBody((req, res, body) => proxyRequest({ req, res, upstream, body }))
+    withBody((req, res, body) => proxyRequest({ req, res, upstream, body, route }))
   );
 
   ownPorts.add(port);
@@ -356,10 +361,11 @@ function serve({ port, upstream }) {
   return server;
 }
 
-const active = new Map(); // "port->origin" -> server
+const active = new Map(); // "<route> -> origin" -> server
 
 function reconcile() {
-  const wanted = new Map(readRoutes().map((r) => [`${r.port}->${r.upstream.origin}`, r]));
+  // The route text is the key, so a renamed label restarts that listener. Caches key on origin.
+  const wanted = new Map(readRoutes().map((r) => [`${r.route} -> ${r.upstream.origin}`, r]));
 
   for (const [key, server] of active) {
     if (!wanted.has(key)) {

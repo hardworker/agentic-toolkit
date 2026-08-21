@@ -4,6 +4,31 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.7.0] — 2026-08-21
+
+**Restart the daemon when updating** (`install.sh`): route labels are read by the proxy.
+
+### Added
+
+- **A direct login explains itself like a proxied one.** `cf-access curl` / `token` / `env` carried no trace, so the page was skipped and the browser opened straight onto Cloudflare — no app, no session, no cause, and no log line to attribute the window to later. The broker now names itself (`cf-access curl pid=…`, session from `CLAUDE_CODE_SESSION_ID`) into the same log, so one `grep sso` covers every window. A login typed at a terminal still goes straight through: a tty proves someone knows who asked.
+- **A fixed route can be labelled.** A trailing `# label` on a `proxy` line turns `peer :54239` into `fixed port 8790 ("admin panel MCP")`. Such a client sits on loopback and knows nothing about cf-access, so the route is its only identity.
+
+### Fixed
+
+- **A named session could still show a raw uuid.** The lookup demanded `title` on the desktop record or `name` on the CLI one; a title lands only after the first turn, a terminal session has no desktop record, and the CLI record dies with its pid. Now either id matches, and each store degrades through worktree and directory.
+
+### Changed
+
+- The `sso` line dropped its `— starting browser sign-in for` filler. `sso` already said it.
+
+### Security
+
+- A session id off the environment is validated once, in the broker, before it reaches a world-readable log and a web page.
+
+### Notes
+
+- `selftest.sh` covers all three, and resolves the `node` shim so a faked `HOME` no longer exits 126. Log rotation still absent.
+
 ## [1.6.1] — 2026-08-14
 
 ### Fixed
