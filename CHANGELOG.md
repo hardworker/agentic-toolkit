@@ -4,6 +4,13 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.7.1] — 2026-08-27
+
+### Fixed
+
+- **A session-capped token reopened SSO on every call.** A login that can't extend the token now stamps it, and the still-live token is served until it expires. `--fresh` (on any subcommand) ignores the stamp; the proxy forces it once when Access rejects a token.
+- `selftest.sh` exited 1 on a green run.
+
 ## [1.7.0] — 2026-08-21
 
 **Restart the daemon when updating** (`install.sh`): route labels are read by the proxy.

@@ -8,7 +8,8 @@ CF="$DIR/cf-access"
 fails=0
 
 work=$(mktemp -d)
-trap 'kill ${px_pid:-} ${up_pid:-} 2>/dev/null; rm -rf "$work"' EXIT INT TERM
+# || true: under set -e, killing already-reaped pids would fail the trap.
+trap 'kill ${px_pid:-} ${up_pid:-} 2>/dev/null || true; rm -rf "$work"' EXIT INT TERM
 
 wait_for() {
   i=0
@@ -91,17 +92,22 @@ else
   echo "skip  account resolution (no signed-in browser profiles here)"
 fi
 
-# The login path must report the URL and hand it to the opener. A stub cloudflared stands
-# in for the real one so this never starts an SSO round-trip.
+# One stub cloudflared for every test, so nothing starts a real SSO round-trip: `access token`
+# reads the emulated cache; `access login` mints into it only under MINT=1 and records itself
+# when LOGINS is set. Builtins only: the broker runs `access login` under PATH=/var/empty.
+JWT=eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDAsImF1ZCI6WyJ0ZXN0YXVkIl19.sig
 stub="$work/stub"; mkdir -p "$stub"
-cat >"$stub/cloudflared" <<'STUB'
+cat >"$stub/cloudflared" <<STUB
 #!/bin/sh
-case "$*" in
+tok="\$HOME/.cloudflared/app-testaud-token"
+case "\$*" in
+  *"access token"*) [ -f "\$tok" ] && read -r t <"\$tok" && printf '%s' "\$t" ;;
   *"access login"*)
+    echo login >>"\${LOGINS:-/dev/null}"
     echo "Please open the following URL and log in with your Cloudflare account:"
     echo ""
     echo "https://example.cloudflareaccess.com/cdn-cgi/access/cli?token=stub"
-    sleep 1
+    [ "\${MINT:-}" = 1 ] && printf '%s\n' "$JWT" >"\$tok"
     ;;
 esac
 exit 0
@@ -150,6 +156,48 @@ matches "an unnameable session still yields a page" '*session=00000000-*' "$page
 # The proxy logged this one already.
 check "a traced login leaves the log to the proxy" "" "$(cat "$work/traced.log" 2>/dev/null || true)"
 
+# A token capped below SKEW must not reopen SSO per call: one login, a stamp, then silence.
+# SKEW larger than the fixture's whole life makes every mint "capped".
+capdir="$work/capped"; mkdir -p "$capdir/home/.cloudflared"
+cap() {
+  mint=$1; shift
+  MINT="$mint" LOGINS="$capdir/logins" PATH="$stub:$PATH" HOME="$capdir/home" \
+    CF_ACCESS_SKEW=9999999999 CF_ACCESS_LOG="$capdir/log" CF_ACCESS_BROWSER=true \
+    "$CF" "$@" 2>/dev/null || true
+}
+logins() { wc -l <"$capdir/logins" | tr -d ' '; }
+
+# Login 1 has no prior exp so it never stamps; login 2 proves the cap; call 3 is silent.
+cap 1 token https://capped.example >/dev/null
+cap 1 token https://capped.example >/dev/null
+captok=$(cap 1 token https://capped.example)
+check "a capped token still comes back" "$JWT" "$captok"
+check "a capped token logs in until the cap is proven, then stops" 2 "$(logins)"
+
+# Access just rejected the token: --fresh must ignore the stamp and log in again.
+cap 1 token --fresh https://capped.example >/dev/null
+check "--fresh overrides the stamp" 3 "$(logins)"
+cookie=$(cap 1 cookie --fresh https://capped.example)
+check "--fresh works on the other subcommands" "CF_Authorization=$JWT 4" "$cookie $(logins)"
+
+# A failed login restores the old token but must not stamp it as unimprovable.
+rm -f "$capdir/home/.cloudflared/"*-capped "$capdir/logins"
+cap '' token https://capped.example >/dev/null
+cap '' token https://capped.example >/dev/null
+check "a failed login does not suppress the next attempt" 2 "$(logins)"
+
+# A mint that extends the old exp is improvable — never stamped.
+printf '%s\n' "eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ3MDAsImF1ZCI6WyJ0ZXN0YXVkIl19.sig" \
+  >"$capdir/home/.cloudflared/app-testaud-token"
+cap 1 token https://capped.example >/dev/null
+check "an extending mint does not stamp" "" "$(ls "$capdir/home/.cloudflared/"*-capped 2>/dev/null || true)"
+
+rm -f "$capdir/logins"
+cap 1 login https://capped.example >/dev/null
+captok=$(cap 1 token https://capped.example)
+check "an explicit login stamps a capped token" 1 "$(logins)"
+check "the token after an explicit login is served" "$JWT" "$captok"
+
 # Asked for: fixed ports once collided with a real service, and the harness tested against it.
 read -r UP_PORT PX_PORT FX_PORT <<PORTS
 $(node -e '
@@ -163,12 +211,12 @@ $(node -e '
   Promise.all([grab(), grab(), grab()]).then((p) => process.stdout.write(p.join(" ")));
 ')
 PORTS
-JWT=eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDAsImF1ZCI6WyJ0ZXN0YXVkIl19.sig
 
 cat >"$work/cf-access" <<STUB
 #!/bin/sh
 printf '%s\n' "\${CF_ACCESS_SESSION:-}" >>"$work/env-session"
 case "\$*" in
+  *--fresh*) echo fresh >>"$work/fresh"; echo "$JWT" ;;
   *--no-login*) exit 1 ;;
   token*) echo "$JWT" ;;
 esac
@@ -186,7 +234,7 @@ node -e '
   require("http").createServer((req, res) => {
     const client = req.headers["x-cf-access-client"];
     if (client) fs.writeFileSync(process.argv[2], String(client));
-    if (!req.headers["cf-access-token"]) {
+    if (req.url === "/reject" || !req.headers["cf-access-token"]) {
       res.writeHead(302, { location: "https://team.cloudflareaccess.com/cdn-cgi/access/login/x" });
       return res.end();
     }
@@ -223,6 +271,8 @@ CF_ACCESS_HOSTS_FILE="$work/hosts" CF_ACCESS_PROXY_DYNAMIC_PORT="$UP_PORT" CLAUD
 wait_for '[ -s "$work/hdr" ]' || true
 
 curl -s -o /dev/null -m 2 "http://127.0.0.1:$FX_PORT/fixed" || true
+# An upstream that rejects a live token must trigger one forced (--fresh) re-mint.
+curl -s -o /dev/null -m 5 "http://127.0.0.1:$FX_PORT/reject" || true
 
 kill "$px_pid" "$up_pid" 2>/dev/null || true
 wait "$px_pid" "$up_pid" 2>/dev/null || true
@@ -240,5 +290,6 @@ matches "an eval argument never becomes the client name" 'pid=* ppid=* node' \
   "$(cat "$work/hdr" 2>/dev/null || true)"
 matches "a fixed route lends its label to the trace" "*fixed port $FX_PORT*stub route*" \
   "$(grep 'sso ' "$work/log" || true)"
+check "a rejected token forces a fresh mint" fresh "$(head -1 "$work/fresh" 2>/dev/null || true)"
 [ "$fails" -eq 0 ] || exit 1
 echo "all good"

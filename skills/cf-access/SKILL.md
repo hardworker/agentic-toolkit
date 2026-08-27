@@ -78,7 +78,7 @@ cf-access login
 
 | Command | Purpose |
 |---|---|
-| `cf-access token [--no-login] <app>` | print a valid JWT, refreshing if under 10 min of life. `--no-login` never opens a browser (for scripts) |
+| `cf-access token [--no-login] [--fresh] <app>` | print a valid JWT, refreshing if under 10 min of life. `--no-login` never opens a browser (for scripts); `--fresh` (any subcommand) ignores the capped-token stamp |
 | `cf-access cookie <app>` | `CF_Authorization=<jwt>`, for tools that want a cookie |
 | `cf-access env <app> <VAR> -- <cmd…>` | exec `cmd` with `VAR=<jwt>` — the MCP-launcher form. `env(1)`, so `VAR` may contain hyphens |
 | `cf-access curl <url> [args…]` | `curl` with `cf-access-token:` injected |

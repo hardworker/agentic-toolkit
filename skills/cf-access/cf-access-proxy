@@ -113,8 +113,8 @@ class TokenSource {
 
   // Every browser window starts here, the one place that can name the cause. It fires *before*
   // the attempt: waiting for the mint would report it LOGIN_DEADLINE late, or never.
-  mint(allowLogin, why = '', session = '') {
-    const args = allowLogin ? ['token', this.app] : ['token', '--no-login', this.app];
+  mint(allowLogin, force = false, why = '', session = '') {
+    const args = ['token', allowLogin ? '' : '--no-login', force ? '--fresh' : '', this.app].filter(Boolean);
     if (allowLogin) {
       log(`sso ${this.app} ${why}${session && ` session=${q(session, 64)}`}`);
     }
@@ -168,15 +168,16 @@ class TokenSource {
     if (!this.inflight) {
       this.inflight = (async () => {
         // Always try the cheap read first: it reflects a token cloudflared refreshed
-        // out of band, and never opens a browser.
-        const local = await this.mint(false);
+        // out of band, and never opens a browser. `force` means the upstream just
+        // rejected what we had, so a stamped capped token must not be re-served.
+        const local = await this.mint(false, force);
         if (local) return local;
 
         // Only an SSO round-trip is left. Rate-limited, because a burst of failing
         // requests would otherwise stack up browser tabs.
         if (Date.now() - this.lastLogin < LOGIN_COOLDOWN) return null;
         this.lastLogin = Date.now();
-        return this.mint(true, why, session);
+        return this.mint(true, force, why, session);
       })().finally(() => {
         this.inflight = null;
       });
@@ -306,15 +307,20 @@ async function proxyRequest({ req, res, upstream, body, route }) {
   let jwt = state === 'gated' ? await tokens.get({ holdMs: HOLD, why, session }) : null;
   let upRes = await forward({ upstream, req, body, jwt });
 
-  if (isAccessRedirect(upRes)) {
-    if (state !== 'gated') {
+  if (!isAccessRedirect(upRes) && state === 'unknown') gating.set(origin, jwt ? 'gated' : 'open');
+
+  // Bounded renewal: an ordinary mint first (the cache is usually right), then one forced —
+  // the cache can hold a stamped capped token Access has already rejected.
+  for (let attempt = 0; isAccessRedirect(upRes) && attempt < 2; attempt++) {
+    const force = attempt > 0 || state === 'gated';
+    if (gating.get(origin) !== 'gated') {
       gating.set(origin, 'gated');
       log(`${origin} is Access-gated — minting a token`);
     } else {
-      log(`stale token for ${origin} — refreshing`);
+      log(attempt ? `rejected token for ${origin} — forcing a login` : `stale token for ${origin} — refreshing`);
     }
     upRes.resume();
-    jwt = await tokens.get({ force: state === 'gated', holdMs: HOLD, why, session });
+    jwt = await tokens.get({ force, holdMs: HOLD, why, session });
     if (!jwt) {
       res.writeHead(511, { 'content-type': 'text/plain' });
       res.end(
@@ -324,8 +330,6 @@ async function proxyRequest({ req, res, upstream, body, route }) {
       return;
     }
     upRes = await forward({ upstream, req, body, jwt });
-  } else if (state === 'unknown') {
-    gating.set(origin, jwt ? 'gated' : 'open');
   }
 
   res.writeHead(upRes.statusCode, upRes.headers);

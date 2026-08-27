@@ -8,7 +8,8 @@
 # all apps.
 #
 # Subcommands:
-#   token [--no-login] <app>        print a valid JWT (refreshing if stale)
+#   token [--no-login|--fresh] <app>  print a valid JWT (--fresh, valid on every subcommand,
+#                                     ignores the capped-token stamp)
 #   cookie <app>                    print "CF_Authorization=<jwt>"
 #   env <app> <VAR> -- <cmd...>     export VAR=<jwt> and exec cmd (MCP launchers)
 #   curl <url> [curl args...]       curl with the JWT header injected
@@ -76,12 +77,12 @@ jwt_claim() {
   ' "$1" "$2" 2>/dev/null
 }
 
-# Seconds of life left in a JWT; -1 when absent or unparseable.
-jwt_ttl() {
+# Sets $exp and $ttl from a JWT; ttl=-1 when absent or unparseable.
+jwt_life() {
   exp=$(jwt_claim exp "$1")
   case "$exp" in
-    '' | *[!0-9]*) echo -1 ;;
-    *) echo $((exp - $(date +%s))) ;;
+    '' | *[!0-9]*) ttl=-1 ;;
+    *) ttl=$((exp - $(date +%s))) ;;
   esac
 }
 
@@ -153,10 +154,22 @@ token_cache_files() {
   ls "$HOME/.cloudflared/"*-"$aud"-token 2>/dev/null || true
 }
 
+# Near a global-session expiry every re-mint is capped at that same exp, so a login cannot beat
+# SKEW: the exp a login yielded is stamped, and that still-live token served without another SSO.
+# Keyed by aud like the token cache, so origins under one wildcard app share the stamp.
+USE_STAMP=yes # `token --fresh` clears it
+sso_stamp() {
+  aud=$(jwt_claim aud "$1")
+  printf '%s' "${aud:+$HOME/.cloudflared/$aud-capped}"
+}
+
 # `cloudflared access login` hands back the cached app token if one exists, even seconds
 # from expiry — so renewal means clearing the cache first. The token is stashed and put
 # back if the login fails, otherwise a browser-less machine would lose a usable token.
 do_login() {
+  # Both callers ran jwt_life on the old token just before; a login that cannot beat
+  # this exp is the proof the token is session-capped.
+  prev_exp=${exp:-}
   echo "cf-access: browser SSO for $1" >&2
   trace=${CF_ACCESS_TRACE:-}
   session=${CF_ACCESS_SESSION:-${CLAUDE_CODE_SESSION_ID:-}}
@@ -332,6 +345,16 @@ PAGE
   wait "$cfd_pid" 2>/dev/null || true
   rm -f "$out"
 
+  # Stamp only a fresh mint that failed to extend the old exp, judged before cleanup,
+  # which can restore an old token.
+  minted=$(cached_token "$1")
+  if [ -n "$minted" ]; then
+    jwt_life "$minted"
+    if [ "$ttl" -gt 0 ] && [ "$ttl" -lt "$SKEW" ] && [ "$exp" = "$prev_exp" ]; then
+      printf '%s' "$exp" 2>/dev/null >"$(sso_stamp "$minted")" || true
+    fi
+  fi
+
   cleanup "$1"
   trap - EXIT INT TERM
 }
@@ -342,14 +365,17 @@ get_token() {
   app=$(app_origin "$2")
 
   t=$(cached_token "$app")
-  ttl=-1
-  [ -z "$t" ] || ttl=$(jwt_ttl "$t")
+  jwt_life "$t"
   if [ "$ttl" -lt "$SKEW" ]; then
+    if [ "$USE_STAMP" = yes ] && [ "$ttl" -gt 0 ] &&
+      [ "$(cat "$(sso_stamp "$t")" 2>/dev/null)" = "$exp" ]; then
+      printf '%s' "$t"
+      return 0
+    fi
     [ "$allow_login" = yes ] || return 1
     do_login "$app"
     t=$(cached_token "$app")
-    ttl=-1
-    [ -z "$t" ] || ttl=$(jwt_ttl "$t")
+    jwt_life "$t"
   fi
 
   [ "$ttl" -gt 0 ] || return 1
@@ -359,15 +385,14 @@ get_token() {
 cmd=${1:-}
 [ -n "$cmd" ] || die "usage: cf-access {token|cookie|env|curl|login|list} ..."
 shift
+# Every subcommand takes a leading --fresh: ignore the capped-token stamp (post-rejection retry).
+[ "${1:-}" = --fresh ] && { USE_STAMP=no; shift; }
 
 case "$cmd" in
 token)
   allow_login=yes
-  [ "${1:-}" = --no-login ] && {
-    allow_login=no
-    shift
-  }
-  [ $# -ge 1 ] || die "usage: cf-access token [--no-login] <app-url>"
+  while case "${1:-}" in --no-login) allow_login=no ;; --fresh) USE_STAMP=no ;; *) false ;; esac; do shift; done
+  [ $# -ge 1 ] || die "usage: cf-access token [--no-login] [--fresh] <app-url>"
   get_token "$allow_login" "$1" || die "no valid token for $1 (try: cf-access login $1)"
   echo
   ;;
@@ -405,15 +430,13 @@ login)
   [ -n "$apps" ] || die "no apps given and none configured in $APPS_FILE"
   for app in $apps; do
     app=$(app_origin "$app")
-    t=$(cached_token "$app")
-    ttl=$(jwt_ttl "$t")
+    jwt_life "$(cached_token "$app")"
     if [ "$ttl" -ge "$SKEW" ]; then
       echo "ok       $app (${ttl}s left)"
       continue
     fi
     do_login "$app"
-    t=$(cached_token "$app")
-    ttl=$(jwt_ttl "$t")
+    jwt_life "$(cached_token "$app")"
     if [ "$ttl" -gt 0 ]; then echo "refreshed $app (${ttl}s)"; else echo "FAILED   $app"; fi
   done
   ;;
@@ -427,7 +450,7 @@ list)
   apps=$(configured_apps)
   [ -n "$apps" ] || die "no apps configured in $APPS_FILE"
   for app in $apps; do
-    ttl=$(jwt_ttl "$(cached_token "$app")")
+    jwt_life "$(cached_token "$app")"
     if [ "$ttl" -gt 0 ]; then
       printf '%-40s %sh %sm left\n' "$app" "$((ttl / 3600))" "$(((ttl % 3600) / 60))"
     else
