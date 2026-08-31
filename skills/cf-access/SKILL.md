@@ -78,7 +78,7 @@ cf-access login
 
 | Command | Purpose |
 |---|---|
-| `cf-access token [--no-login] [--fresh] <app>` | print a valid JWT, refreshing if under 10 min of life. `--no-login` never opens a browser (for scripts); `--fresh` (any subcommand) ignores the capped-token stamp |
+| `cf-access token [--no-login] [--fresh] <app>` | print a valid JWT, logging in only once it expires. `--no-login` never opens a browser (for scripts); `--fresh` (any subcommand) forces a login now |
 | `cf-access cookie <app>` | `CF_Authorization=<jwt>`, for tools that want a cookie |
 | `cf-access env <app> <VAR> -- <cmd…>` | exec `cmd` with `VAR=<jwt>` — the MCP-launcher form. `env(1)`, so `VAR` may contain hyphens |
 | `cf-access curl <url> [args…]` | `curl` with `cf-access-token:` injected |
@@ -130,7 +130,7 @@ sso https://ci.example.com GET "/api/jobs"?… ← "pid=8123 ppid=8100 server.mj
 
   Path only, never the query string. Identity is `x-cf-access-client` + `x-cf-access-session`; a fixed-port client can send neither, so its route answers instead — `fixed port 8790 ("admin panel MCP")`, or `peer :<port>` unlabelled.
 
-- **Renewal.** Tokens are cached per origin until 10 min before expiry, minting is single-flight (a stampede collapses into one mint), and a browser login is rate-limited to once a minute so a burst of failures cannot stack up tabs. Single-flight is also what makes the trace honest: the request that creates the mint is named, and the ones that join it are not — they did not cause the window.
+- **Renewal.** Tokens are cached per origin and served until they expire — never renewed early. Minting is single-flight (a stampede collapses into one mint), and a browser login is rate-limited to once a minute so a burst of failures cannot stack up tabs. Single-flight is also what makes the trace honest: the request that creates the mint is named, and the ones that join it are not — they did not cause the window.
 - **Request bodies are buffered** so a token retry replays the request byte-for-byte.
 - Status codes it originates: `511` no token available (run `cf-access login <origin>`), `403` host not in `hosts`, `508` the upstream is the proxy itself, `502` transport error, `400` missing upstream header.
 

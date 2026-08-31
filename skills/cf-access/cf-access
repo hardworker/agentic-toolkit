@@ -9,7 +9,7 @@
 #
 # Subcommands:
 #   token [--no-login|--fresh] <app>  print a valid JWT (--fresh, valid on every subcommand,
-#                                     ignores the capped-token stamp)
+#                                     forces a login even while the token is alive)
 #   cookie <app>                    print "CF_Authorization=<jwt>"
 #   env <app> <VAR> -- <cmd...>     export VAR=<jwt> and exec cmd (MCP launchers)
 #   curl <url> [curl args...]       curl with the JWT header injected
@@ -25,7 +25,7 @@ set -eu
 
 APPS_FILE="${CF_ACCESS_APPS_FILE:-$HOME/.config/cloudflare-access/apps}"
 BROWSER_FILE="${CF_ACCESS_BROWSER_FILE:-$HOME/.config/cloudflare-access/browser}"
-SKEW="${CF_ACCESS_SKEW:-600}"                          # refresh when under this many seconds of life left
+SKEW="${CF_ACCESS_SKEW:-600}"                          # `login` is the one deliberate early renewal: a human asked
 LOGIN_DEADLINE="${CF_ACCESS_LOGIN_DEADLINE:-120}"      # kill an unanswered browser SSO after this
 # The daemon's log on purpose: one grep answers "who opened that window".
 LOG_FILE="${CF_ACCESS_LOG:-$HOME/Library/Logs/cf-access-proxy.log}"
@@ -77,12 +77,12 @@ jwt_claim() {
   ' "$1" "$2" 2>/dev/null
 }
 
-# Sets $exp and $ttl from a JWT; ttl=-1 when absent or unparseable.
+# Seconds of life left in a JWT as $ttl; -1 when absent or unparseable.
 jwt_life() {
-  exp=$(jwt_claim exp "$1")
-  case "$exp" in
+  ttl=$(jwt_claim exp "$1")
+  case "$ttl" in
     '' | *[!0-9]*) ttl=-1 ;;
-    *) ttl=$((exp - $(date +%s))) ;;
+    *) ttl=$((ttl - $(date +%s))) ;;
   esac
 }
 
@@ -154,22 +154,10 @@ token_cache_files() {
   ls "$HOME/.cloudflared/"*-"$aud"-token 2>/dev/null || true
 }
 
-# Near a global-session expiry every re-mint is capped at that same exp, so a login cannot beat
-# SKEW: the exp a login yielded is stamped, and that still-live token served without another SSO.
-# Keyed by aud like the token cache, so origins under one wildcard app share the stamp.
-USE_STAMP=yes # `token --fresh` clears it
-sso_stamp() {
-  aud=$(jwt_claim aud "$1")
-  printf '%s' "${aud:+$HOME/.cloudflared/$aud-capped}"
-}
-
-# `cloudflared access login` hands back the cached app token if one exists, even seconds
-# from expiry — so renewal means clearing the cache first. The token is stashed and put
-# back if the login fails, otherwise a browser-less machine would lose a usable token.
+# `cloudflared access login` hands back the cached app token if one exists, so a re-login
+# means clearing the cache first. The token is stashed and put back if the login fails,
+# otherwise a browser-less machine would lose a usable token.
 do_login() {
-  # Both callers ran jwt_life on the old token just before; a login that cannot beat
-  # this exp is the proof the token is session-capped.
-  prev_exp=${exp:-}
   echo "cf-access: browser SSO for $1" >&2
   trace=${CF_ACCESS_TRACE:-}
   session=${CF_ACCESS_SESSION:-${CLAUDE_CODE_SESSION_ID:-}}
@@ -345,33 +333,20 @@ PAGE
   wait "$cfd_pid" 2>/dev/null || true
   rm -f "$out"
 
-  # Stamp only a fresh mint that failed to extend the old exp, judged before cleanup,
-  # which can restore an old token.
-  minted=$(cached_token "$1")
-  if [ -n "$minted" ]; then
-    jwt_life "$minted"
-    if [ "$ttl" -gt 0 ] && [ "$ttl" -lt "$SKEW" ] && [ "$exp" = "$prev_exp" ]; then
-      printf '%s' "$exp" 2>/dev/null >"$(sso_stamp "$minted")" || true
-    fi
-  fi
-
   cleanup "$1"
   trap - EXIT INT TERM
 }
 
-# Valid JWT for an app, refreshing when stale unless --no-login.
+# Valid JWT for an app. A live token is served however close to expiry — near a global-session
+# end a re-mint is capped at the same exp anyway, so renewing early only reopens SSO windows.
 get_token() {
   allow_login=$1
   app=$(app_origin "$2")
 
-  t=$(cached_token "$app")
-  jwt_life "$t"
-  if [ "$ttl" -lt "$SKEW" ]; then
-    if [ "$USE_STAMP" = yes ] && [ "$ttl" -gt 0 ] &&
-      [ "$(cat "$(sso_stamp "$t")" 2>/dev/null)" = "$exp" ]; then
-      printf '%s' "$t"
-      return 0
-    fi
+  t=
+  ttl=-1
+  [ "$FRESH" = yes ] || { t=$(cached_token "$app"); jwt_life "$t"; }
+  if [ "$ttl" -le 0 ]; then
     [ "$allow_login" = yes ] || return 1
     do_login "$app"
     t=$(cached_token "$app")
@@ -385,13 +360,14 @@ get_token() {
 cmd=${1:-}
 [ -n "$cmd" ] || die "usage: cf-access {token|cookie|env|curl|login|list} ..."
 shift
-# Every subcommand takes a leading --fresh: ignore the capped-token stamp (post-rejection retry).
-[ "${1:-}" = --fresh ] && { USE_STAMP=no; shift; }
+# --fresh (any subcommand): login now, even while the token is alive — the proxy's
+# post-rejection retry. --no-login: never open a browser.
+FRESH=no
+allow_login=yes
+while case "${1:-}" in --fresh) FRESH=yes ;; --no-login) allow_login=no ;; *) false ;; esac; do shift; done
 
 case "$cmd" in
 token)
-  allow_login=yes
-  while case "${1:-}" in --no-login) allow_login=no ;; --fresh) USE_STAMP=no ;; *) false ;; esac; do shift; done
   [ $# -ge 1 ] || die "usage: cf-access token [--no-login] [--fresh] <app-url>"
   get_token "$allow_login" "$1" || die "no valid token for $1 (try: cf-access login $1)"
   echo
@@ -399,7 +375,7 @@ token)
 
 cookie)
   [ $# -ge 1 ] || die "usage: cf-access cookie <app-url>"
-  t=$(get_token yes "$1") || die "no valid token for $1"
+  t=$(get_token "$allow_login" "$1") || die "no valid token for $1"
   echo "CF_Authorization=$t"
   ;;
 
@@ -410,7 +386,7 @@ env)
   shift 2
   [ "$1" = -- ] || die "expected -- before the command"
   shift
-  t=$(get_token yes "$app") || die "no valid token for $app (try: cf-access login $app)"
+  t=$(get_token "$allow_login" "$app") || die "no valid token for $app (try: cf-access login $app)"
   # env(1), not export: header-name vars often need literal hyphens
   # (SOMETOOL_HEADER_cf-access-token), which are not valid shell identifiers.
   exec env "$var=$t" "$@"
@@ -420,7 +396,7 @@ curl)
   [ $# -ge 1 ] || die "usage: cf-access curl <url> [curl args...]"
   url=$1
   shift
-  t=$(get_token yes "$url") || die "no valid token for $url"
+  t=$(get_token "$allow_login" "$url") || die "no valid token for $url"
   exec curl -H "cf-access-token: $t" "$url" "$@"
   ;;
 

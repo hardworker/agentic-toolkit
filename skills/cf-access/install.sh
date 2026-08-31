@@ -71,7 +71,7 @@ seed_configs() {
 # spawns, so they flow daemon→child and never arrive from launchd. Env wins, then
 # whatever the current plist already carries — so `CF_ACCESS_HOLD=60 ./install.sh` sticks
 # across later plain re-runs. Defaults stay owned by the runtime: an unset knob is absent.
-TUNABLES="CF_ACCESS_HOLD CF_ACCESS_SKEW CF_ACCESS_LOGIN_COOLDOWN CF_ACCESS_LOGIN_DEADLINE
+TUNABLES="CF_ACCESS_HOLD CF_ACCESS_LOGIN_COOLDOWN CF_ACCESS_LOGIN_DEADLINE
   CF_ACCESS_PROXY_DYNAMIC_PORT CF_ACCESS_HOSTS_FILE CF_ACCESS_PROXY_CONFIG
   CF_ACCESS_APPS_FILE CF_ACCESS_BROWSER_FILE"
 

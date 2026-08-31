@@ -12,9 +12,8 @@
 // that header live in $CF_ACCESS_PROXY_CONFIG (default ~/.config/cloudflare-access/proxy),
 // one `<port> <upstream-origin>` pair per line, plus an optional trailing `# label`.
 //
-// Tokens are minted by `cf-access`, cached until SKEW seconds before expiry, and
-// refreshed once (single-flight, rate-limited) when a response still comes back as a
-// Cloudflare login redirect.
+// Tokens are minted by `cf-access`, cached until expiry, and refreshed (single-flight,
+// rate-limited) when a response still comes back as a Cloudflare login redirect.
 
 'use strict';
 
@@ -32,7 +31,6 @@ const CONFIG =
 // Sibling, not the installer's bin dir: the two are installed side by side either way, so
 // this keeps --bin-dir and hand-supervised (non-launchd) setups working without CF_ACCESS_BIN.
 const CF_ACCESS = process.env.CF_ACCESS_BIN || path.join(__dirname, 'cf-access');
-const SKEW = Number(process.env.CF_ACCESS_SKEW || 600);
 const LOGIN_COOLDOWN = Number(process.env.CF_ACCESS_LOGIN_COOLDOWN || 60) * 1000;
 // How long a request may wait for a token before it is answered anyway. Must stay under
 // the client's own timeout (30s is the common MCP default) — the login keeps running in
@@ -107,8 +105,9 @@ class TokenSource {
     this.lastLogin = 0;
   }
 
+  // Alive is enough: the broker never renews early, so a re-read cannot better this.
   fresh() {
-    return this.jwt && this.exp - Date.now() / 1000 > SKEW;
+    return this.jwt && this.exp > Date.now() / 1000;
   }
 
   // Every browser window starts here, the one place that can name the cause. It fires *before*
@@ -167,11 +166,12 @@ class TokenSource {
 
     if (!this.inflight) {
       this.inflight = (async () => {
-        // Always try the cheap read first: it reflects a token cloudflared refreshed
-        // out of band, and never opens a browser. `force` means the upstream just
-        // rejected what we had, so a stamped capped token must not be re-served.
-        const local = await this.mint(false, force);
-        if (local) return local;
+        // Cheap read first: it reflects a token cloudflared refreshed out of band and never
+        // opens a browser. Pointless under `force` — the upstream just rejected the cache.
+        if (!force) {
+          const local = await this.mint(false);
+          if (local) return local;
+        }
 
         // Only an SSO round-trip is left. Rate-limited, because a burst of failing
         // requests would otherwise stack up browser tabs.
@@ -310,9 +310,10 @@ async function proxyRequest({ req, res, upstream, body, route }) {
   if (!isAccessRedirect(upRes) && state === 'unknown') gating.set(origin, jwt ? 'gated' : 'open');
 
   // Bounded renewal: an ordinary mint first (the cache is usually right), then one forced —
-  // the cache can hold a stamped capped token Access has already rejected.
+  // the cache can hold a live token Access has already rejected.
   for (let attempt = 0; isAccessRedirect(upRes) && attempt < 2; attempt++) {
-    const force = attempt > 0 || state === 'gated';
+    // Force only when the redirect rejected a token we actually sent.
+    const force = attempt > 0 || (state === 'gated' && !!jwt);
     if (gating.get(origin) !== 'gated') {
       gating.set(origin, 'gated');
       log(`${origin} is Access-gated — minting a token`);

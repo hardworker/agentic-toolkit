@@ -156,47 +156,45 @@ matches "an unnameable session still yields a page" '*session=00000000-*' "$page
 # The proxy logged this one already.
 check "a traced login leaves the log to the proxy" "" "$(cat "$work/traced.log" 2>/dev/null || true)"
 
-# A token capped below SKEW must not reopen SSO per call: one login, a stamp, then silence.
-# SKEW larger than the fixture's whole life makes every mint "capped".
-capdir="$work/capped"; mkdir -p "$capdir/home/.cloudflared"
-cap() {
+# A live token is served however close to expiry; SSO happens only after it dies.
+EXPIRED=eyJhbGciOiJub25lIn0.eyJleHAiOjEwMDAwMDAwMDAsImF1ZCI6WyJ0ZXN0YXVkIl19.sig
+livedir="$work/live"; mkdir -p "$livedir/home/.cloudflared"
+tokfile="$livedir/home/.cloudflared/app-testaud-token"
+run() {
   mint=$1; shift
-  MINT="$mint" LOGINS="$capdir/logins" PATH="$stub:$PATH" HOME="$capdir/home" \
-    CF_ACCESS_SKEW=9999999999 CF_ACCESS_LOG="$capdir/log" CF_ACCESS_BROWSER=true \
-    "$CF" "$@" 2>/dev/null || true
+  MINT="$mint" LOGINS="$livedir/logins" PATH="$stub:$PATH" HOME="$livedir/home" \
+    CF_ACCESS_LOG="$livedir/log" CF_ACCESS_BROWSER=true "$CF" "$@" 2>/dev/null || true
 }
-logins() { wc -l <"$capdir/logins" | tr -d ' '; }
+logins() { wc -l <"$livedir/logins" | tr -d ' '; }
 
-# Login 1 has no prior exp so it never stamps; login 2 proves the cap; call 3 is silent.
-cap 1 token https://capped.example >/dev/null
-cap 1 token https://capped.example >/dev/null
-captok=$(cap 1 token https://capped.example)
-check "a capped token still comes back" "$JWT" "$captok"
-check "a capped token logs in until the cap is proven, then stops" 2 "$(logins)"
+: >"$livedir/logins"
+printf '%s\n' "$JWT" >"$tokfile"
+check "a live token is served without SSO" "$JWT 0" "$(run 1 token https://live.example) $(logins)"
 
-# Access just rejected the token: --fresh must ignore the stamp and log in again.
-cap 1 token --fresh https://capped.example >/dev/null
-check "--fresh overrides the stamp" 3 "$(logins)"
-cookie=$(cap 1 cookie --fresh https://capped.example)
-check "--fresh works on the other subcommands" "CF_Authorization=$JWT 4" "$cookie $(logins)"
+printf '%s\n' "$EXPIRED" >"$tokfile"
+check "an expired token logs in once" "$JWT 1" "$(run 1 token https://live.example) $(logins)"
 
-# A failed login restores the old token but must not stamp it as unimprovable.
-rm -f "$capdir/home/.cloudflared/"*-capped "$capdir/logins"
-cap '' token https://capped.example >/dev/null
-cap '' token https://capped.example >/dev/null
+# Access just rejected the live token: --fresh must log in anyway.
+run 1 token --fresh https://live.example >/dev/null
+check "--fresh logs in despite a live token" 2 "$(logins)"
+check "--fresh works on the other subcommands" "CF_Authorization=$JWT 3" \
+  "$(run 1 cookie --fresh https://live.example) $(logins)"
+
+# `login` is the one deliberate early renewal, and only for tokens under SKEW.
+: >"$livedir/logins"
+printf '%s\n' "$JWT" >"$tokfile"
+run 1 login https://live.example >/dev/null
+check "login skips a token with plenty of life" 0 "$(logins)"
+printf '%s\n' "$EXPIRED" >"$tokfile"
+run 1 login https://live.example >/dev/null
+check "login refreshes a dead token" 1 "$(logins)"
+
+# A failed login restores the expired token and stays retryable.
+: >"$livedir/logins"
+printf '%s\n' "$EXPIRED" >"$tokfile"
+check "a failed login yields no token" "" "$(run '' token https://live.example)"
+run '' token https://live.example >/dev/null
 check "a failed login does not suppress the next attempt" 2 "$(logins)"
-
-# A mint that extends the old exp is improvable — never stamped.
-printf '%s\n' "eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ3MDAsImF1ZCI6WyJ0ZXN0YXVkIl19.sig" \
-  >"$capdir/home/.cloudflared/app-testaud-token"
-cap 1 token https://capped.example >/dev/null
-check "an extending mint does not stamp" "" "$(ls "$capdir/home/.cloudflared/"*-capped 2>/dev/null || true)"
-
-rm -f "$capdir/logins"
-cap 1 login https://capped.example >/dev/null
-captok=$(cap 1 token https://capped.example)
-check "an explicit login stamps a capped token" 1 "$(logins)"
-check "the token after an explicit login is served" "$JWT" "$captok"
 
 # Asked for: fixed ports once collided with a real service, and the harness tested against it.
 read -r UP_PORT PX_PORT FX_PORT <<PORTS
@@ -246,6 +244,7 @@ up_pid=$!
 
 CF_ACCESS_BIN="$work/cf-access" CF_ACCESS_HOSTS_FILE="$work/hosts" \
   CF_ACCESS_PROXY_CONFIG="$work/routes" CF_ACCESS_PROXY_DYNAMIC_PORT="$PX_PORT" \
+  CF_ACCESS_LOGIN_COOLDOWN=0 \
   node "$DIR/cf-access-proxy" >"$work/log" 2>&1 &
 px_pid=$!
 

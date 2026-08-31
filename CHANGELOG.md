@@ -4,6 +4,12 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # cf-access
 
+## [1.8.0] — 2026-08-31
+
+### Changed
+
+- **No early renewal at all.** 1.7.1 probed once to prove a session cap; the probe was still a window. Now a live token is served however close to expiry, and SSO happens once, after it dies. `--fresh` forces a login now instead of skipping the stamp; the stamp is gone.
+
 ## [1.7.1] — 2026-08-27
 
 ### Fixed
