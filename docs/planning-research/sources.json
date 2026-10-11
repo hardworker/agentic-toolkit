@@ -1,0 +1,834 @@
+{
+  "as_of": "2026-10-11",
+  "method": "Public GitHub API metadata, immutable commit references, raw source downloads, targeted source inspection. Retrieved files are a source inventory, not a claim that every line was reviewed. No upstream runtime or quality benchmark was executed.",
+  "repositories": [
+    {
+      "requested": "Aider-AI/aider",
+      "repo": "Aider-AI/aider",
+      "sha": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "commit_date": "2026-05-22T14:02:20Z",
+      "pushed_at": "2026-05-22T14:02:20Z",
+      "license": "Apache-2.0",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE.txt",
+          "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "bytes": 11358
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/README.md",
+          "sha256": "e40e05367ceacf7138a2605484bf7d1cb5a262d2dba03f52a5327c023b3cd0dc",
+          "bytes": 12406
+        },
+        {
+          "path": "aider/coders/architect_coder.py",
+          "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/coders/architect_coder.py",
+          "sha256": "6fb2aab62be79653ddc8c7f16e711477d1b40b56456a26a9a55db9473d0390cb",
+          "bytes": 1622
+        },
+        {
+          "path": "aider/website/_posts/2024-09-26-architect.md",
+          "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_posts/2024-09-26-architect.md",
+          "sha256": "39d04275c25031742ef2d458a8214479f7c96a3b56921b474c75e14bc637011f",
+          "bytes": 14717
+        },
+        {
+          "path": "aider/website/docs/usage/modes.md",
+          "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/docs/usage/modes.md",
+          "sha256": "77c3d350e91d39ece704688208abcd923b277e10c13ea7230c13e2229e18c2a3",
+          "bytes": 6733
+        }
+      ]
+    },
+    {
+      "requested": "EveryInc/compound-engineering-plugin",
+      "repo": "EveryInc/compound-engineering-plugin",
+      "sha": "50532b00de523980010d97fe950965b35382a3b7",
+      "commit_date": "2026-10-11T16:43:50Z",
+      "pushed_at": "2026-10-11T16:44:11Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/LICENSE",
+          "sha256": "61d89de7646effdaba2d0a4ab7bd0eba60b4094b83efe5bc73c7940e43e93fc6",
+          "bytes": 1062
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/README.md",
+          "sha256": "44daa4bdd27c8b80bebce4e8dad06102ebddcc48040432f5a1ec80da33019dec",
+          "bytes": 23201
+        },
+        {
+          "path": "docs/guides/ce-plan.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/docs/guides/ce-plan.md",
+          "sha256": "4513a1b69521d9d15301505e5f0d1946d6635414be8caec37c01e38331730718",
+          "bytes": 25538
+        },
+        {
+          "path": "skills/ce-brainstorm/SKILL.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-brainstorm/SKILL.md",
+          "sha256": "1820aa67cd39b4f220b6b1e638bd98841e6ba8e8a3c3f35448155a28b2822948",
+          "bytes": 7798
+        },
+        {
+          "path": "skills/ce-plan/SKILL.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/SKILL.md",
+          "sha256": "6c5842bfc91a9aad65fcdf83669f86ef499a9b40dc99f9340c5981d2bc6f1720",
+          "bytes": 7779
+        },
+        {
+          "path": "skills/ce-plan/references/agents/best-practices-researcher.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/agents/best-practices-researcher.md",
+          "sha256": "69e524c4910c0e63fa46437ed44916a0e332593d90c2331711cdbaa23cc3692a",
+          "bytes": 7740
+        },
+        {
+          "path": "skills/ce-plan/references/agents/framework-docs-researcher.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/agents/framework-docs-researcher.md",
+          "sha256": "223e4b753abde5b316c432a9fb0fb866313f0898805ea9056a4d7331d2709952",
+          "bytes": 6198
+        },
+        {
+          "path": "skills/ce-plan/references/agents/learnings-researcher.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/agents/learnings-researcher.md",
+          "sha256": "c731f1b08a961da0aebf0eadde723ffaacc124f3899d6126e80507d1770942fa",
+          "bytes": 20218
+        },
+        {
+          "path": "skills/ce-plan/references/agents/repo-research-analyst.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/agents/repo-research-analyst.md",
+          "sha256": "a517089c7f7bed0b40fa42b6090c0a0aeaa23b11012a4b666e9392cb330f5f07",
+          "bytes": 15589
+        },
+        {
+          "path": "skills/ce-plan/references/agents/slack-researcher.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/agents/slack-researcher.md",
+          "sha256": "66b67b7bb1f85365a4795efff7bec3b6394ba8c809317349af8c4b48e2e67173",
+          "bytes": 11036
+        },
+        {
+          "path": "skills/ce-plan/references/agents/web-researcher.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/agents/web-researcher.md",
+          "sha256": "a8e879adec37ecd8aa1dccfa085c8ecdefcbec634d741bdcc62c272cbf7eddc6",
+          "bytes": 9723
+        },
+        {
+          "path": "skills/ce-plan/references/deepening-workflow.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/deepening-workflow.md",
+          "sha256": "cb64fe5092ee48cf9fd0cd339a8ae23ee7f01a66493c686ba36f0ea901cd0690",
+          "bytes": 20397
+        },
+        {
+          "path": "skills/ce-plan/references/final-review.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/final-review.md",
+          "sha256": "11cc241f0dddd83fad3db7e1073a90356c6d1193d60178e7c6dcfa0306f013d9",
+          "bytes": 19258
+        },
+        {
+          "path": "skills/ce-plan/references/plan-handoff.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/plan-handoff.md",
+          "sha256": "8b4319d15fa8120c48e993882e5daee5673afbdd50ebc29d74353af115309a86",
+          "bytes": 21814
+        },
+        {
+          "path": "skills/ce-plan/references/plan-sections.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/plan-sections.md",
+          "sha256": "d68b92a73a56d74dc0a3614c7068c0ff59ff40d8d0292afa48963743477fa75c",
+          "bytes": 29833
+        },
+        {
+          "path": "skills/ce-plan/references/research.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/research.md",
+          "sha256": "a7819d615348eace1a845f9937e43dc6a179e324fc25123c7bcf08fb6bc7ae2d",
+          "bytes": 25086
+        },
+        {
+          "path": "skills/ce-plan/references/structure.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/structure.md",
+          "sha256": "83342bcfa48aee9a900687572a711128e9875c35aaefb6f78c6599207b5eb8fa",
+          "bytes": 21335
+        },
+        {
+          "path": "skills/ce-plan/references/universal-planning.md",
+          "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/50532b00de523980010d97fe950965b35382a3b7/skills/ce-plan/references/universal-planning.md",
+          "sha256": "ddecf56a846f561b50d883ca1c71dfc09bb160429917b16a5214298fcca360f3",
+          "bytes": 15701
+        }
+      ]
+    },
+    {
+      "requested": "OthmanAdi/planning-with-files",
+      "repo": "OthmanAdi/planning-with-files",
+      "sha": "7056ed2f2b86a8a9e18840f625ac66a48fa07693",
+      "commit_date": "2026-10-10T09:46:58Z",
+      "pushed_at": "2026-10-10T10:03:49Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": ".agents/skills/planning-with-files/SKILL.md",
+          "url": "https://github.com/OthmanAdi/planning-with-files/blob/7056ed2f2b86a8a9e18840f625ac66a48fa07693/.agents/skills/planning-with-files/SKILL.md",
+          "sha256": "402268dd90307bd1ea44e30d468cb0c293952b95d21c4eb489d61bc54676a402",
+          "bytes": 36576
+        },
+        {
+          "path": ".agents/skills/planning-with-files/scripts/check-complete.sh",
+          "url": "https://github.com/OthmanAdi/planning-with-files/blob/7056ed2f2b86a8a9e18840f625ac66a48fa07693/.agents/skills/planning-with-files/scripts/check-complete.sh",
+          "sha256": "f07d568a82c7cba1a32d4e6f20aecfaa3db98ab1fe47b3303e39d35f94e0faa5",
+          "bytes": 12083
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/OthmanAdi/planning-with-files/blob/7056ed2f2b86a8a9e18840f625ac66a48fa07693/LICENSE",
+          "sha256": "4f2e5ecfaa4e0833621cfe54c0bdc2f60f086c0925540d7bdc713517eafb3c84",
+          "bytes": 1066
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/OthmanAdi/planning-with-files/blob/7056ed2f2b86a8a9e18840f625ac66a48fa07693/README.md",
+          "sha256": "26e8bec9d8419bd7b12c28b5da32e7d5a1c1bc4ed82697c7b046cdf76bd84d42",
+          "bytes": 102130
+        }
+      ]
+    },
+    {
+      "requested": "Q00/Symposium",
+      "repo": "Q00/Symposium",
+      "sha": "60037854824e369b004703de30877a6c88530f60",
+      "commit_date": "2026-08-03T02:20:18Z",
+      "pushed_at": "2026-08-03T02:20:19Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/Q00/Symposium/blob/60037854824e369b004703de30877a6c88530f60/LICENSE",
+          "sha256": "90c8c697408fbdb33c6b0baba0b7b658a283c8d2b37140a18301d0f6ec0edd66",
+          "bytes": 1079
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/Q00/Symposium/blob/60037854824e369b004703de30877a6c88530f60/README.md",
+          "sha256": "3d5299307e3a9f4f16bfb2f9803b9e7e9f293cc45f377728e382860a2eb2b203",
+          "bytes": 9102
+        },
+        {
+          "path": "skills/interview-harness/SKILL.md",
+          "url": "https://github.com/Q00/Symposium/blob/60037854824e369b004703de30877a6c88530f60/skills/interview-harness/SKILL.md",
+          "sha256": "ed270a77938476fa683637471e0add7435e8911bee4f4d5a7fc62eab0c4d47b7",
+          "bytes": 2915
+        },
+        {
+          "path": "skills/reflect/SKILL.md",
+          "url": "https://github.com/Q00/Symposium/blob/60037854824e369b004703de30877a6c88530f60/skills/reflect/SKILL.md",
+          "sha256": "a8010b528f127602bde4c9552b2f7f470185a6a5f0d360c938755a7223f679e3",
+          "bytes": 1717
+        },
+        {
+          "path": "skills/socrates/SKILL.md",
+          "url": "https://github.com/Q00/Symposium/blob/60037854824e369b004703de30877a6c88530f60/skills/socrates/SKILL.md",
+          "sha256": "70810fc6d59797254f656eca40e3d7dd1ce029ae4cd6c98753f020317b75cca1",
+          "bytes": 2599
+        }
+      ]
+    },
+    {
+      "requested": "Q00/ouroboros",
+      "repo": "Q00/ouroboros",
+      "sha": "188020bf1e406e0d276e8cfdd5f95f92e9fed7f5",
+      "commit_date": "2026-10-11T10:55:09Z",
+      "pushed_at": "2026-10-11T19:56:32Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/LICENSE",
+          "sha256": "9f65feab6e93aa95e7a01a34b7f5a8ba11715b0ebadffab91666d80d96b2a07a",
+          "bytes": 1060
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/README.md",
+          "sha256": "bf6c434c3951a3689c53e5ef7514a549a609447cea3b2543460cf9a1b77db04f",
+          "bytes": 39176
+        },
+        {
+          "path": "docs/architecture.md",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/docs/architecture.md",
+          "sha256": "d34ca62ac0a9af1d73f4f603d853bb0dc1d5b645b0c75b28b377ce0118274d7b",
+          "bytes": 38748
+        },
+        {
+          "path": "skills/interview/SKILL.md",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/skills/interview/SKILL.md",
+          "sha256": "404cf415e3ff30103afe1fd5c424553f9860bf3e8bfbc2ce5605b3bd01fcf719",
+          "bytes": 50539
+        },
+        {
+          "path": "skills/seed/SKILL.md",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/skills/seed/SKILL.md",
+          "sha256": "4ebbb348638450ad2a1fd750658e9b7a14a51cc2d522169be96dd4970c3fff8b",
+          "bytes": 32415
+        },
+        {
+          "path": "src/ouroboros/bigbang/ambiguity.py",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/src/ouroboros/bigbang/ambiguity.py",
+          "sha256": "d57cefe382ba49114325dc3cff2c718479207a324a26d21d7db0c300bbb03b64",
+          "bytes": 44298
+        },
+        {
+          "path": "src/ouroboros/evaluation/consensus.py",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/src/ouroboros/evaluation/consensus.py",
+          "sha256": "4d888f7eb7485278b38b2dbbd208b7e8edd3243637c6d050b6ee0412c02a368f",
+          "bytes": 39180
+        },
+        {
+          "path": "src/ouroboros/evaluation/pipeline.py",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/src/ouroboros/evaluation/pipeline.py",
+          "sha256": "29ea03cddf2139834d9b1717830792d955c358bc96ac7734a3fbbd40a94e1169",
+          "bytes": 13423
+        },
+        {
+          "path": "src/ouroboros/evaluation/reviewer_independence.py",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/src/ouroboros/evaluation/reviewer_independence.py",
+          "sha256": "61c9c34f5d84eb70d0769f33942e5e00941a9a6f38bcda5dc28959f3f4b86c87",
+          "bytes": 10539
+        },
+        {
+          "path": "src/ouroboros/evaluation/trigger.py",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/src/ouroboros/evaluation/trigger.py",
+          "sha256": "c19899c5d4d4f9b246d3f05730aa2f050ba74ecf3ba20036173ae76acc30d5e0",
+          "bytes": 10569
+        },
+        {
+          "path": "src/ouroboros/evaluation/models.py",
+          "url": "https://github.com/Q00/ouroboros/blob/188020bf1e406e0d276e8cfdd5f95f92e9fed7f5/src/ouroboros/evaluation/models.py",
+          "sha256": "330668c8151fc8067ed87f4c06004abdd5aa4ddb5a74984c43202e0e748b865f",
+          "bytes": 24607
+        }
+      ]
+    },
+    {
+      "requested": "Yeachan-Heo/oh-my-claudecode",
+      "repo": "Yeachan-Heo/oh-my-claudecode",
+      "sha": "454bae017356ed1d056182cd929b6eb6cf6143ad",
+      "commit_date": "2026-10-06T05:32:47Z",
+      "pushed_at": "2026-10-11T22:34:21Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/Yeachan-Heo/oh-my-claudecode/blob/454bae017356ed1d056182cd929b6eb6cf6143ad/LICENSE",
+          "sha256": "1d2b966f93feaa8928a57a69868388ee9016c86a341299fc5261ded44249af79",
+          "bytes": 1068
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-claudecode/blob/454bae017356ed1d056182cd929b6eb6cf6143ad/README.md",
+          "sha256": "98a77f3bdf356ba72c4ef62dd8a7864cf25215581c36364d1ae78f5dc2b59dc8",
+          "bytes": 43717
+        },
+        {
+          "path": "agents/critic.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-claudecode/blob/454bae017356ed1d056182cd929b6eb6cf6143ad/agents/critic.md",
+          "sha256": "7ac22331649f07805eca351e784629520a831d6a7ff8596628c66e6d4703b072",
+          "bytes": 22285
+        },
+        {
+          "path": "agents/planner.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-claudecode/blob/454bae017356ed1d056182cd929b6eb6cf6143ad/agents/planner.md",
+          "sha256": "20186e7bb9cc8298838cf2bd7caf187c79d9b9cb8ed941a9600b9c98454a09e5",
+          "bytes": 8618
+        },
+        {
+          "path": "skills/plan/SKILL.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-claudecode/blob/454bae017356ed1d056182cd929b6eb6cf6143ad/skills/plan/SKILL.md",
+          "sha256": "465eb49b8c303dbf07811e303907a8484b30a41ac5363d0c25c1b7bfc3153236",
+          "bytes": 24934
+        },
+        {
+          "path": "skills/ralplan/SKILL.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-claudecode/blob/454bae017356ed1d056182cd929b6eb6cf6143ad/skills/ralplan/SKILL.md",
+          "sha256": "cf4591a6886e82a5b397fc781ad751c82de3703a78d5458d6177fbbc2e870431",
+          "bytes": 10984
+        }
+      ]
+    },
+    {
+      "requested": "Yeachan-Heo/oh-my-codex",
+      "repo": "Yeachan-Heo/oh-my-codex",
+      "sha": "2db7d5136b22252e83091a12ea27567b2fdd5971",
+      "commit_date": "2026-10-06T04:47:51Z",
+      "pushed_at": "2026-10-11T10:26:27Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/Yeachan-Heo/oh-my-codex/blob/2db7d5136b22252e83091a12ea27567b2fdd5971/LICENSE",
+          "sha256": "4fd42de3188b327edb30d8997f8669b590ccfde847bb85af2e73a5c7161d4ec0",
+          "bytes": 1068
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-codex/blob/2db7d5136b22252e83091a12ea27567b2fdd5971/README.md",
+          "sha256": "0567acbb767163fe15507316da2fb3e8af3d09de4a2d73e463cc7eb33ffcdef9",
+          "bytes": 35099
+        },
+        {
+          "path": "prompts/critic.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-codex/blob/2db7d5136b22252e83091a12ea27567b2fdd5971/prompts/critic.md",
+          "sha256": "2fec72f4d448e37a4fe1ab71e20d2b40582052627009677aeda50eec787d0aaf",
+          "bytes": 2824
+        },
+        {
+          "path": "skills/plan/SKILL.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-codex/blob/2db7d5136b22252e83091a12ea27567b2fdd5971/skills/plan/SKILL.md",
+          "sha256": "4a2312fee52f4780338eccc217a9340300e03c8a3e8b0f8e8dde0a8239afd0b7",
+          "bytes": 3706
+        },
+        {
+          "path": "skills/ralplan/SKILL.md",
+          "url": "https://github.com/Yeachan-Heo/oh-my-codex/blob/2db7d5136b22252e83091a12ea27567b2fdd5971/skills/ralplan/SKILL.md",
+          "sha256": "1d17d7d478ad83946520f22e0b8bacdbdb214342edde58742fad9fba0e9227d5",
+          "bytes": 16945
+        }
+      ]
+    },
+    {
+      "requested": "affaan-m/ECC",
+      "repo": "affaan-m/ECC",
+      "sha": "d4a44ded8c150aac89b37c1f665b5a749fe52b02",
+      "commit_date": "2026-10-11T18:37:53Z",
+      "pushed_at": "2026-10-11T22:46:08Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/LICENSE",
+          "sha256": "326146379f01bb137c0a5d3c54770c1aa31076705c8b88a7f6b26a460f6221b2",
+          "bytes": 1071
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/README.md",
+          "sha256": "891c1db3e717d893e625c9a87194a2dda07185911019a6e0e8b4c4bfd5d3b92c",
+          "bytes": 115595
+        },
+        {
+          "path": "agents/gan-planner.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/agents/gan-planner.md",
+          "sha256": "852f8ac7cc1761186ec6f48e1b1be65cc32307a182062e0cebb84aae2d3ca901",
+          "bytes": 4502
+        },
+        {
+          "path": "agents/planner.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/agents/planner.md",
+          "sha256": "63aba865206bac9cb5887542fb01b97656e7701faff98e091aa77057ba9860bc",
+          "bytes": 8055
+        },
+        {
+          "path": "commands/multi-plan.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/commands/multi-plan.md",
+          "sha256": "34f6cb463a65d35149d3e1f9f059380264ce7499850d5240c7600acbfd5afa2a",
+          "bytes": 10048
+        },
+        {
+          "path": "commands/plan.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/commands/plan.md",
+          "sha256": "8d0caa8380eba2f2550937553c9c8c8f253c627cff662f0c333e6ad982706e3e",
+          "bytes": 7766
+        },
+        {
+          "path": "skills/plan-canvas/SKILL.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/skills/plan-canvas/SKILL.md",
+          "sha256": "0ee9356f9305eb8ceec671753700a0a7a438c76dca9983ed87c66be0b5681b64",
+          "bytes": 8676
+        },
+        {
+          "path": "skills/search-first/SKILL.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/skills/search-first/SKILL.md",
+          "sha256": "76835db48dd910061d2e4271b1151793d2fddbabeb2d2866eed068b3580c55d5",
+          "bytes": 8210
+        },
+        {
+          "path": "skills/token-budget-advisor/SKILL.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/skills/token-budget-advisor/SKILL.md",
+          "sha256": "7f037a58306a6bd5c5a024491a6c4529cd8373309e413eda517ad2430420e25a",
+          "bytes": 5740
+        },
+        {
+          "path": "skills/verification-loop/SKILL.md",
+          "url": "https://github.com/affaan-m/ECC/blob/d4a44ded8c150aac89b37c1f665b5a749fe52b02/skills/verification-loop/SKILL.md",
+          "sha256": "5b06be54d4852f60e6cf1b04c6e9a4748554334eb3e41af6c0959b544e6464ae",
+          "bytes": 3064
+        }
+      ]
+    },
+    {
+      "requested": "assafelovic/gpt-researcher",
+      "repo": "assafelovic/gpt-researcher",
+      "sha": "3582a6841fe7dc801e2a34e34ee408641aea9bce",
+      "commit_date": "2026-10-10T22:03:51Z",
+      "pushed_at": "2026-10-10T22:03:53Z",
+      "license": "Apache-2.0",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/assafelovic/gpt-researcher/blob/3582a6841fe7dc801e2a34e34ee408641aea9bce/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "bytes": 11357
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/assafelovic/gpt-researcher/blob/3582a6841fe7dc801e2a34e34ee408641aea9bce/README.md",
+          "sha256": "a43c071ae3d19ae35631ae325742b973a8a925ecc3669563c67ed759398ec0e2",
+          "bytes": 19172
+        }
+      ]
+    },
+    {
+      "requested": "backnotprop/plannotator",
+      "repo": "backnotprop/plannotator",
+      "sha": "34432f0aeb5456efe220529d0d263d301dbd0ea6",
+      "commit_date": "2026-10-11T22:03:38Z",
+      "pushed_at": "2026-10-11T22:42:51Z",
+      "license": "Apache-2.0",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/backnotprop/plannotator/blob/34432f0aeb5456efe220529d0d263d301dbd0ea6/README.md",
+          "sha256": "3e9bf8f276c43ad8609be1a437f81c90cb7626ce0f5ec3fbb4f99424ccf732e1",
+          "bytes": 27995
+        },
+        {
+          "path": "apps/codex/README.md",
+          "url": "https://github.com/backnotprop/plannotator/blob/34432f0aeb5456efe220529d0d263d301dbd0ea6/apps/codex/README.md",
+          "sha256": "3a2706da590fa8038aa197980bac871ac69b16fc771984ffe93b532bb0506ffd",
+          "bytes": 4561
+        }
+      ]
+    },
+    {
+      "requested": "garrytan/gstack",
+      "repo": "garrytan/gstack",
+      "sha": "3b7254a54d3291c559b39b8ff7014b040d2650b0",
+      "commit_date": "2026-10-11T19:09:12Z",
+      "pushed_at": "2026-10-11T19:09:16Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/garrytan/gstack/blob/3b7254a54d3291c559b39b8ff7014b040d2650b0/LICENSE",
+          "sha256": "e56fbb5b3d95756f3fa1cfefa24732ec79f18ece1ad08a4e79e00df57e8b198c",
+          "bytes": 1066
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/garrytan/gstack/blob/3b7254a54d3291c559b39b8ff7014b040d2650b0/README.md",
+          "sha256": "2f1343ce81e47106a0f67d12acad3c09881219a4d1148cd27d28697432a79c51",
+          "bytes": 88558
+        },
+        {
+          "path": "autoplan/SKILL.md",
+          "url": "https://github.com/garrytan/gstack/blob/3b7254a54d3291c559b39b8ff7014b040d2650b0/autoplan/SKILL.md",
+          "sha256": "27ea3d33ed45206e82e2dd9322789010e8521467cfd7725c7e74e0f6b3623f7c",
+          "bytes": 65667
+        },
+        {
+          "path": "plan-ceo-review/SKILL.md",
+          "url": "https://github.com/garrytan/gstack/blob/3b7254a54d3291c559b39b8ff7014b040d2650b0/plan-ceo-review/SKILL.md",
+          "sha256": "46e5912bbf6984419d30be11e43d6850b665884147852affe55be15a85f62ccb",
+          "bytes": 80949
+        },
+        {
+          "path": "plan-eng-review/SKILL.md",
+          "url": "https://github.com/garrytan/gstack/blob/3b7254a54d3291c559b39b8ff7014b040d2650b0/plan-eng-review/SKILL.md",
+          "sha256": "93e2f67945521fa959e0aed8285d48b1ab53d0f4fa7db4c5aa34a2ba981f04a5",
+          "bytes": 51958
+        },
+        {
+          "path": "plan-eng-review/sections/review-sections.md",
+          "url": "https://github.com/garrytan/gstack/blob/3b7254a54d3291c559b39b8ff7014b040d2650b0/plan-eng-review/sections/review-sections.md",
+          "sha256": "a656931750572acb5f77e84160cdbd38de0bb1977ba67d14d4794ba8e604f537",
+          "bytes": 97989
+        }
+      ]
+    },
+    {
+      "requested": "gsd-build/get-shit-done",
+      "repo": "gsd-build/get-shit-done",
+      "sha": "bdcaab2c752d9a33a1a1ca9acf3a3c81fb991815",
+      "commit_date": "2026-05-31T13:34:35Z",
+      "pushed_at": "2026-05-31T17:46:54Z",
+      "license": "MIT",
+      "archived": true,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/gsd-build/get-shit-done/blob/bdcaab2c752d9a33a1a1ca9acf3a3c81fb991815/LICENSE",
+          "sha256": "af0d31f2550b534c14251e14020f3378cf17bd21af7660e7d7b1a2ead4fcdfb4",
+          "bytes": 1075
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/gsd-build/get-shit-done/blob/bdcaab2c752d9a33a1a1ca9acf3a3c81fb991815/README.md",
+          "sha256": "6530ef6aad23383980a7c405d32c40e73c798ee4263a883f804aef31548569b6",
+          "bytes": 329
+        },
+        {
+          "path": "agents/gsd-plan-checker.md",
+          "url": "https://github.com/gsd-build/get-shit-done/blob/bdcaab2c752d9a33a1a1ca9acf3a3c81fb991815/agents/gsd-plan-checker.md",
+          "sha256": "e92c2937abab2460d5abee05371d3e532b3ff8ea7999dad48beb62d0f59a6a1a",
+          "bytes": 36076
+        },
+        {
+          "path": "agents/gsd-planner.md",
+          "url": "https://github.com/gsd-build/get-shit-done/blob/bdcaab2c752d9a33a1a1ca9acf3a3c81fb991815/agents/gsd-planner.md",
+          "sha256": "0a91120c53fe8974e072517a5b5356447c545dcf52ec044a5a35d1ea6be5d23d",
+          "bytes": 49350
+        }
+      ]
+    },
+    {
+      "requested": "karpathy/llm-council",
+      "repo": "karpathy/llm-council",
+      "sha": "92e1fccb1bdcf1bab7221aa9ed90f9dc72529131",
+      "commit_date": "2025-11-22T23:35:19Z",
+      "pushed_at": "2025-11-22T23:35:21Z",
+      "license": null,
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/karpathy/llm-council/blob/92e1fccb1bdcf1bab7221aa9ed90f9dc72529131/README.md",
+          "sha256": "0f21b96fd783f74ed1599a7a831d75d9718a4876b42da5db2d931cb1442f4245",
+          "bytes": 3135
+        },
+        {
+          "path": "backend/config.py",
+          "url": "https://github.com/karpathy/llm-council/blob/92e1fccb1bdcf1bab7221aa9ed90f9dc72529131/backend/config.py",
+          "sha256": "f527f3c7bf88f7e02e0bf1879c3bfd7af63682d4494df5b876197fc9899704f6",
+          "bytes": 628
+        },
+        {
+          "path": "backend/council.py",
+          "url": "https://github.com/karpathy/llm-council/blob/92e1fccb1bdcf1bab7221aa9ed90f9dc72529131/backend/council.py",
+          "sha256": "8b29aba85d25efb82025dab74fe374b2b64f2580f4a29f1b7329c1ede2977ae8",
+          "bytes": 10528
+        }
+      ]
+    },
+    {
+      "requested": "langchain-ai/open_deep_research",
+      "repo": "langchain-ai/open_deep_research",
+      "sha": "1b7d2e80db9faa586165c60e09096dbbfd483a64",
+      "commit_date": "2026-08-10T18:13:29Z",
+      "pushed_at": "2026-08-10T18:13:37Z",
+      "license": "MIT",
+      "archived": true,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/langchain-ai/open_deep_research/blob/1b7d2e80db9faa586165c60e09096dbbfd483a64/LICENSE",
+          "sha256": "3404cb66935968edefe1149c9bfcb44bd8532c437c01ac095ec53b6e195ce110",
+          "bytes": 1065
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/langchain-ai/open_deep_research/blob/1b7d2e80db9faa586165c60e09096dbbfd483a64/README.md",
+          "sha256": "0fc75629079c025b0200e6032a038edf9c91c332d4ce925cbc6165910008267f",
+          "bytes": 10265
+        },
+        {
+          "path": "src/open_deep_research/configuration.py",
+          "url": "https://github.com/langchain-ai/open_deep_research/blob/1b7d2e80db9faa586165c60e09096dbbfd483a64/src/open_deep_research/configuration.py",
+          "sha256": "61e1a62ada20d16cb7b876c10b15a3ddb71f61248a53a05d7511ca6930af98da",
+          "bytes": 8234
+        },
+        {
+          "path": "src/open_deep_research/deep_researcher.py",
+          "url": "https://github.com/langchain-ai/open_deep_research/blob/1b7d2e80db9faa586165c60e09096dbbfd483a64/src/open_deep_research/deep_researcher.py",
+          "sha256": "af128d5d8773008d021b6ef7562e9fb90a45f7eb5e886483d1e6e835223275e0",
+          "bytes": 30117
+        }
+      ]
+    },
+    {
+      "requested": "mattpocock/skills",
+      "repo": "mattpocock/skills",
+      "sha": "49dd158d1076134a641b33efb035946536778336",
+      "commit_date": "2026-10-09T10:56:49Z",
+      "pushed_at": "2026-10-09T10:57:08Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/LICENSE",
+          "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+          "bytes": 1068
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/README.md",
+          "sha256": "345041d56cf1411b6b3ca1cc54014d26c563890f817f4cb9e2cb193dcd771a3e",
+          "bytes": 16461
+        },
+        {
+          "path": "skills/engineering/grill-with-docs/SKILL.md",
+          "url": "https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/skills/engineering/grill-with-docs/SKILL.md",
+          "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+          "bytes": 247
+        },
+        {
+          "path": "skills/productivity/grill-me/SKILL.md",
+          "url": "https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/skills/productivity/grill-me/SKILL.md",
+          "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+          "bytes": 157
+        },
+        {
+          "path": "skills/productivity/grilling/SKILL.md",
+          "url": "https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/skills/productivity/grilling/SKILL.md",
+          "sha256": "befdff1e27a1dfe2a294d5871169ac1afe16d983911daa4f32627514a48c1e15",
+          "bytes": 2049
+        }
+      ]
+    },
+    {
+      "requested": "modelcontextprotocol/servers",
+      "repo": "modelcontextprotocol/servers",
+      "sha": "bbb701e7ac1e57f3edd1c2836b94c5457eaf7b9c",
+      "commit_date": "2026-10-11T05:10:42Z",
+      "pushed_at": "2026-10-11T05:42:28Z",
+      "license": "NOASSERTION",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/modelcontextprotocol/servers/blob/bbb701e7ac1e57f3edd1c2836b94c5457eaf7b9c/LICENSE",
+          "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a",
+          "bytes": 12227
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/modelcontextprotocol/servers/blob/bbb701e7ac1e57f3edd1c2836b94c5457eaf7b9c/README.md",
+          "sha256": "c112784223279665bda02d79105eff6f268c629f18c4590a50e9305b72bf1f9e",
+          "bytes": 8707
+        },
+        {
+          "path": "src/sequentialthinking/README.md",
+          "url": "https://github.com/modelcontextprotocol/servers/blob/bbb701e7ac1e57f3edd1c2836b94c5457eaf7b9c/src/sequentialthinking/README.md",
+          "sha256": "3a6f0665a0d561db5ae5973deaf360253a5d0334563cd329ae3df1d2296516c7",
+          "bytes": 7542
+        },
+        {
+          "path": "src/sequentialthinking/lib.ts",
+          "url": "https://github.com/modelcontextprotocol/servers/blob/bbb701e7ac1e57f3edd1c2836b94c5457eaf7b9c/src/sequentialthinking/lib.ts",
+          "sha256": "b1f7bbf44ac98a3eff153cab6afde2fa8b46a5c7bbe1d96e030747cf9d438da9",
+          "bytes": 4175
+        }
+      ]
+    },
+    {
+      "requested": "obra/superpowers",
+      "repo": "obra/superpowers",
+      "sha": "bb92a77741419a4ab5f06e711a283343f1ada0c3",
+      "commit_date": "2026-10-10T00:28:04Z",
+      "pushed_at": "2026-10-10T03:03:30Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/obra/superpowers/blob/bb92a77741419a4ab5f06e711a283343f1ada0c3/LICENSE",
+          "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+          "bytes": 1070
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/obra/superpowers/blob/bb92a77741419a4ab5f06e711a283343f1ada0c3/README.md",
+          "sha256": "9b7be460027bf53c29f628eee72dceeebb83e52dd5e94a1b6f9828a64c579198",
+          "bytes": 14589
+        },
+        {
+          "path": "skills/brainstorming/SKILL.md",
+          "url": "https://github.com/obra/superpowers/blob/bb92a77741419a4ab5f06e711a283343f1ada0c3/skills/brainstorming/SKILL.md",
+          "sha256": "6ee10d1481b8a2580d5336ff66c5c08acc9d4b251b13bbc3bfd31be99c261d43",
+          "bytes": 10073
+        },
+        {
+          "path": "skills/brainstorming/builder-check-prompt.md",
+          "url": "https://github.com/obra/superpowers/blob/bb92a77741419a4ab5f06e711a283343f1ada0c3/skills/brainstorming/builder-check-prompt.md",
+          "sha256": "36d51a4723d6f0a3ce5811a0ea3b3a8424f07533947e1355f5d8cb8cce40c55e",
+          "bytes": 881
+        },
+        {
+          "path": "skills/writing-plans/SKILL.md",
+          "url": "https://github.com/obra/superpowers/blob/bb92a77741419a4ab5f06e711a283343f1ada0c3/skills/writing-plans/SKILL.md",
+          "sha256": "a6c67c1900064347c2a329990dd3c555657c51c3ec53b259a08aa01a2c26139a",
+          "bytes": 10335
+        }
+      ]
+    },
+    {
+      "requested": "open-gsd/gsd-core",
+      "repo": "open-gsd/gsd-core",
+      "sha": "b747aca5b1dcff699c36d90c5b9fca0ec6354c1c",
+      "commit_date": "2026-10-11T08:07:15Z",
+      "pushed_at": "2026-10-11T08:07:17Z",
+      "license": "MIT",
+      "archived": false,
+      "tree_truncated": false,
+      "retrieved_files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/open-gsd/gsd-core/blob/b747aca5b1dcff699c36d90c5b9fca0ec6354c1c/LICENSE",
+          "sha256": "3a160aec61eeb28e75e8017346ee190db07986a09c4bd72555cc706f1d99e27e",
+          "bytes": 1065
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/open-gsd/gsd-core/blob/b747aca5b1dcff699c36d90c5b9fca0ec6354c1c/README.md",
+          "sha256": "66fe062ee3705af835b09ffa8da112fd14bc8a6025f0d4fb22b4291d353268a9",
+          "bytes": 5922
+        },
+        {
+          "path": "agents/gsd-plan-checker.md",
+          "url": "https://github.com/open-gsd/gsd-core/blob/b747aca5b1dcff699c36d90c5b9fca0ec6354c1c/agents/gsd-plan-checker.md",
+          "sha256": "fb10523b3e8e3adc3ddb5901c277dd1919317b8f0f70af67f71d7eb86653825a",
+          "bytes": 47209
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Four skills:
 
+Research: [concise, verified planning approaches](docs/planning-research/overview.md) — an October 2026 comparison of current repositories, cost tradeoffs, and a proposed standalone planning skill. The proposal is not an installed fifth skill.
+
 ## adversarial-review
 
 Adversarial Claude-vs-Codex debate review of any target — branch diff, working tree, or documents (specs, proposals, plans). Hunts real defects **and** challenges design decisions, approaches, and implementation paths.
