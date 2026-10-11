@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-12",
+  "purpose": "Small synthetic pilot; not a controlled quality/cost benchmark",
+  "normalization": "Only absolute workspace paths and Markdown line pointers were normalized to repository-relative references or <scratch> placeholders. No substantive output text was changed by export. The research receipt records a parent-audit clarification after the parent inspected an intermediate output; the final diagram already contained the questioned branch.",
+  "model": "Host settings inherited; exact identifier and billing telemetry unavailable",
+  "grading": "Non-blind author assessment; one run per task/mode",
+  "skill": [
+    {
+      "path": "skills/grounded-plan/LICENSE",
+      "sha256": "8b69415ed20b94c13d1d3bdab5a114d53b5ee474f1c3f800c44916b9d9264819"
+    },
+    {
+      "path": "skills/grounded-plan/SKILL.md",
+      "sha256": "4fa4ad73675a1d6b47e0538fc150a7d486c3435953d7d08cb8a3e8f3971e9a0c"
+    },
+    {
+      "path": "skills/grounded-plan/review.md",
+      "sha256": "f6c2fc28cf5b87feb5fb409e667e4bbd78344bbe1f4e848e59533751346a2262"
+    }
+  ],
+  "fixtures": [
+    {
+      "path": "docs/planning-research/eval-fixtures/README.md",
+      "sha256": "24350a59980e32538e0a3b9a51f7b39cf44391ffc8b47c6628ea231e56d3b842"
+    },
+    {
+      "path": "docs/planning-research/eval-fixtures/engineering/README.md",
+      "sha256": "3caf3851ec22fb3cd8d89e0eadd40dc27b2ef4dfde65dc727d91946f185eb132"
+    },
+    {
+      "path": "docs/planning-research/eval-fixtures/engineering/REQUEST.md",
+      "sha256": "16d1af46d6e65734ae8f7e8328518e94804b2f4ce7acb609c3dca020bed37ae2"
+    },
+    {
+      "path": "docs/planning-research/eval-fixtures/engineering/service.py",
+      "sha256": "d073b1c0d8d1ee7d9016620f31c4129ec8fd6ad2c6756a141d28c0cfefd36181"
+    },
+    {
+      "path": "docs/planning-research/eval-fixtures/engineering/test_service.py",
+      "sha256": "b1e506d942396d070c4c01b19bc548b3a4dad22311c1cdc76e797c1583eeedf9"
+    },
+    {
+      "path": "docs/planning-research/eval-fixtures/product.md",
+      "sha256": "b5d7632276a60c427251a63f37779a7527684b372296d16bd09f1e993194ab8f"
+    },
+    {
+      "path": "docs/planning-research/eval-fixtures/research.md",
+      "sha256": "e7faf16afc9d63f399dec1b31889534adbd2264d9634fddb0bcfb37ba15b3ea2"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "engineering-baseline/output.md",
+      "original_sha256": "5b0f775f846644f57090934ca637c7df0aa91856769945012b98f6b4905e367a",
+      "export_sha256": "5b0f775f846644f57090934ca637c7df0aa91856769945012b98f6b4905e367a"
+    },
+    {
+      "path": "engineering-baseline/receipt.json",
+      "original_sha256": "d1215b4a4df09183b91bb2f550d149f40dcad85d768555f6e04f2b8adb1c824f",
+      "export_sha256": "c3eeb9de11edc50e8ee902a7276b2a8335afcd01cd0b6450bb02c94dc1e97f35"
+    },
+    {
+      "path": "engineering-candidate/output.md",
+      "original_sha256": "971154ae58fe883bf095d0fbef975a5323f182826297ae2b6790db27242b4d85",
+      "export_sha256": "962a7ad857219d2d4a44b317808cd85d8529b51758397169894862da78fe0bdb"
+    },
+    {
+      "path": "engineering-candidate/receipt.json",
+      "original_sha256": "c4a5068c21e85b0d6d47aa44d11677ba334502a66bbea7d104ba316a80979dd0",
+      "export_sha256": "062a56a1b7c1c0fc6baaa4abb2bbb622d63fab82fd459497cc7218196cfce899"
+    },
+    {
+      "path": "product/output.md",
+      "original_sha256": "f57b0d08448938a48820fd799b0914442563ab975cce9db683a1982288d5559c",
+      "export_sha256": "9c000f4680e84b8a8cfa1d423d2b038aed896e54c3ba795c4f48938027a2000f"
+    },
+    {
+      "path": "product/receipt.json",
+      "original_sha256": "022ee7c98b5a0af5c79952a916256c6b6152c8d5f6caa667e05688220d6fefc5",
+      "export_sha256": "56b8d32d6ab1575eba3c32b7b324367a9e118b159962265b6a5f079a5c0ff8cf"
+    },
+    {
+      "path": "research/output.md",
+      "original_sha256": "d090244d5e60870f55a87bddb9e8a2c24ab77baa5dd999397cb57e64275cea69",
+      "export_sha256": "bb32f2990769bb542abd07e8e638c6ee53e71b6b80353d877f627a0c4ad21d98"
+    },
+    {
+      "path": "research/receipt.json",
+      "original_sha256": "f92faabb710bae684641f5493f9963b98065423030ef36bb4ab9283a4081034e",
+      "export_sha256": "36ac2a7e7c0e9317b2940095c6721433b8cc1de7979a51540b627282bc047d46"
+    },
+    {
+      "path": "engineering-deep/frozen-plan.md",
+      "original_sha256": "971154ae58fe883bf095d0fbef975a5323f182826297ae2b6790db27242b4d85",
+      "export_sha256": "962a7ad857219d2d4a44b317808cd85d8529b51758397169894862da78fe0bdb"
+    },
+    {
+      "path": "engineering-deep/critic.md",
+      "original_sha256": "37b76d401255dd69086841afb77dfcae9425d5f338e04391dd32ae983031c49c",
+      "export_sha256": "37b76d401255dd69086841afb77dfcae9425d5f338e04391dd32ae983031c49c"
+    },
+    {
+      "path": "engineering-deep/critic-receipt.json",
+      "original_sha256": "37b54e93438eb63d508873bebbc1bb83c8b67744d9127b996f560310dc3a4622",
+      "export_sha256": "37b54e93438eb63d508873bebbc1bb83c8b67744d9127b996f560310dc3a4622"
+    },
+    {
+      "path": "engineering-deep/alternative.md",
+      "original_sha256": "4edeb2371b5ed89b253c63abecac71e7366b72de3b9e3abcc5d3506faad505c2",
+      "export_sha256": "4edeb2371b5ed89b253c63abecac71e7366b72de3b9e3abcc5d3506faad505c2"
+    },
+    {
+      "path": "engineering-deep/alternative-receipt.json",
+      "original_sha256": "58a158c7a591ac6f3fc5e461bae842df1f23ce37d55dd03bcbe2178cf3225729",
+      "export_sha256": "cea916d2a8b7651aac56ae4f26684b1744206d62b64d40bea567b81fabdc96ea"
+    }
+  ],
+  "parent_authored_receipts": [
+    {
+      "path": "engineering-deep/receipt.json",
+      "sha256": "05be79661a01566c0a0c7d082fa8762804f0ba07838f815e49000b3713481a40"
+    }
+  ]
+}

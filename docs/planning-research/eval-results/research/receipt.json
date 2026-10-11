@@ -1,0 +1,131 @@
+{
+  "mode": "review",
+  "effort": "standard",
+  "verdict": "revise",
+  "original_preserved": true,
+  "input": "../../eval-fixtures/research.md",
+  "output": "output.md",
+  "source_access": {
+    "instructions_read": [
+      "../../../../skills/grounded-plan/SKILL.md",
+      "../../../../skills/grounded-plan/review.md"
+    ],
+    "task_evidence_read": [
+      "../../eval-fixtures/research.md"
+    ],
+    "source_A_to_D_originals_read": false,
+    "source_scope": "Only the descriptions in the supplied packet were available within the authorized scope.",
+    "web_accesses": 0,
+    "other_evaluation_artifacts_read": false
+  },
+  "checks_performed": [
+    {
+      "check": "Evidence provenance and independence",
+      "method": "Manual comparison of supplied source descriptions",
+      "result": "B repeats A; no independent corroboration of the 20% claim."
+    },
+    {
+      "check": "Descriptive arithmetic",
+      "method": "Executed JavaScript arithmetic in functions.exec: 6/100; 4/110; difference; relative proportion decrease; relative raw-count decrease",
+      "result": {
+        "prior_percent": 6,
+        "next_percent": 3.6363636363636362,
+        "percentage_point_decrease": 2.3636363636363638,
+        "relative_proportion_decrease_percent": 39.39393939393939,
+        "relative_raw_count_decrease_percent": 33.33333333333333
+      },
+      "scope_limit": "Calculations use nominal packet headcounts; they do not verify person-time, comparable cohorts, annual retention, or causation."
+    },
+    {
+      "check": "Causal support, metric and observation window",
+      "method": "Manual check of steps 2\u20134 against C and the trial duration",
+      "result": "Concurrent compensation/manager changes and missing policy exposure prevent attribution. Four weeks cannot directly observe an annual outcome; the 20% metric is ambiguous."
+    },
+    {
+      "check": "Requirement coverage, alternatives, dependencies and acceptance",
+      "method": "Manual self-check of proposed corrections against the task and packet",
+      "result": "Added policy definition, feasibility/precision gate, concurrent comparison, observed follow-up, uncertainty, guardrails, flexibility alternative, and an inconclusive outcome."
+    },
+    {
+      "check": "Diagram/prose consistency",
+      "method": "Manual Mermaid syntax and relationship check; no renderer",
+      "result": "Identified adoption-before-trial in the original diagram. The final proposed Mermaid diagram places adoption after evaluation and explicitly includes B -->|Insufficient design or events| G[Scope to feasibility or defer]. The prose separately explains weaker causal inference without randomization and the option to limit claims or extend follow-up when event counts are insufficient."
+    },
+    {
+      "check": "Saved artifact inspection",
+      "method": "Read the saved review with Python and checked verdict, Mermaid block, decision IDs and review-limit statement",
+      "result": "Present. The review is a separate artifact; input was not edited. A subsequent targeted edit clarified precision assessment, the infeasible branch, and evidence status."
+    }
+  ],
+  "review": {
+    "actual_context": "One current forward-test assessment context",
+    "fresh_independent_contexts_created": 0,
+    "independent_review_calls": 0,
+    "targeted_reviewer_followups": 0,
+    "self_check_performed": true,
+    "status": "self-checked; independent review unavailable",
+    "reason": "Task expressly prohibits additional independent agents.",
+    "model_diversity": "Not applicable: no independent reviewers were used.",
+    "material_corrections_proposed": [
+      "Treat A/B as one origin and avoid importing the case-study effect size.",
+      "Replace causal attribution of C with a descriptive, confounded comparison.",
+      "Define the outcome and observe its full measurement window.",
+      "Define the policy and consider flexibility as a competing option.",
+      "Place adoption after a feasibility gate and adequate evaluation."
+    ],
+    "changes_to_original": "None; corrections are proposed in the separate review.",
+    "stop_reason": "review-unavailable",
+    "additional_stop_context": "All permitted evidence was reviewed; unresolved empirical facts require data outside the supplied packet."
+  },
+  "decisions_needed": [
+    {
+      "id": "D1",
+      "decision": "Choose the policy: reduced hours, compressed hours, or flexibility.",
+      "recommendation": "Clarify using broader employee input; do not generalize D's preference prevalence."
+    },
+    {
+      "id": "D2",
+      "decision": "Choose causal efficacy study or exploratory pilot.",
+      "recommendation": "Use concurrent randomized comparison if feasible; otherwise explicitly limit causal claims."
+    },
+    {
+      "id": "D3",
+      "decision": "Set meaningful effect, outcome window, operational guardrails and acceptable uncertainty.",
+      "recommendation": "Use a directly observed outcome over its actual measurement window; company judgment must set thresholds."
+    }
+  ],
+  "unresolved_facts": [
+    "Whether any shorter-week policy was introduced during C's periods",
+    "Employee exposure, turnover definitions and population comparability",
+    "Interview sampling and representativeness",
+    "Number of eligible teams and feasibility of independent assignment",
+    "Feasible precision, follow-up length and available event counts"
+  ],
+  "limitations": [
+    "Packet summaries only; no source originals or raw records inspected",
+    "No browsing, external studies, independent agents, contacts or package installation",
+    "No empirical experiment, power calculation or operational feasibility test",
+    "Diagram manually checked, not rendered",
+    "Recommendations do not establish that the intervention improves retention"
+  ],
+  "usage": {
+    "kind": "Work proxies, not cost or token accounting",
+    "source_read_commands": 3,
+    "executed_arithmetic_checks": 1,
+    "independent_review_calls": 0,
+    "elapsed_time": "Not measured",
+    "token_usage": "Unavailable",
+    "cost": "Unavailable"
+  },
+  "parent_audit_followup": {
+    "reported_issue": "The parent reported that the receipt claimed an infeasible-study branch while the Mermaid diagram was linear.",
+    "local_inspection": "Reopened the saved output.md Mermaid block and relevant receipt entries. The final saved diagram already contained both a Feasible branch and an Insufficient design or events branch.",
+    "resolution": "The reported mismatch was not present in the final saved output. Clarified the receipt with the exact diagram edge and distinguished the broader fallback discussion in prose.",
+    "artifacts_changed": [
+      "receipt.json"
+    ],
+    "original_input_and_substantive_output_changed": false,
+    "additional_reviewers": 0,
+    "diagram_rendered": false
+  }
+}

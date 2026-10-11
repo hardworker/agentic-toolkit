@@ -1,0 +1,28 @@
+{
+  "test_kind": "deep review component on an already completed standard plan",
+  "fixed_plan": "frozen-plan.md",
+  "fixed_plan_export_sha256": "962a7ad857219d2d4a44b317808cd85d8529b51758397169894862da78fe0bdb",
+  "fresh_contexts": 2,
+  "initial_review_calls": 2,
+  "dispute_rounds": 0,
+  "total_review_calls": 2,
+  "cap": 6,
+  "context_boundary": "Critic received REQUEST.md, README.md, service.py, test_service.py, and frozen-plan.md. Alternative author received only the first four source files. Both were fresh contexts with no inherited conversation. Initial outputs were not exchanged before completion.",
+  "model_diversity": "Both inherited host settings without model overrides; exact identifiers were not independently verified. This is not a cross-model experiment.",
+  "finding": "Critic found no material issue. Blind alternative independently recommended reuse of the existing worker route, with separation conditional on measured contention or unmet targets.",
+  "adjudication": "Parent compared both outputs with the fixture and frozen plan. No material factual disagreement required a dispute round. Their agreement does not establish production feasibility.",
+  "material_changes_to_frozen_plan": [],
+  "unresolved": [
+    "Request identity and deduplication retention policy",
+    "Capacity acceptance targets",
+    "Production integration contracts absent from fixture"
+  ],
+  "stop_reason": "settled",
+  "limits": [
+    "No full deep planning run",
+    "No dispute/no-new-evidence/cap branch exercised",
+    "No different-provider reviewer",
+    "Sources controlled by instructions rather than a per-agent filesystem sandbox",
+    "No token or price telemetry; counts are work proxies"
+  ]
+}

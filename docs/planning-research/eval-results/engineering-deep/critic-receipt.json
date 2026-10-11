@@ -1,0 +1,21 @@
+{
+  "role": "fresh_critic",
+  "model_identity": "unknown",
+  "verdict": "ready",
+  "material_findings": 0,
+  "files_read": ["REQUEST.md", "README.md", "service.py", "test_service.py", "frozen-plan.md"],
+  "checks_executed": {
+    "python_version": "3.9.6",
+    "existing_tests": "3 passed",
+    "csv_round_trip": "failed for comma and embedded newline as claimed",
+    "ttl_hours": 24,
+    "job_timestamps_present": false
+  },
+  "diagram_review": "source inspected; not rendered",
+  "open_prerequisites": ["D1 request identity", "D2 capacity acceptance", "production integration inventory"],
+  "historical_critic_execution_verified": false,
+  "source_modified": false,
+  "network_or_install_used": false,
+  "subagents_used": false,
+  "outputs": ["critic.md", "critic-receipt.json"]
+}

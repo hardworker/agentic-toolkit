@@ -1,8 +1,27 @@
 # agentic-toolkit
 
-Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Four skills:
+Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Five skills:
 
-Research: [concise, verified planning approaches](docs/planning-research/overview.md) — an October 2026 comparison of current repositories, cost tradeoffs, and a proposed standalone planning skill. The proposal is not an installed fifth skill.
+Research: [concise, verified planning approaches](docs/planning-research/overview.md) — an October 2026 comparison of current repositories, cost tradeoffs, and the design behind `grounded-plan`.
+
+## grounded-plan
+
+Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources, compares serious alternatives, uses diagrams where relationships matter, and links deliverables to acceptance checks. A short decision brief leads; detailed evidence stays inspectable behind links.
+
+```text
+Goal → evidence → options → plan and diagram → bounded challenge → decision and checks
+```
+
+Adaptive effort: `lean` uses source checks and self-review; `standard` adds one fresh critic with at most one targeted follow-up; `deep` adds a blind alternative and at most two dispute rounds. The skill distinguishes observed/tested evidence from assumptions and future checks. It reports actual reviewer independence and falls back honestly when fresh agents are unavailable. Effort caps control workflow size, not billing.
+
+```text
+/grounded-plan add retry-safe customer exports
+/grounded-plan compare product rollout approaches --effort lean
+/grounded-plan design a research plan for the retention hypothesis
+/grounded-plan docs/plans/migration.md --review --effort deep
+```
+
+Use `$grounded-plan` in hosts with dollar-prefixed skill invocation. Requires source/artifact access; web and fresh reviewers are conditional. No external runtime or model provider is mandatory. Planning does not itself authorize implementation. Original skill files are [MIT-licensed](skills/grounded-plan/LICENSE); that license does not relicense the rest of the toolkit. See the [evaluation record](docs/planning-research/evaluation.md) for the pilot's scope and limits.
 
 ## adversarial-review
 

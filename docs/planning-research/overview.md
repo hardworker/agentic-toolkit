@@ -1,8 +1,8 @@
 # Planning that is concise, illustrated, checked, and affordable
 
-Research snapshot: **11 October 2026**. Scope: engineering and architecture first; reusable for product decisions and broader research. Status: **overview and proposed design, awaiting preference decisions before skill implementation**.
+Research snapshot: **11 October 2026**; candidate built **12 October 2026**. Scope: engineering and architecture first; reusable for product decisions and broader research. Status: **research dossier and trial skill available; defaults remain recommendations, not recorded user preferences**.
 
-Start here. [Repository evidence](repositories.md) contains the comparisons and pinned source links. [Skill proposal](skill-proposal.md) makes the recommended design reviewable. [Source manifest](sources.json) records 18 repository snapshots and retrieved-file hashes.
+Start here. [Repository evidence](repositories.md) contains the comparisons and pinned source links. [Skill design](skill-proposal.md) explains the choices behind the [candidate](../../skills/grounded-plan/SKILL.md). [Pilot evaluation](evaluation.md) records observed behavior and limitations. [Source manifest](sources.json) records 18 repository snapshots and retrieved-file hashes.
 
 ## Recommendation
 
@@ -10,7 +10,7 @@ Build a small, standalone planning skill, using **Compound Engineering's `ce-pla
 
 The useful unit is a **decision with evidence, alternatives, a diagram where helpful, and a way to discover that it is wrong**. A longer plan, more reviewers, and a higher self-assigned confidence score do not establish that the decision is better.
 
-This recommendation is a design judgment from source inspection, **not a measured quality or cost ranking**. The strongest objection is that `ce-plan` already covers much of the desired behavior and maintaining another skill may cost more than adapting it. Test a thin candidate against that baseline before declaring a winner.
+This recommendation is a design judgment from source inspection, **not a measured quality or cost ranking**. The strongest objection is that `ce-plan` already covers much of the desired behavior and maintaining another skill may cost more than adapting it. A small candidate pilot against native planning is now available; a controlled comparison with `ce-plan` remains worthwhile before declaring a winner.
 
 ## What was actually verified
 
@@ -18,7 +18,7 @@ This recommendation is a design judgment from source inspection, **not a measure
 - Retrieved public repository metadata, immutable commit IDs, file trees, READMEs, and available root licenses for 18 repositories. Inspected selected planning prompts, review procedures, and implementation paths. The manifest lists downloads; it is not a claim of exhaustive code review.
 - Cross-checked advertised workflows against source where it matters: inline versus delegated planning, cross-model prerequisites, score gates, review independence, revision limits, and mechanical versus model-based acceptance.
 - Read primary research abstracts and official engineering guidance to challenge the assumption that additional debate necessarily improves planning. These are supporting evidence about mechanisms, not direct evaluations of these skills.
-- Did **not** install or execute the upstream systems, run paid model comparisons, or establish end-to-end reliability. No comparative dollar estimates are claimed. Live integrations, rendering, and behavioral outcomes remain to be evaluated.
+- Did **not** install or execute the upstream systems, run a controlled cross-model benchmark, or establish end-to-end reliability. No comparative dollar estimates are claimed. The separate candidate pilot checks a few behaviors; upstream runtime integrations and general planning quality remain unmeasured.
 
 The distinction matters. A prompt can instruct an agent to verify something; only a run record can show that it did. A repository can have tests without those tests measuring planning quality.
 

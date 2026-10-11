@@ -1,0 +1,35 @@
+{
+  "effort": "lean",
+  "artifact": "output.md",
+  "sources_read": [
+    "../../../../skills/grounded-plan/SKILL.md",
+    "../../eval-fixtures/product.md"
+  ],
+  "checks_actually_done": [
+    "Read supplied evidence and checked line-level pointers.",
+    "Self-checked provenance labels and absence of unsupported baseline or persona claims.",
+    "Compared routing experiment, universal copy experiment, and measurement-only fallback.",
+    "Self-checked requirements, dependencies, acceptance checks, outcome maturation, and sequence/prose consistency.",
+    "Reread the saved artifact, checked its length against the skill target, and parsed receipt.json successfully.",
+    "Corrected the fallback comparison to distinguish confirmed copy/instrumentation capacity from unknown assignment capability."
+  ],
+  "review": {
+    "type": "self-check",
+    "independent_review_calls": 0,
+    "reason": "Lean mode; task prohibited subagents."
+  },
+  "questions": [
+    "D1: What event, population, and outcome window define meaningful activation?",
+    "D2: What activation lift is worthwhile, and what support-effort acceptance rule preserves the no-increase goal?",
+    "D3: Is sufficient traffic and reliable support measurement available, or should the work end as a feasibility pilot?"
+  ],
+  "limits": [
+    "No users, analytics tools, raw data, screenshot, web research, implementation, or external contact.",
+    "Only supplied notes were available; their underlying factual claims were not independently verified.",
+    "No sample-size calculation or executed product test; these are proposed work.",
+    "Selection UI, random assignment, traffic, baseline, and support attribution feasibility remain unknown.",
+    "No rendered diagram; a textual dependency sequence was self-checked.",
+    "No invented token, price, or cost figures."
+  ],
+  "material_difficulty": "The two-week window cannot support a defensible launch decision without definitions, thresholds, traffic, and assignment/support capabilities. The plan makes those gates explicit and offers useful fallback work."
+}

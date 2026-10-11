@@ -1,14 +1,14 @@
-# A small planning skill: proposed contract
+# A small planning skill: design and decisions
 
-Status: **proposal, not installed or behaviorally validated**. Return to the [research overview](overview.md) and [repository comparisons](repositories.md).
+Status: **a trial implementation is available as [grounded-plan](../../skills/grounded-plan/SKILL.md), with a [pilot evaluation](evaluation.md)**. This document preserves the design rationale and choices the user can resolve. Return to the [research overview](overview.md) and [repository comparisons](repositories.md).
 
 ## Intended result
 
 Turn an engineering, product, or research question into a concise decision brief that another person can inspect and act on. Show why the recommendation follows from evidence, what remains uncertain, how the alternatives differ, and which checks would expose a mistake. Stop at planning unless the user has separately authorized implementation.
 
-Working name: **`grounded-plan`**. This is an original small skill, not a fork of a runtime. Reuse ideas with source attribution; copy upstream text/code only with the appropriate license and notices. This repository currently has no root LICENSE file, so public visibility alone is not sufficient to make a new skill openly licensed. A license scoped to the new skill is a concrete packaging option; a repository-wide license is a broader maintainer decision.
+Name: **`grounded-plan`**. This is an original small skill, not a fork of a runtime. Its [MIT license](../../skills/grounded-plan/LICENSE) covers the self-contained skill folder. Design inspirations are linked in this dossier; upstream code and prompt text were not copied into the skill. The license does not relicense the rest of this repository, which has no root LICENSE file.
 
-## Proposed user surface
+## User surface
 
 ```text
 $grounded-plan decide how to add background exports
@@ -20,7 +20,7 @@ $grounded-plan ... --effort lean|standard|deep
 
 Exact slash/dollar invocation depends on the host. No CLI, MCP server, external model provider, browser, or repository bootstrap is required. Native tools provide reading, research, optional execution of appropriate checks, and fresh review where permitted. Additional tools can improve the workflow but are not prerequisites.
 
-The default effort remains a **proposal**: choose adaptively between lean for obvious reversible work and standard for a nontrivial decision; recommend deep only when a consequential uncertainty earns the added work. A user-selected mode or budget takes precedence.
+The implemented default is **provisional**: choose adaptively between lean for obvious reversible work and standard for a nontrivial decision; recommend deep only when a consequential uncertainty earns the added work. It is available to trial, not recorded as the user's chosen cost policy. A user-selected mode or budget takes precedence.
 
 ## Workflow
 
@@ -35,7 +35,7 @@ flowchart TD
     E --> F{Assurance mode}
     F -->|Lean| L[Self-check against sources]
     F -->|Standard| S[One fresh focused critic]
-    F -->|Deep| H[Blind alternative or distinct review]
+    F -->|Deep| H[Critic and blind alternative]
     S --> V[Verify and resolve material findings]
     H --> V
     L --> R[Decision-ready artifact]
@@ -57,7 +57,7 @@ flowchart TD
 |---|---|---|---|
 | Lean | One planner, source checks, a self-check | Deliver once the decision and limits are clear | Self-checked |
 | Standard | Planner + one fresh critic, then targeted fixes/checks | One initial critique; at most one targeted follow-up if a material issue changed | Independently critiqued, same-model if applicable |
-| Deep | Planner + a blind alternative or second distinct reviewer, then evidence-led resolution | At most two dispute rounds; stop earlier on no new evidence | Report exact model/context diversity |
+| Deep | Planner + a critic and a blind alternative author, then evidence-led resolution | Two initial calls and at most two dispute rounds: six calls maximum; stop earlier on no new evidence | Report exact model/context diversity |
 
 Budget the research too: begin with the smallest set of questions and sources that could settle the decision. Expand only when a missing fact could change the recommended option or leave a consequential criterion unsupported. A mode cap is a ceiling, not a quota.
 
@@ -126,7 +126,9 @@ Proposed probes remain future work until run. Do not write “verified” becaus
 
 Do not impose code paths, TDD, or deployment terminology on other domains. Do not claim to validate demand, research findings, or future performance merely by checking the plan's structure.
 
-## Behavioral evaluation before calling it ready
+## Evaluation and remaining comparisons
+
+The [pilot record](evaluation.md) supplies runnable fixtures and outputs for an initial native-planning comparison and engineering, product, and research behavior checks. It does not complete the broader benchmark below; the candidate is version 0.1.0, not a demonstrated winner.
 
 Compare **native planning**, **ECC-style inline planning**, **`ce-plan`**, and the **candidate**. Start with a small pilot rather than an expensive broad benchmark. Keep the same task, available sources, model, and budget envelope within each comparison. Record different capabilities or setup constraints; do not pretend incompatible harnesses are identical.
 

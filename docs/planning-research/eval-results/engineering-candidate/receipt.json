@@ -1,0 +1,102 @@
+{
+  "mode": "standard",
+  "artifact": "output.md",
+  "elapsed_seconds_after_initial_source_reads": 191,
+  "elapsed_measurement_limit": "Clock measurement began immediately after the initial skill/request/inventory reads and ended before receipt writing.",
+  "files_read": [
+    "../../../../skills/grounded-plan/SKILL.md",
+    "../../../../skills/grounded-plan/review.md",
+    "../../eval-fixtures/engineering/REQUEST.md",
+    "../../eval-fixtures/engineering/README.md",
+    "../../eval-fixtures/engineering/service.py",
+    "../../eval-fixtures/engineering/test_service.py",
+    "output.md"
+  ],
+  "checks": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v",
+      "result": "PASS: all 3 existing tests",
+      "scope": "Sequential duplicate requests, tenant-scoped request keys and lookup, and simple CSV output",
+      "python_version": "3.9.6"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 - (read-only inline probe importing service, csv, io, json, and platform)",
+      "inputs": {
+        "csv_rows": [
+          [
+            "name",
+            "note"
+          ],
+          [
+            "Ada, Jr",
+            "first\nsecond"
+          ],
+          [
+            "Bob",
+            "said \"hi\""
+          ]
+        ]
+      },
+      "result": {
+        "csv_round_trip_matches": false,
+        "ttl_hours_constant": 24,
+        "completed_job_fields": [
+          "job_id",
+          "request_key",
+          "result",
+          "status",
+          "tenant"
+        ],
+        "new_store_remembers_request": false
+      },
+      "scope": "Fixture behavior only; no product changes"
+    },
+    {
+      "command": "shasum -a 256 REQUEST.md README.md service.py test_service.py",
+      "result": "Two identical captures; supplied files unchanged during review/finalization",
+      "sha256": {
+        "REQUEST_md": "16d1af46d6e65734ae8f7e8328518e94804b2f4ce7acb609c3dca020bed37ae2",
+        "README_md": "3caf3851ec22fb3cd8d89e0eadd40dc27b2ef4dfde65dc727d91946f185eb132",
+        "service_py": "d073b1c0d8d1ee7d9016620f31c4129ec8fd6ad2c6756a141d28c0cfefd36181",
+        "test_service_py": "b1e506d942396d070c4c01b19bc548b3a4dad22311c1cdc76e797c1583eeedf9"
+      }
+    },
+    {
+      "check": "Requirement coverage and Mermaid/prose agreement",
+      "result": "Self-checked; Mermaid not rendered"
+    }
+  ],
+  "review": {
+    "fresh_contexts": 1,
+    "initial_review_calls": 1,
+    "targeted_followups": 0,
+    "context_independence": "Critic spawned with fork_turns=none; given task brief and five workspace file pointers only, including fixed output.md. Critic reported reading only these files and no author history.",
+    "model_diversity": "Same inherited model; no model override. Exact model identifier unverified.",
+    "critic_verdict": "ready",
+    "material_findings": [],
+    "material_changes_from_review": [],
+    "limits": "Critic read fixture sources and plan but did not independently rerun checks.",
+    "stop_reason": "settled"
+  },
+  "questions_that_would_require_user_input_before_dependent_work": [
+    {
+      "id": "D1",
+      "question": "Should request identity use a tenant-scoped operation key or automatic matching of identical parameters, and may key/job tombstones be retained indefinitely after result expiry?",
+      "recommendation": "Use a stable operation key plus canonical-parameter fingerprint; conflict on parameter mismatch, use a new key for intentional refresh, and preserve tombstones unless a finite deduplication window is explicitly accepted."
+    },
+    {
+      "id": "D2",
+      "question": "What maximum export size, peak arrival profile, export wait/completion target, and existing-report latency guardrail must rollout satisfy?",
+      "recommendation": "Agree these targets before capacity acceptance and dedicated-queue decisions."
+    }
+  ],
+  "limits": [
+    "No network, installations, source fixture edits, implementation, or writes outside the assigned workspace.",
+    "Production HTTP, durable persistence, data access, result storage, and worker scheduling are absent from the supplied fixture.",
+    "Worker throughput, concurrency, crash recovery, production tenant authorization, seven-day delivery, and cleanup were not tested.",
+    "CSV schema and data snapshot timing require the existing production contract or an explicit decision before implementation.",
+    "Elapsed time excludes initial reads; no token or cost telemetry was available or fabricated."
+  ],
+  "material_skill_application_issues": [],
+  "process_notes": "The skill's standard workflow fit this fixture. It required a separate review.md read and one fresh critic. Final artifact is a proposal, not evidence that implementation works."
+}

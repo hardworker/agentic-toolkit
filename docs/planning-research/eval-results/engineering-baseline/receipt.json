@@ -1,0 +1,45 @@
+{
+  "task": "Baseline plan for retry-safe customer CSV exports",
+  "elapsed_time": {
+    "seconds": 86.54,
+    "measurement": "Wall-clock interval from the first recorded timestamp after initial request/listing reads through artifact generation.",
+    "started_at": "2026-10-11T23:02:57+00:00",
+    "finished_at": "2026-10-11T23:04:23.537450+00:00"
+  },
+  "files_read": [
+    "REQUEST.md",
+    "README.md",
+    "service.py",
+    "test_service.py",
+    "output.md"
+  ],
+  "checks_run": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v",
+      "working_directory": "<scratch>/engineering-baseline",
+      "exit_code": 0,
+      "result": "All 3 existing tests passed: repeated request identity, tenant-scoped request keys and lookup, simple report rendering."
+    },
+    {
+      "check": "Read supplied source and tests against the requested behavior",
+      "result": "Existing tenant-scoped deduplication and lookup confirmed; durable storage, HTTP/queue integration, CSV escaping, enforced expiration, and execution retry handling are not implemented in the fixture."
+    }
+  ],
+  "user_question_required": false,
+  "assumptions_to_confirm_before_implementation": [
+    "Logical request identity is authenticated tenant plus client idempotency key, bound to normalized export parameters.",
+    "Seven-day download retention starts at successful completion.",
+    "Idempotency/job identity records remain after result-file expiration; a fresh export needs a new key."
+  ],
+  "limitations": [
+    "Planning only; source fixtures were not modified.",
+    "Only the supplied fixture and its 3 tests were inspected; no production HTTP, persistence, queue, or worker configuration was available.",
+    "No throughput or concurrency benchmark was performed, so queue/worker capacity remains unmeasured.",
+    "No network access, package installation, planning skills, subagents, other evaluation directories, or research reports were used.",
+    "No token or cost telemetry was available or fabricated."
+  ],
+  "artifacts": [
+    "output.md",
+    "receipt.json"
+  ]
+}

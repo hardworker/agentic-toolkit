@@ -1,0 +1,31 @@
+{
+  "task": "Independent smallest-credible-approach review of retry-safe customer CSV exports",
+  "source_files_opened": [
+    "../../eval-fixtures/engineering/REQUEST.md",
+    "../../eval-fixtures/engineering/README.md",
+    "../../eval-fixtures/engineering/service.py",
+    "../../eval-fixtures/engineering/test_service.py"
+  ],
+  "actual_checks": [
+    {
+      "command": "cat REQUEST.md README.md service.py test_service.py",
+      "working_directory": "<scratch>/engineering-deep",
+      "result": "Read all four permitted source files; exit code 0."
+    },
+    {
+      "command": "python3 -B -m unittest -v",
+      "working_directory": "<scratch>/engineering-deep",
+      "result": "All three existing tests passed; exit code 0. Bytecode writes disabled."
+    }
+  ],
+  "limitations": [
+    "Inspected only the four permitted fixture files; did not read any frozen plan, critic output, other directory, or other agent history.",
+    "HTTP, production persistence, actual dispatch infrastructure, result storage, and deployment behavior are not supplied.",
+    "No concurrency, restart, capacity, retention, or end-to-end authorization checks were run; existing tests do not cover these properties.",
+    "No network, installations, service edits, or subagents were used; only the requested recommendation and receipt were written."
+  ],
+  "outputs": [
+    "alternative.md",
+    "alternative-receipt.json"
+  ]
+}

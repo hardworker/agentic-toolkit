@@ -1,13 +1,35 @@
 # agentic-toolkit — Architecture
 
-Two debate pipelines, two utility skills. The pipelines share one goal: output you don't have to re-check, because every claim was attacked before it reached you, at a cost every fan-out caps. Both are pure prose — a SKILL.md that spawns its own agents, no orchestrator script.
+Two debate pipelines, a standalone planner, and two utility skills. The debate pipelines challenge claims before delivery and cap their fan-out. The planner matches scrutiny to the decision's stakes and records the limits of its evidence. These workflows are prose run by the host agent, not orchestrator scripts.
 
 | Skill | Does | Agents |
 |---|---|---|
+| [grounded-plan](#grounded-plan) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts by mode |
 | [adversarial-review](#adversarial-review) | cross-model debate review of finished work — diff, working tree, or documents | 4 + 2 Codex calls |
 | [crucible](#crucible) | idea → grill → attacked assumptions → plan → code → verify | 6–12, capped |
 | [session-migration](#session-migration) | find any past session, route it to the surface you want | none |
 | [cf-access](#cf-access) | keep CLI tools, Node clients and MCP servers authenticated to Cloudflare Access | none |
+
+## grounded-plan
+
+Planning ends with a decision brief and handoff. Unlike Crucible, this skill does not own a build-and-verify loop. Unlike adversarial-review, it does not require a full cross-model debate for every target.
+
+```mermaid
+flowchart LR
+    B[Brief and source evidence] --> O[Options and decisive tradeoff]
+    O --> P[Plan and useful diagram]
+    P --> C[Scrutiny matched to stakes]
+    C --> R[Resolve findings against evidence]
+    R --> H[Decision brief and verification receipt]
+```
+
+The main skill handles intake, grounding, decision-making, representation, and output. `review.md` is loaded only when a fresh review is warranted. Standard mode permits one critic call and one targeted follow-up. Deep mode has a critic and a blind alternative author; their first judgments remain separate, followed by up to two dispute rounds (six review calls total). No-new-evidence and settled-dispute exits stop earlier. Fresh contexts may share a model; the receipt must say so.
+
+Claims carry evidence states rather than confidence percentages. Deterministic checks or disposable probes may help when permitted, but a planned test is not an executed result and model consensus is not proof. A short front page can link a larger evidence appendix. The plan's dependencies, acceptance criteria, and diagram must agree before handoff.
+
+`--review` preserves the supplied plan unless edits were requested. A missing reviewer degrades to self-checking with explicit limits. Model selection inherits the host unless a different available model is authorized; the skill has no hardcoded model or required external provider. Its effort limits are instruction-level controls, not enforced monetary budgets.
+
+The [research dossier](docs/planning-research/overview.md) explains source selection, tradeoffs, and alternatives. The [evaluation record](docs/planning-research/evaluation.md) distinguishes observed pilot behavior from unmeasured quality/cost claims.
 
 ## adversarial-review
 
@@ -248,6 +270,10 @@ agentic-toolkit/
 │   ├── plugin.json          # repo root doubles as the plugin
 │   └── marketplace.json     # ...and as its own marketplace (source "./")
 ├── skills/
+│   ├── grounded-plan/
+│   │   ├── SKILL.md              # planning contract, effort routing, evidence and output
+│   │   ├── review.md             # conditional critic and blind-alternative procedure
+│   │   └── LICENSE               # MIT, scoped to this skill
 │   ├── adversarial-review/
 │   │   └── SKILL.md              # the whole pipeline: args, stage prompts, guards, report
 │   ├── crucible/

@@ -2,6 +2,16 @@
 
 Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently.
 
+# grounded-plan
+
+## [0.1.0] — 2026-10-12
+
+### Added
+
+- A standalone planning and plan-review skill for engineering, product, and research. It produces concise, evidence-backed recommendations, useful diagrams, alternatives, dependency-aware deliverables, and a record of checks actually performed.
+- Adaptive lean/standard/deep scrutiny: no critic for simple work, one fresh critic for substantive choices, or a blind alternative and bounded debate for consequential uncertainty. Model and context independence are reported explicitly; unavailable review is never simulated.
+- A conditional review procedure, a skill-scoped MIT license, a pinned repository survey, and reproducible behavioral-evaluation fixtures. Cost policy is provisional; no measured savings or quality superiority are claimed.
+
 # cf-access
 
 ## [1.8.0] — 2026-08-31
