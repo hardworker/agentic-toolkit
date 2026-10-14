@@ -4,6 +4,8 @@ Research snapshot: **11 October 2026**; candidate built **12 October 2026**. Sco
 
 Start here. [Repository evidence](repositories.md) contains the comparisons and pinned source links. [Skill design](skill-proposal.md) explains the choices behind the [candidate](../../skills/grounded-plan/SKILL.md). [Pilot evaluation](evaluation.md) records observed behavior and limitations. [Source manifest](sources.json) records 18 repository snapshots and retrieved-file hashes.
 
+Follow-up, **14 October 2026**: [research decisions and outcomes](outcomes.md) connects these findings to version 0.2.0 and documents its user-wide planning library. The upstream research snapshot remains unchanged.
+
 ## Recommendation
 
 Build a small, standalone planning skill, using **Compound Engineering's `ce-plan` as the strongest ready-made comparator**, ECC's simple inline planning as the cost baseline, and selected verification and review ideas from Ouroboros, Ralplan, and this toolkit. Do not make the new skill depend on any of those systems.

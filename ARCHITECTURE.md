@@ -21,6 +21,9 @@ flowchart LR
     P --> C[Scrutiny matched to stakes]
     C --> R[Resolve findings against evidence]
     R --> H[Decision brief and verification receipt]
+    H --> L[User-wide record and index]
+    L --> U[Later outcomes and contextual lessons]
+    U -. relevant evidence for future plans .-> B
 ```
 
 The main skill handles intake, grounding, decision-making, representation, and output. `review.md` is loaded only when a fresh review is warranted. Standard mode permits one critic call and one targeted follow-up. Deep mode has a critic and a blind alternative author; their first judgments remain separate, followed by up to two dispute rounds (six review calls total). No-new-evidence and settled-dispute exits stop earlier. Fresh contexts may share a model; the receipt must say so.
@@ -29,7 +32,9 @@ Claims carry evidence states rather than confidence percentages. Deterministic c
 
 `--review` preserves the supplied plan unless edits were requested. A missing reviewer degrades to self-checking with explicit limits. Model selection inherits the host unless a different available model is authorized; the skill has no hardcoded model or required external provider. Its effort limits are instruction-level controls, not enforced monetary budgets.
 
-The [research dossier](docs/planning-research/overview.md) explains source selection, tradeoffs, and alternatives. The [evaluation record](docs/planning-research/evaluation.md) distinguishes observed pilot behavior from unmeasured quality/cost claims.
+`records.md` defines a user-wide Markdown library at `~/.local/share/grounded-plan/`, overridden by `--store DIR` or `GROUNDED_PLAN_HOME`. A stable record ID identifies the plan or its external reference, original expectations, dated decisions, outcomes, and lessons. The index is derived navigation; each record is authoritative. Relevant records are read selectively, with old evidence checked for applicability. `--outcome` updates a matched record without restarting planning. No background monitor, database, or required runtime is added.
+
+The [research dossier](docs/planning-research/overview.md) explains source selection, tradeoffs, and alternatives. The [evaluation record](docs/planning-research/evaluation.md) distinguishes observed pilot behavior from unmeasured quality/cost claims. [Research decisions and outcomes](docs/planning-research/outcomes.md) connects that evidence to the current skill and documents the storage boundary.
 
 ## adversarial-review
 
@@ -273,6 +278,7 @@ agentic-toolkit/
 │   ├── grounded-plan/
 │   │   ├── SKILL.md              # planning contract, effort routing, evidence and output
 │   │   ├── review.md             # conditional critic and blind-alternative procedure
+│   │   ├── records.md            # user-wide plans, decisions, outcomes, and reuse
 │   │   └── LICENSE               # MIT, scoped to this skill
 │   ├── adversarial-review/
 │   │   └── SKILL.md              # the whole pipeline: args, stage prompts, guards, report

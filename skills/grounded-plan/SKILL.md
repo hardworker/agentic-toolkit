@@ -1,13 +1,13 @@
 ---
 name: grounded-plan
-description: Create or review concise, evidence-backed plans for engineering, product, and research, with useful diagrams, serious alternatives, and scrutiny matched to the stakes. Use for planning a nontrivial change, comparing approaches, or checking an existing plan before execution.
-argument-hint: "[task or plan path] [--review] [--effort lean|standard|deep]"
+description: Create or review concise, evidence-backed plans for engineering, product, and research, with useful diagrams, serious alternatives, and scrutiny matched to the stakes. Use for nontrivial planning, comparing approaches, checking a plan, or recording its decisions, outcomes, and lessons in a user-wide library.
+argument-hint: "[task, plan path, or record ID] [--review | --outcome] [--effort lean|standard|deep] [--store DIR]"
 license: MIT
 ---
 
 # Grounded Plan
 
-Deliver a plan the user can understand, challenge, and hand off: a recommendation, its evidence and alternatives, the shape of the work, and checks that could expose a mistake. End with the planning artifact; continue into implementation only when the user has authorized that next action.
+Deliver a plan the user can understand, challenge, and hand off: a recommendation, its evidence and alternatives, the shape of the work, and checks that could expose a mistake. Preserve decisions and observed outcomes for later planning. End with the requested artifact; continue into implementation only when the user has authorized that next action.
 
 ## Scope and effort
 
@@ -23,9 +23,11 @@ For a straightforward action with no meaningful planning decision, give the few 
 
 `--review` checks a supplied plan against its goal and evidence. Preserve the original unless editing was requested; return material findings and proposed corrections. Reuse valid prior evidence and decisions instead of restarting discovery.
 
+`--outcome` (or a request to record results or lessons) updates an existing record using [records.md](records.md). Match the record before writing; record known results and gaps without restarting planning or launching a review council. Review a disputed claim only when it could change the recorded conclusion. If review and outcome capture are both requested, preserve the supplied plan and distinguish proposed corrections from observed results.
+
 ## Ground the decision
 
-1. State the desired outcome, constraints, non-goals, and observable success. Distinguish the user's decisions from your assumptions. Inspect discoverable facts yourself. Ask only for missing decisions that could change scope, approach, acceptance, or a costly commitment; batch independent questions and recommend answers. Carry minor reversible choices as explicit assumptions.
+1. State the desired outcome, constraints, non-goals, and observable success. Distinguish the user's decisions from your assumptions. For substantive planning, read [records.md](records.md) and look up relevant prior decisions and outcomes; recheck their applicability and evidence. Inspect discoverable facts yourself. Ask only for missing decisions that could change scope, approach, acceptance, or a costly commitment; batch independent questions and recommend answers. Carry minor reversible choices as explicit assumptions.
 2. Inspect the sources that bear on those decisions: code and tests for existing behavior, the actual document/data for a named artifact, and current primary sources for external facts that may have changed. Follow the user's research scope. An explicit broad comparison warrants a broad scan followed by deeper checks of the shortlist.
 3. Record material claims with an evidence pointer and status. Use **observed**, **tested**, **inferred**, **assumed**, or **unknown**; add **corroborated** only when evidence has independently originating support. These are provenance labels, not a confidence scale. A test establishes only the behavior it exercises; two pages repeating one source count as one origin.
 4. For claims that determine the recommendation, look for disconfirming evidence or another evidence channel. Resolve a disputed fact with the cheapest useful observation. Existing non-destructive checks and disposable probes may help when within the task's permissions; don't change the product to make a plan look verified. Record the command, result, scope, and version/commit where relevant. A proposed future check is never an executed result.
@@ -70,6 +72,6 @@ Lead with the recommendation and why. Include only the following content that ma
 
 For a substantive plan, aim for a front page around 500–900 words; small tasks can be much shorter. Never omit a critical caveat to hit a word cap. Keep detailed evidence and settled debate behind links when they would swamp the decision. Use compact decision IDs (`D1`, `D2`) with options and your recommendation so the user can resolve them directly.
 
-Save a durable plan when requested, when work will span sessions, or when evidence is too large for a short chat response. Follow the user's destination and existing project conventions; otherwise use `docs/plans/` in a repository or the host's artifact workspace. For review-only work, save a separate review if needed. Maintain one canonical plan, update superseded choices in place, and reread it after context loss. Return the actual artifact link.
+Save substantive plans and their decisions in the user-wide library using [records.md](records.md), with an outcome initially marked pending. Default to `~/.local/share/grounded-plan/`; an explicit `--store DIR` or `GROUNDED_PLAN_HOME` can override it. Honor an explicit artifact destination or request not to save. Existing plans remain at their original paths and can be referenced by a library record; do not migrate or duplicate them automatically. Maintain one canonical plan, preserve original expectations and dated decisions, and reread the record after context loss. Return the saved artifact link and record ID. If access is unavailable, report the unsaved record rather than silently storing it in the repository.
 
 Report actual token/tool usage when available. Otherwise give work proxies, such as review calls and checks, and label them as proxies. Do not invent prices or cost savings. Review limits are instruction-level budgets, not host-enforced billing limits. Recheck changed decisions and affected evidence; don't replay the whole process for cosmetic revisions.

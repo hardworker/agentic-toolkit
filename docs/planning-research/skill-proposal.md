@@ -2,6 +2,8 @@
 
 Status: **a trial implementation is available as [grounded-plan](../../skills/grounded-plan/SKILL.md), with a [pilot evaluation](evaluation.md)**. This document preserves the design rationale and choices the user can resolve. Return to the [research overview](overview.md) and [repository comparisons](repositories.md).
 
+**14 October follow-up:** the user approved outcome capture and selected a separate user-wide folder. Version 0.2.0 implements that extension; [research decisions and outcomes](outcomes.md) documents its contract. This supersedes the original project-local persistence suggestion below. It does not settle the remaining cost-policy choices.
+
 ## Intended result
 
 Turn an engineering, product, or research question into a concise decision brief that another person can inspect and act on. Show why the recommendation follows from evidence, what remains uncertain, how the alternatives differ, and which checks would expose a mistake. Stop at planning unless the user has separately authorized implementation.

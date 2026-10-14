@@ -2,6 +2,8 @@
 
 Evaluation date: **12 October 2026** (some run timestamps are 11 October UTC). Candidate: [SKILL.md](../../skills/grounded-plan/SKILL.md) and [review procedure](../../skills/grounded-plan/review.md). Sources and fixture hashes accompany the [saved results](eval-results/manifest.json).
 
+This report evaluates **0.1.0**, saved in commit `6397676`; the skill links above now open the current version. The original manifest hashes remain historical evidence. The subsequent user-wide storage and outcome extension is documented separately in [research decisions and outcomes](outcomes.md).
+
 **The candidate demonstrated the intended basic behaviors on three synthetic tasks. It has not demonstrated superior planning quality or lower cost.** Native planning was already strong on the engineering case. The additional reviewers found no material defects in that completed plan, so this pilot supplies no observed quality gain from deeper review.
 
 ## What ran

@@ -4,6 +4,18 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.2.0] — 2026-10-14
+
+### Added
+
+- A user-wide Markdown library for plans, decisions, outcomes, and contextual lessons, with a small index and stable record IDs. `--store DIR` and `GROUNDED_PLAN_HOME` override the default `~/.local/share/grounded-plan/`.
+- Outcome capture through `--outcome` or ordinary requests to record results. Original expectations and dated decisions are preserved; reported results, executed checks, and unmeasured benefits remain distinct.
+- Repository documentation connecting the source survey, pilot findings, design choices, and outcome workflow.
+
+### Changed
+
+- Substantive plans are saved to the library by default and relevant prior outcomes are consulted selectively. Existing external plans are linked rather than migrated or duplicated. Explicit output destinations and no-save requests take precedence.
+
 ## [0.1.0] — 2026-10-12
 
 ### Added

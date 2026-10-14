@@ -19,7 +19,11 @@ Adaptive effort: `lean` uses source checks and self-review; `standard` adds one 
 /grounded-plan compare product rollout approaches --effort lean
 /grounded-plan design a research plan for the retention hypothesis
 /grounded-plan docs/plans/migration.md --review --effort deep
+/grounded-plan <record-id> --outcome
+/grounded-plan compare rollout options --store ~/my-planning-library
 ```
+
+Substantive plans, decisions, and outcomes live in `~/.local/share/grounded-plan/`, shared across projects. `--store DIR` or `GROUNDED_PLAN_HOME` can override the root. Each record preserves its original expectations, dated decisions, evidence-backed outcomes, and contextual lessons; `index.md` helps find relevant prior work. Existing external plans stay in place and are linked. Outcome capture updates known results when requested; it does not monitor tasks in the background. See [research decisions and outcomes](docs/planning-research/outcomes.md) for the rationale and workflow.
 
 Use `$grounded-plan` in hosts with dollar-prefixed skill invocation. Requires source/artifact access; web and fresh reviewers are conditional. No external runtime or model provider is mandatory. Planning does not itself authorize implementation. Original skill files are [MIT-licensed](skills/grounded-plan/LICENSE); that license does not relicense the rest of the toolkit. See the [evaluation record](docs/planning-research/evaluation.md) for the pilot's scope and limits.
 
