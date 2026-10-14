@@ -4,6 +4,17 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.3.0] — 2026-10-14
+
+### Added
+
+- Optional research scouts for bulky sources or independent questions, with compact evidence packets, direct verification of decisive sources, and a default cap of two calls including follow-ups. Research and review budgets remain separate.
+
+### Changed
+
+- Made the planning boundary explicit: code inspection and permitted checks are allowed; product implementation belongs to a separate authorized phase or handoff. Direct research remains the default, with no mandatory weaker model or recursive delegation.
+- Documented the research-routing rationale and focused validation in the research dossier.
+
 ## [0.2.0] — 2026-10-14
 
 ### Added

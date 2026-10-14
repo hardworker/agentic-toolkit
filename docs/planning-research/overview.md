@@ -4,7 +4,7 @@ Research snapshot: **11 October 2026**; candidate built **12 October 2026**. Sco
 
 Start here. [Repository evidence](repositories.md) contains the comparisons and pinned source links. [Skill design](skill-proposal.md) explains the choices behind the [candidate](../../skills/grounded-plan/SKILL.md). [Pilot evaluation](evaluation.md) records observed behavior and limitations. [Source manifest](sources.json) records 18 repository snapshots and retrieved-file hashes.
 
-Follow-up, **14 October 2026**: [research decisions and outcomes](outcomes.md) connects these findings to version 0.2.0 and documents its user-wide planning library. The upstream research snapshot remains unchanged.
+Follow-up, **14 October 2026**: [research decisions and outcomes](outcomes.md) connects these findings to versions 0.2.0–0.3.0: the user-wide planning library, explicit planning boundary, and selective research scouts. The upstream repository snapshot remains unchanged.
 
 ## Recommendation
 

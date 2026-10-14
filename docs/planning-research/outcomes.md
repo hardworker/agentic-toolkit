@@ -13,6 +13,8 @@ The original requirement combined concise structured plans, useful diagrams, evi
 | Scale review to the decision | Lean, standard, and deep modes bound review work. The pilot found no material improvement from additional critics on its engineering plan, so more debate is not a demonstrated default benefit. |
 | Preserve outcomes for later planning | The user requested storing decisions, delivered artifacts, observed results, and lessons. This supplies a place to compare expectations with evidence instead of losing the result after handoff. |
 | Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/grounded-plan/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
+| Keep planning grounded without implementing | Code inspection and permitted checks inform feasibility; product edits belong to a separate authorized phase. The user accepted this boundary and selective research delegation. |
+| Delegate research selectively | Direct research remains the default. Scouts can compress bulky sources or investigate separable questions; the planner verifies decisive support. The two-call default is a provisional work budget, not a measured optimum. |
 
 Detailed mechanisms, licenses, and immutable source references are in the [repository evidence](repositories.md). Those findings are tied to the 11 October snapshot; this update does not claim to repeat the upstream survey.
 
@@ -25,10 +27,30 @@ Detailed mechanisms, licenses, and immutable source references are in the [repos
 | Useful independent scrutiny | Standard review used one fresh critic; the deep component kept a critic and alternative author separate initially. Both stopped without a material dispute. | Quality gain from deeper review, cross-model effects, and behavior at the dispute cap. |
 | Lower planning overhead | Instruction-level review budgets and selective source access limit workflow size. | Dollar savings or an optimal effort policy; no controlled cost benchmark was run. |
 | A reusable outcome history | Version 0.2.0 adds a user-wide record/index contract and outcome capture. | Whether lessons improve later decisions over repeated real use. |
+| Focused planning with selective research | Version 0.3.0 separates implementation from planning and adds optional bounded scouts. | Whether delegation improves quality, latency, or cost on real planning tasks. |
 
 The original expectations above summarize the recorded research goal retrospectively; they are not newly claimed pre-registered evaluation hypotheses. The [0.1.0 pilot report](evaluation.md) retains its original scope and receipts.
 
 The host's completed-goal meter reported **478,827 tokens and 1,761 seconds** for the initial research, construction, and pilot work together. That aggregate is not per-plan usage, a controlled comparison, or a bill; dollar cost was unavailable. It should not be presented as evidence that using the skill saves money.
+
+## Planning boundary and research routing
+
+Version 0.3.0 keeps code reading, source checks, and disposable probes available to the planner. It limits writes to planning artifacts and probes during planning; implementation is a separate authorized phase or handoff, even when one agent performs both phases. This is an instruction-level role boundary, not a filesystem permission system.
+
+| Research shape | Default route |
+|---|---|
+| Small lookup, local check, tightly coupled reasoning | Planner directly, batching independent tool calls where useful |
+| Bulky sources or separable questions | Optional scouts with distinct scopes and compact evidence packets |
+| Claim that decides the recommendation | Planner opens underlying evidence and reconciles contradictions |
+| Challenge to the completed plan | Fresh critic under the existing review policy, not the scout reviewing its own work |
+
+The scout budget defaults to two calls total, including follow-ups, independently of lean/standard/deep review depth. User budgets take precedence. No recursive delegation is allowed. Packets contain provenance, source/version pointers, actual checks, counterevidence, and gaps; detailed evidence can stay behind links. Model settings inherit the host unless an appropriate available alternative is authorized. The receipt counts research and review separately.
+
+The rationale is conditional: separate research contexts can compress large source collections and explore independent directions, but coordination and additional tokens carry costs. Anthropic's engineering report describes both effects and emphasizes bounded assignments; it does not validate this skill's thresholds. [Multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system).
+
+The revised scaling study likewise reports task-dependent benefits and coordination costs across 260 configurations and six benchmarks. Applying those results to this planner is a design inference, not direct evidence of savings. The adopted policy favors direct investigation until delegation has a concrete purpose. [Scaling Agent Systems, v3](https://arxiv.org/abs/2512.08296v3).
+
+The complete conditional procedure lives in [scouts.md](../../skills/grounded-plan/scouts.md). No new flag, runtime, mandatory model tier, or always-on agent team is introduced.
 
 ## Storage and use
 
@@ -84,3 +106,19 @@ The evaluator reported no material difficulty. This is one synthetic behavioral 
 Static checks covered local documentation links, Markdown fences, public-path hygiene, plugin version, and the old pilot's source hashes against commit `6397676`. Full frontmatter parsed correctly. As in 0.1.0, the bundled validator rejects this repository's required `argument-hint` extension; a projection omitting that field passed its checks. The extension does not change that known compatibility limitation.
 
 Not exercised: simultaneous writers, denied filesystem permissions, ambiguous record selection, changed environment overrides across sessions, or repeated longitudinal reuse. File-edit coordination and index repair are instructions to the host agent, not transactional guarantees. Diagram rendering was not tested.
+
+## Validation of planning and scouts
+
+A fresh-context evaluator used an isolated copy of the existing [engineering fixture](eval-fixtures/engineering/REQUEST.md) for two lean requests. The first asked a narrow tenant-lookup question; the second requested a concise export plan and explicitly authorized exactly one queue/retention research scout. Neither request permitted implementation or library writes.
+
+| Check | Observed result |
+|---|---|
+| Small direct request | No scout or reviewer; read the source and ran the one relevant existing test, distinguishing store-level isolation from unverified HTTP authorization. |
+| Scout dispatch | One scout, no follow-up, recursive delegation, or review calls; returned source pointers, actual test results, contrary evidence, and gaps. |
+| Decisive source checks | Planner inspected the underlying sources. The plan identified the unused retention constant and absent execution queue; it did not mistake a declaration or an old proposal for working behavior. |
+| Evidence attribution | Attributed the three-test suite to the scout and a separate failing CSV probe to the planner. Production concurrency, expiry, recovery, and capacity remained unverified. |
+| Planning boundary | Produced the plan, evidence, and receipt in temporary output storage. Parent hash checks confirmed all four input files remained unchanged, with no bytecode files added. |
+
+This checks a small direct path and an explicitly requested scout path, not autonomous routing on a large research task. It does not exercise the two-call ceiling, unavailable delegation, scout/critic separation under standard or deep review, or prove quality/cost gains. No token or billing comparison was available; the observed work was one evaluator context plus one scout, with zero review calls. Mermaid rendering was not tested.
+
+Static checks covered changed documentation links, Markdown fences, public-path hygiene, skill frontmatter, plugin version, and both local installation symlinks. The complete frontmatter still encounters the known `argument-hint` validator mismatch; omitting only that field in a temporary projection passed. Version 0.3.0 adds roughly 100 words to the core instructions and loads the separate scout procedure only when relevant.

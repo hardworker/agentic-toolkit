@@ -1,6 +1,6 @@
 # Bounded review procedure
 
-Read this for standard/deep planning or review of an existing plan. The parent owns the artifact; reviewers return findings rather than modifying it. Use fresh contexts with only the brief, constraints, acceptance criteria, evidence pointers, and the input specified below. Tool access is read-only except a designated scratch output, if needed. Local instructions and the user's limits still apply.
+Read this for standard/deep planning or review of an existing plan. The parent owns the artifact; reviewers return findings rather than modifying it. Use fresh contexts with only the brief, constraints, acceptance criteria, evidence pointers, and the input specified below; do not reuse a research scout as the fresh critic of its own work. Tool access is read-only except a designated scratch output, if needed. Local instructions and the user's limits still apply.
 
 ## Standard
 

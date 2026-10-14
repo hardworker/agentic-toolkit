@@ -7,7 +7,9 @@ license: MIT
 
 # Grounded Plan
 
-Deliver a plan the user can understand, challenge, and hand off: a recommendation, its evidence and alternatives, the shape of the work, and checks that could expose a mistake. Preserve decisions and observed outcomes for later planning. End with the requested artifact; continue into implementation only when the user has authorized that next action.
+Deliver a plan the user can understand, challenge, and hand off: a recommendation, its evidence and alternatives, the shape of the work, and checks that could expose a mistake. Preserve decisions and observed outcomes for later planning.
+
+While planning, inspect code and run permitted non-destructive checks, but write only planning artifacts and disposable probes; do not edit product code, tests, or configuration. Implementation belongs to a separate, user-authorized phase or handoff, even when the same agent performs it. These are role instructions, not a filesystem sandbox.
 
 ## Scope and effort
 
@@ -33,6 +35,8 @@ For a straightforward action with no meaningful planning decision, give the few 
 4. For claims that determine the recommendation, look for disconfirming evidence or another evidence channel. Resolve a disputed fact with the cheapest useful observation. Existing non-destructive checks and disposable probes may help when within the task's permissions; don't change the product to make a plan look verified. Record the command, result, scope, and version/commit where relevant. A proposed future check is never an executed result.
 
 Bound research by decisions: expand only when a missing fact could change an option, leave a consequential criterion unsupported, or satisfy the user's requested breadth. Separate unknown facts from user preferences. If a blocker affects only part of the plan, finish the independent parts and make the dependency explicit.
+
+Research directly by default; batch independent tool calls before adding agents. Use research scouts when bulky sources would crowd out decision-making or questions can be investigated independently. If that would help and delegation is permitted, read [scouts.md](scouts.md) for the bounded dispatch and evidence contract. Scouts gather evidence; the planner still owns synthesis and checks the sources that determine the recommendation. Research breadth and review depth are separate choices.
 
 ## Compare, sketch, and sequence
 
@@ -74,4 +78,4 @@ For a substantive plan, aim for a front page around 500–900 words; small tasks
 
 Save substantive plans and their decisions in the user-wide library using [records.md](records.md), with an outcome initially marked pending. Default to `~/.local/share/grounded-plan/`; an explicit `--store DIR` or `GROUNDED_PLAN_HOME` can override it. Honor an explicit artifact destination or request not to save. Existing plans remain at their original paths and can be referenced by a library record; do not migrate or duplicate them automatically. Maintain one canonical plan, preserve original expectations and dated decisions, and reread the record after context loss. Return the saved artifact link and record ID. If access is unavailable, report the unsaved record rather than silently storing it in the repository.
 
-Report actual token/tool usage when available. Otherwise give work proxies, such as review calls and checks, and label them as proxies. Do not invent prices or cost savings. Review limits are instruction-level budgets, not host-enforced billing limits. Recheck changed decisions and affected evidence; don't replay the whole process for cosmetic revisions.
+Report actual token/tool usage when available. Otherwise give work proxies, counting scout calls, review calls, and checks separately. Do not invent prices or cost savings. Agent limits are instruction-level budgets, not host-enforced billing limits. Recheck changed decisions and affected evidence; don't replay the whole process for cosmetic revisions.

@@ -4,7 +4,7 @@ Two debate pipelines, a standalone planner, and two utility skills. The debate p
 
 | Skill | Does | Agents |
 |---|---|---|
-| [grounded-plan](#grounded-plan) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts by mode |
+| [grounded-plan](#grounded-plan) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts by mode; optional scouts, two calls by default |
 | [adversarial-review](#adversarial-review) | cross-model debate review of finished work — diff, working tree, or documents | 4 + 2 Codex calls |
 | [crucible](#crucible) | idea → grill → attacked assumptions → plan → code → verify | 6–12, capped |
 | [session-migration](#session-migration) | find any past session, route it to the surface you want | none |
@@ -12,11 +12,14 @@ Two debate pipelines, a standalone planner, and two utility skills. The debate p
 
 ## grounded-plan
 
-Planning ends with a decision brief and handoff. Unlike Crucible, this skill does not own a build-and-verify loop. Unlike adversarial-review, it does not require a full cross-model debate for every target.
+Planning ends with a decision brief and handoff. The planner may inspect code and run permitted checks, but writes only planning artifacts and disposable probes. Product implementation is a separate authorized phase, possibly performed by the same agent. This is a role boundary, not filesystem enforcement.
 
 ```mermaid
 flowchart LR
-    B[Brief and source evidence] --> O[Options and decisive tradeoff]
+    B[Brief] --> E[Direct source research]
+    B -. bulky or independent research .-> S[Bounded scouts]
+    S --> E
+    E --> O[Options and decisive tradeoff]
     O --> P[Plan and useful diagram]
     P --> C[Scrutiny matched to stakes]
     C --> R[Resolve findings against evidence]
@@ -27,6 +30,8 @@ flowchart LR
 ```
 
 The main skill handles intake, grounding, decision-making, representation, and output. `review.md` is loaded only when a fresh review is warranted. Standard mode permits one critic call and one targeted follow-up. Deep mode has a critic and a blind alternative author; their first judgments remain separate, followed by up to two dispute rounds (six review calls total). No-new-evidence and settled-dispute exits stop earlier. Fresh contexts may share a model; the receipt must say so.
+
+`scouts.md` loads only when research benefits from delegation. Direct research and parallel tool calls are the default. Scouts get bounded, distinct questions and return claims, source/version pointers, counterevidence, and gaps. The default research cap is two scout calls including follow-ups, separately counted from review and adjustable by the user's budget. No recursive delegation is permitted. The planner opens decisive sources and reconciles contradictions; a scout cannot become the fresh critic of its own work. Bulk evidence can stay behind links without losing provenance.
 
 Claims carry evidence states rather than confidence percentages. Deterministic checks or disposable probes may help when permitted, but a planned test is not an executed result and model consensus is not proof. A short front page can link a larger evidence appendix. The plan's dependencies, acceptance criteria, and diagram must agree before handoff.
 
@@ -277,6 +282,7 @@ agentic-toolkit/
 ├── skills/
 │   ├── grounded-plan/
 │   │   ├── SKILL.md              # planning contract, effort routing, evidence and output
+│   │   ├── scouts.md             # conditional research dispatch and evidence packets
 │   │   ├── review.md             # conditional critic and blind-alternative procedure
 │   │   ├── records.md            # user-wide plans, decisions, outcomes, and reuse
 │   │   └── LICENSE               # MIT, scoped to this skill

@@ -8,6 +8,8 @@ Research: [concise, verified planning approaches](docs/planning-research/overvie
 
 Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources, compares serious alternatives, uses diagrams where relationships matter, and links deliverables to acceptance checks. A short decision brief leads; detailed evidence stays inspectable behind links.
 
+The planner reads code and may run permitted checks, but writes planning artifacts and disposable probes only. Implementation is a separate authorized phase or handoff. Research stays direct by default; optional [scouts](skills/grounded-plan/scouts.md) handle bulky sources or independent questions, with at most two calls including follow-ups unless the user sets another research budget. The planner checks decisive evidence itself. Scouts and fresh critics have separate roles and budgets.
+
 ```text
 Goal → evidence → options → plan and diagram → bounded challenge → decision and checks
 ```
