@@ -8,6 +8,8 @@ Status: **a trial implementation is available as [grounded-plan](../../skills/gr
 
 **Output follow-up:** version 0.5.0 keeps an architectural view in a shorter, consistently structured brief. Code-level design belongs to the implementer; no additional skill or mandatory design phase is introduced.
 
+**16 October follow-up:** the user adopted the [output-policy research](output-design.md) in version 0.6.0. Length and headings adapt to the task, each section stays concise, and facts have one home. This supersedes the previous word target and prescribed headings.
+
 ## Intended result
 
 Turn an engineering, product, or research question into a concise decision brief that another person can inspect and act on. Show why the recommendation follows from evidence, what remains uncertain, how the alternatives differ, and which checks would expose a mistake. Stop at planning unless the user has separately authorized implementation.
@@ -86,7 +88,7 @@ When an independent approach is warranted, a blind alternative author initially 
 
 ## Compact artifact contract
 
-Use a stable reading order, omitting empty sections and simplifying small tasks:
+Lead with the recommendation, then use a recognizable progression through approach/architecture, delivery, and uncertainties. These are content cues, not prescribed headings; combine, rename, or omit sections to suit the task:
 
 | Content | What it should contain |
 |---|---|
@@ -96,7 +98,7 @@ Use a stable reading order, omitting empty sections and simplifying small tasks:
 | Delivery | A handful of ordered milestones with dependencies, “done when” conditions, and a clear next step |
 | Risks and evidence | Consequential assumptions, risks, reversal conditions, source pointers, checks/review performed, and limits |
 
-A substantive brief should usually fit roughly 300–500 words, often fewer; do not hide a critical caveat to hit the target. Explain each point once and link bulky evidence or review receipts when useful. Do not add a code-level implementation appendix by default. Read code to establish feasibility and cite it as evidence, while leaving implementation choices within the agreed architecture to the implementer. The [record procedure](../../skills/grounded-plan/records.md) defines storage: the user-wide library by default, with explicit destinations respected and existing plans referenced in place.
+Length follows the decisions, dependencies, and acceptance conditions the task needs. Each section starts with its conclusion, followed by decisive support in focused prose, parallel bullets, comparisons, or useful diagrams. State each fact once and reference it elsewhere; link bulky evidence and review receipts while keeping consequential caveats visible. Read code to establish feasibility and cite it as evidence, while leaving code-level choices to the implementer. The [record procedure](../../skills/grounded-plan/records.md) defines storage: the user-wide library by default, with explicit destinations respected and existing plans referenced in place.
 
 ### Example evidence rows
 
@@ -154,7 +156,7 @@ Start with three representative tasks and repeat promising comparisons to estima
 |---|---|---|---|
 | D1 | Reuse or build | Trial a thin custom skill against `ce-plan` | Adopt `ce-plan` first and customize only demonstrated gaps |
 | D2 | Normal assurance | Resolved 15 October: infer scrutiny from task context, with no effort selector | Always one critic, or always cross-model review |
-| D3 | Output | Resolved 15 October: short structured brief with architecture; code-level choices left to the implementer | Detailed implementation specification in every plan |
+| D3 | Output | Revised 16 October: adaptive length and headings, concise sections, one home per fact; architecture retained and code-level choices left to the implementer | Fixed word target and prescribed headings |
 | D4 | Human interaction | Batch only decisions that can change the plan; recommend answers | Exhaustive Socratic interview |
 | D5 | Verification boundary | Source inspection and appropriate non-destructive checks; explicit limits | Research-only, with all execution checks deferred |
 | D6 | Review UI | Native artifact/chat first | Add ECC Canvas or Plannotator after a compatibility trial |

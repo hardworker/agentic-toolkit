@@ -15,7 +15,7 @@ The original requirement combined concise structured plans, useful diagrams, evi
 | Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/grounded-plan/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
 | Keep planning grounded without implementing | Code inspection and permitted checks inform feasibility; product edits belong to a separate authorized phase. The user accepted this boundary and selective research delegation. |
 | Delegate research selectively | Direct research remains the default. Scouts can compress bulky sources or investigate separable questions; the planner verifies decisive support. The two-call default is a provisional work budget, not a measured optimum. |
-| Keep architecture without prescribing code | After reviewing current records, the user requested simpler, more readable plans while retaining architecture. Version 0.5.0 adopts a consistent brief and leaves code-level choices to the implementer. Readability and handoff improvements remain to be measured in use. |
+| Keep architecture without prescribing code | After reviewing current records, the user requested simpler plans while retaining architecture. Version 0.5.0 left code-level choices to the implementer; v0.6.0 replaces its word target and prescribed headings with adaptive length, flexible sections, concise writing, and one home per fact. Readability and handoff improvements remain unmeasured. |
 
 Detailed mechanisms, licenses, and immutable source references are in the [repository evidence](repositories.md). Those findings are tied to the 11 October snapshot; this update does not claim to repeat the upstream survey.
 
@@ -29,7 +29,7 @@ Detailed mechanisms, licenses, and immutable source references are in the [repos
 | Lower planning overhead | Instruction-level review budgets and selective source access limit workflow size. | Dollar savings or an optimal effort policy; no controlled cost benchmark was run. |
 | A reusable outcome history | Version 0.2.0 adds a user-wide record/index contract and outcome capture. | Whether lessons improve later decisions over repeated real use. |
 | Focused planning with selective research | Version 0.3.0 separates implementation from planning and adds optional bounded scouts. | Whether delegation improves quality, latency, or cost on real planning tasks. |
-| A readable plan with architectural substance | Version 0.5.0 defines a soft 300–500-word brief with visible decisions, architecture, milestones, and evidence limits. | Whether readers resolve decisions faster and implementers retain sufficient context. |
+| A readable plan with architectural substance | Version 0.6.0 adapts length and headings to the task, editing each section for clarity and repetition while retaining architecture, milestones, and evidence limits. | Whether readers resolve decisions faster and implementers retain sufficient context. |
 
 The original expectations above summarize the recorded research goal retrospectively; they are not newly claimed pre-registered evaluation hypotheses. The [0.1.0 pilot report](evaluation.md) retains its original scope and receipts.
 
@@ -141,4 +141,10 @@ Static checks passed for full YAML parsing, 50 local documentation links, Markdo
 
 ## Output-policy research, 16 October 2026
 
-The user questioned the length target and prescribed sections. [Focused source research](output-design.md) compares five repositories, architecture/product guidance, and an empirical ADR study. It recommends adaptive length, optional headings, and concise writing within each section. This is a proposal; v0.5.0 remains installed, and no improved reading or handoff outcome has yet been demonstrated.
+The user questioned the length target and prescribed sections. [Focused source research](output-design.md) compares five repositories, architecture/product guidance, and an empirical ADR study. It recommended adaptive length, optional headings, and concise writing within each section. The subsequent adoption is recorded below; no improved reading or handoff outcome has yet been demonstrated.
+
+## Adaptive output in version 0.6.0
+
+On 16 October the user approved the researched output changes. The skill now adapts length and headings to the task, leads each section with its conclusion and decisive support, and references facts rather than repeating them. Architectural boundaries, acceptance conditions, unresolved decisions, and evidence limits remain visible. Reviewers assess readability without enforcing a word range or heading names; records follow the same presentation guidance. The existing skill implements this without a new requirements-document stage.
+
+Validation covered full YAML parsing, 53 local documentation links, reference labels, Markdown fences, public-path hygiene, version metadata, installed symlinks, and Git whitespace. The known bundled-validator `argument-hint` mismatch remains; a temporary projection omitting that repository-required field passed. Instruction and documentation review confirmed the four adopted changes and preserved evidence/architecture requirements. No fresh behavioral benchmark or reader study was run.

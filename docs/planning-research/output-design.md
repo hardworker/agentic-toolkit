@@ -1,6 +1,6 @@
 # Plan length and structure: what to constrain
 
-Checked **16 October 2026**. This is a research recommendation; the installed v0.5.0 skill still has its soft 300–500-word target and five default headings.
+Checked and adopted **16 October 2026** in version 0.6.0. The user selected adaptive length, flexible sections, concise writing within sections, and one home for each fact. This replaces v0.5.0's soft word target and prescribed headings.
 
 ## Recommendation
 
@@ -22,7 +22,7 @@ The previous range was explicitly soft, with exceptions for important caveats. E
 
 Fixed structures and local size guidance therefore have legitimate uses. The inspected material does not establish a universal length or heading set for our broader planning skill.
 
-## Proposed output policy
+## Adopted output policy
 
 - **Orient first.** State the recommendation, its decisive reason, and any choice blocking progress before background.
 - **Adapt the structure.** Architecture, delivery, alternatives, open decisions, and evidence are useful section choices. Combine, rename, or omit them when that helps the reader; preserve material constraints and acceptance conditions.
@@ -30,7 +30,7 @@ Fixed structures and local size guidance therefore have legitimate uses. The ins
 - **Give each fact one home.** Reference a constraint or decision instead of repeating it across architecture, milestones, and risks. Keep large evidence and review receipts linked; retain qualifications beside the claims they limit.
 - **Check usability.** Can a reader find the choice, approach, next action, completion condition, and material uncertainty without reconstructing the investigation? Add detail for a missing answer; remove detail that adds no decision or execution value.
 
-These are proposed writing rules, not a new framework or skill. Keep code-level choices with the implementer and retain the existing evidence and outcome-history requirements.
+These writing rules apply within the existing skill. Code-level choices remain with the implementer, and evidence and outcome-history requirements remain in place.
 
 ## Evidence and limits
 
@@ -38,7 +38,7 @@ A 2026 study compared five ADR templates through author-led feature analysis, th
 
 Inspected eight files pinned to commits across five public repositories, plus primary architecture/product guidance and the study's methods, results, and limitations. Checked the documentation against the relevant source instructions, including the reasons for fixed headings. No upstream runtimes, reader trial, or cost benchmark were run; the recommendation is an inference. The 11 October source manifest remains a separate historical snapshot.
 
-The next useful check is to apply the proposed policy to one existing plan while preserving its decisions and critical constraints, then ask whether the user can locate and resolve them more easily. Outcome: pending.
+The next useful check is to apply the adopted policy to one existing plan while preserving its decisions and critical constraints, then ask whether the user can locate and resolve them more easily. Readability outcome: pending.
 
 [ce-chat]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/output-contracts.md
 [ce-sections]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/plan-sections.md

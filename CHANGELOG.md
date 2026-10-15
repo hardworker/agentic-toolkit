@@ -4,6 +4,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.6.0] — 2026-10-16
+
+### Changed
+
+- Adapt plan length and headings to the task instead of targeting a word range or prescribing sections and milestone counts.
+- Make each section concise: conclusion first, focused prose, appropriate lists/tables/diagrams, and one home for each fact with linked supporting detail.
+- Align review and record guidance with the flexible output policy while retaining architectural substance, acceptance conditions, and visible evidence limits.
+
 ## [0.5.0] — 2026-10-15
 
 ### Changed

@@ -66,17 +66,14 @@ Resolve material findings against sources. A changed stance needs new evidence o
 
 ## Deliver a short, inspectable artifact
 
-Use this reading order and these headings for a substantive brief; omit empty sections and use fewer steps for small tasks:
+Lead with the recommendation and its decisive reason. Keep the desired outcome, scope, serious alternatives, architectural boundaries, acceptance conditions, and material uncertainties visible where relevant.
 
-| Section | Content |
-|---|---|
-| Recommendation | Desired outcome, chosen approach and why; scope, serious alternative, and deciding tradeoff. |
-| Decisions needed | Only unresolved choices: stable IDs (`D1`, `D2`), options, recommendation, and what each blocks. Settled choices become constraints. |
-| Architecture | Major components or stages, responsibilities, interactions, and critical boundaries; a small diagram when useful. |
-| Delivery | Usually 3–5 milestones in dependency order, each with a concise “done when” condition; make the next step clear. |
-| Risks and evidence | Decision-changing assumptions, risks and reversal conditions; source links, checks/review actually performed, important limits, and stop reason. |
+- **Adaptive length:** let the task determine detail, without a word target or milestone quota. Add detail when it changes a decision, exposes a dependency, or defines acceptance. More scrutiny should strengthen the evidence without automatically lengthening the brief.
+- **Flexible sections:** use a recognizable progression through recommendation, approach/architecture, delivery, and uncertainties. Combine, rename, or omit headings to fit the content. Make the next action easy to find.
+- **Concision within sections:** start each with its conclusion, then the decisive reason and evidence. Use focused paragraphs, parallel bullets, comparison tables, and useful diagrams. Split overloaded sentences or bullets instead of compressing them into dense prose.
+- **One home for each fact:** reference decisions and constraints instead of repeating them across sections. Link bulky evidence and review receipts while keeping consequential caveats beside the claims they qualify. Do not add a code-level implementation appendix by default.
 
-Aim for roughly 300–500 words, often fewer. This is a soft target: keep critical constraints and caveats visible. Prefer short paragraphs and compact tables; explain each point once. Link bulky source evidence and review receipts when needed. Do not add a code-level implementation appendix by default. More scrutiny should strengthen the evidence without automatically lengthening the brief.
+Give unresolved choices stable IDs (`D1`, `D2`), options, a recommendation, and what they block; settled choices become constraints. Include checks and review actually performed, important limits, and the stop reason. Before handoff, check that the reader can quickly find what is proposed, why, how it fits together, what happens next, and what remains unresolved.
 
 Save substantive plans and their decisions in the user-wide library using [records.md](records.md), with an outcome initially marked pending. Default to `~/.local/share/grounded-plan/`; an explicit `--store DIR` or `GROUNDED_PLAN_HOME` can override it. Honor an explicit artifact destination or request not to save. Existing plans remain at their original paths and can be referenced by a library record; do not migrate or duplicate them automatically. Maintain one canonical plan, preserve original expectations and dated decisions, and reread the record after context loss. Return the saved artifact link and record ID. If access is unavailable, report the unsaved record rather than silently storing it in the repository.
 
