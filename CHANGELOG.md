@@ -4,6 +4,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.5.0] — 2026-10-15
+
+### Changed
+
+- Use a consistent decision-brief structure with a soft 300–500-word target: recommendation, open decisions, architecture, delivery, and risks/evidence.
+- Preserve architectural responsibilities, flows, boundaries, and acceptance conditions while leaving code-level design and detailed test matrices to the implementer. Reviewers use the same boundary.
+- Lead records with the current brief while preserving original expectations and dated outcomes; keep bulky evidence and review receipts behind links.
+
 ## [0.4.0] — 2026-10-15
 
 ### Changed

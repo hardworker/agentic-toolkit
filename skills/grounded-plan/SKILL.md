@@ -42,16 +42,16 @@ Research directly by default; batch independent tool calls before adding agents.
 
 Compare the smallest viable approach, including reuse or doing nothing where credible, with a serious alternative. Explain the deciding tradeoff and what would reverse your recommendation. Do not invent a second option when constraints leave only one viable path; say why the alternatives fail.
 
-Use a diagram when relationships, order, state, or boundaries matter. Prefer a small editable Mermaid diagram: component/context for boundaries, sequence for interactions, state for lifecycle, dependency graph for order, decision tree for dependent choices. A table can be clearer for a simple comparison. Mark current versus proposed behavior. Check that every important edge/state agrees with the prose and evidence; render/check syntax when a renderer is available, and don't claim rendering when it wasn't checked.
+Keep the architectural view: major components or stages, responsibilities, interactions, and consequential data, trust, or operational boundaries. Use a small editable Mermaid diagram when it makes those relationships clearer; show the main flow rather than every branch. Mark current versus proposed behavior. Check important edges/states against the prose and evidence; render/check syntax when a renderer is available, and don't claim rendering when it wasn't checked.
 
-Define independently checkable deliverables in dependency order. Usually a handful is enough; split further only when execution or review needs the boundary. Each identifies the affected area, its prerequisites, and an observable acceptance check. Read existing paths/interfaces before naming them; label new ones as proposed. Specify decisions an implementer cannot safely invent, not bodies of code that the interfaces and tests already determine.
+Define a handful of deliverables in dependency order, each with its prerequisite and an observable acceptance condition. Specify architectural decisions and constraints that affect feasibility, scope, or acceptance. Leave file layouts, function signatures, field schemas, code snippets, and detailed test matrices to the implementer. Existing code paths may be cited as evidence; they are not a file-by-file work plan. If implementation reveals a conflict with the agreed architecture or acceptance conditions, return that decision for resolution.
 
 Adapt to the domain:
 
 | Engineering | Product | Research |
 |---|---|---|
-| Existing interfaces, files, migrations | Audience, outcome hypothesis, rollout | Question, source criteria, competing explanations |
-| Tests, operational checks, rollback | Observable outcome and guardrail metrics | Discriminating observations and falsification |
+| Components, responsibilities, system boundaries | Audience, outcome hypothesis, rollout | Question, source criteria, competing explanations |
+| Acceptance conditions, operational limits, rollback | Observable outcome and guardrail metrics | Discriminating observations and falsification |
 | Technical dependencies | Learning and adoption dependencies | Evidence and experiment dependencies |
 
 ## Challenge and resolve
@@ -66,15 +66,17 @@ Resolve material findings against sources. A changed stance needs new evidence o
 
 ## Deliver a short, inspectable artifact
 
-Lead with the recommendation and why. Include only the following content that matters for the task; this is not a mandatory heading list:
+Use this reading order and these headings for a substantive brief; omit empty sections and use fewer steps for small tasks:
 
-- Goal, boundaries, success criteria, and consequential assumptions.
-- Serious alternatives and the decision that separates them.
-- The useful diagram and deliverables with dependencies/acceptance checks.
-- Material evidence, risks, reversal conditions, and unresolved decisions.
-- A verification receipt: checks actually run, review actually performed, important limits, and why the process stopped.
+| Section | Content |
+|---|---|
+| Recommendation | Desired outcome, chosen approach and why; scope, serious alternative, and deciding tradeoff. |
+| Decisions needed | Only unresolved choices: stable IDs (`D1`, `D2`), options, recommendation, and what each blocks. Settled choices become constraints. |
+| Architecture | Major components or stages, responsibilities, interactions, and critical boundaries; a small diagram when useful. |
+| Delivery | Usually 3–5 milestones in dependency order, each with a concise “done when” condition; make the next step clear. |
+| Risks and evidence | Decision-changing assumptions, risks and reversal conditions; source links, checks/review actually performed, important limits, and stop reason. |
 
-For a substantive plan, aim for a front page around 500–900 words; small tasks can be much shorter. Never omit a critical caveat to hit a word cap. Keep detailed evidence and settled debate behind links when they would swamp the decision. Use compact decision IDs (`D1`, `D2`) with options and your recommendation so the user can resolve them directly.
+Aim for roughly 300–500 words, often fewer. This is a soft target: keep critical constraints and caveats visible. Prefer short paragraphs and compact tables; explain each point once. Link bulky source evidence and review receipts when needed. Do not add a code-level implementation appendix by default. More scrutiny should strengthen the evidence without automatically lengthening the brief.
 
 Save substantive plans and their decisions in the user-wide library using [records.md](records.md), with an outcome initially marked pending. Default to `~/.local/share/grounded-plan/`; an explicit `--store DIR` or `GROUNDED_PLAN_HOME` can override it. Honor an explicit artifact destination or request not to save. Existing plans remain at their original paths and can be referenced by a library record; do not migrate or duplicate them automatically. Maintain one canonical plan, preserve original expectations and dated decisions, and reread the record after context loss. Return the saved artifact link and record ID. If access is unavailable, report the unsaved record rather than silently storing it in the repository.
 

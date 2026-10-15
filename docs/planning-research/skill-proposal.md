@@ -6,6 +6,8 @@ Status: **a trial implementation is available as [grounded-plan](../../skills/gr
 
 **15 October follow-up:** version 0.4.0 removes effort settings at the user's request. The user surface and scrutiny policy below now reflect inference from task context. Historical pilot results retain their original mode labels; the numeric budgets remain provisional.
 
+**Output follow-up:** version 0.5.0 keeps an architectural view in a shorter, consistently structured brief. Code-level design belongs to the implementer; no additional skill or mandatory design phase is introduced.
+
 ## Intended result
 
 Turn an engineering, product, or research question into a concise decision brief that another person can inspect and act on. Show why the recommendation follows from evidence, what remains uncertain, how the alternatives differ, and which checks would expose a mistake. Stop at planning unless the user has separately authorized implementation.
@@ -50,7 +52,7 @@ flowchart TD
 1. **Frame.** State the outcome, relevant constraints, non-goals, and the decision the plan must support. Separate user requirements from the planner's assumptions. Inspect discoverable facts before asking about them. Ask only questions whose answers could change the approach, scope, success criterion, or costly commitment.
 2. **Ground.** Read relevant code/artifacts; use current primary sources for external facts that matter. Track material claims with provenance and limits. Two summaries of the same upstream source count as one evidence origin.
 3. **Choose.** Compare the smallest viable/reuse approach with one serious alternative. Add another only when it changes the choice. Name the deciding tradeoff and what evidence would reverse the recommendation. Do not generate decorative alternatives.
-4. **Sketch and plan.** Use the representation that reveals the problem: sequence, component, state, dependency, decision tree, or a table. Define independently checkable deliverables and dependencies at the appropriate level of detail. Avoid speculative implementation bodies.
+4. **Sketch and plan.** Show major components or stages, responsibilities, interactions, and consequential boundaries. Use a small diagram when it clarifies them. Define milestones with dependencies and observable acceptance conditions; leave file layouts, function signatures, field schemas, and detailed test matrices to the implementer.
 5. **Check and challenge.** Verify paths, contracts, source claims, dependency wiring, and criterion coverage. Infer additional scrutiny from the task and evidence. Resolve disputed facts by inspection/checks and preference disputes through the user. Do not turn a preference into an alleged defect.
 6. **Compress and hand off.** Keep the recommendation and decisions prominent. Preserve the evidence and rejected alternatives behind links where useful. Report actual verification and review performed, remaining unknowns, and the stopping reason.
 
@@ -84,21 +86,17 @@ When an independent approach is warranted, a blind alternative author initially 
 
 ## Compact artifact contract
 
-This is a content checklist, not a demand for nine headings on every small task:
+Use a stable reading order, omitting empty sections and simplifying small tasks:
 
 | Content | What it should contain |
 |---|---|
-| Decision | Recommended approach, why it fits, what would change it |
-| Boundaries | Goal, non-goals, constraints, user decisions |
-| Options | Serious alternative and the relevant tradeoff |
-| Shape | A diagram if relationships/sequence/state are consequential |
-| Deliverables | Outcome, affected area, dependency, acceptance check |
-| Evidence | Material claims, provenance, verification state, limits |
-| Risks | Failure scenario, mitigation, reversal/rollback when relevant |
-| Resolutions | Decision IDs, options, recommendation, cost of leaving open |
-| Receipt | Checks and critique actually done; unknowns; stop reason |
+| Recommendation | Desired outcome, approach, scope, serious alternative, and deciding tradeoff |
+| Decisions needed | Unresolved choices with IDs, options, recommendation, and blocked work; settled choices become constraints |
+| Architecture | Components or stages, responsibilities, interactions, and important boundaries; a small diagram when useful |
+| Delivery | A handful of ordered milestones with dependencies, “done when” conditions, and a clear next step |
+| Risks and evidence | Consequential assumptions, risks, reversal conditions, source pointers, checks/review performed, and limits |
 
-A substantive front page should usually fit roughly 500–900 words; do not hide a critical caveat to hit the target. Save a separate evidence appendix only when it prevents either a bloated brief or lost provenance. Reuse the project's document location and naming convention. Outside a repository, use the user's requested destination or the host's artifact workspace and return a durable link.
+A substantive brief should usually fit roughly 300–500 words, often fewer; do not hide a critical caveat to hit the target. Explain each point once and link bulky evidence or review receipts when useful. Do not add a code-level implementation appendix by default. Read code to establish feasibility and cite it as evidence, while leaving implementation choices within the agreed architecture to the implementer. The [record procedure](../../skills/grounded-plan/records.md) defines storage: the user-wide library by default, with explicit destinations respected and existing plans referenced in place.
 
 ### Example evidence rows
 
@@ -122,8 +120,8 @@ Proposed probes remain future work until run. Do not write “verified” becaus
 
 | Engineering | Product | Research |
 |---|---|---|
-| Interfaces, files, migration/rollback | Audience, hypothesis, constraints, rollout | Question, evidence inclusion rules, competing explanations |
-| Acceptance tests and operational checks | Observable outcomes and guardrail metrics | Discriminating observations and falsification criteria |
+| Components, boundaries, migration/rollback strategy | Audience, hypothesis, constraints, rollout | Question, evidence inclusion rules, competing explanations |
+| Acceptance conditions and operational limits | Observable outcomes and guardrail metrics | Discriminating observations and falsification criteria |
 | Sequence/state/dependency diagram | Journey/decision/rollout diagram | Evidence map/experiment dependency diagram |
 | Technical unknowns | User-value and feasibility unknowns | Source gaps and uncertainty |
 
@@ -156,7 +154,7 @@ Start with three representative tasks and repeat promising comparisons to estima
 |---|---|---|---|
 | D1 | Reuse or build | Trial a thin custom skill against `ce-plan` | Adopt `ce-plan` first and customize only demonstrated gaps |
 | D2 | Normal assurance | Resolved 15 October: infer scrutiny from task context, with no effort selector | Always one critic, or always cross-model review |
-| D3 | Output | Short front page, linked evidence, Mermaid when useful | Full plan always visible |
+| D3 | Output | Resolved 15 October: short structured brief with architecture; code-level choices left to the implementer | Detailed implementation specification in every plan |
 | D4 | Human interaction | Batch only decisions that can change the plan; recommend answers | Exhaustive Socratic interview |
 | D5 | Verification boundary | Source inspection and appropriate non-destructive checks; explicit limits | Research-only, with all execution checks deferred |
 | D6 | Review UI | Native artifact/chat first | Add ECC Canvas or Plannotator after a compatibility trial |

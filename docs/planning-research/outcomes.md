@@ -15,6 +15,7 @@ The original requirement combined concise structured plans, useful diagrams, evi
 | Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/grounded-plan/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
 | Keep planning grounded without implementing | Code inspection and permitted checks inform feasibility; product edits belong to a separate authorized phase. The user accepted this boundary and selective research delegation. |
 | Delegate research selectively | Direct research remains the default. Scouts can compress bulky sources or investigate separable questions; the planner verifies decisive support. The two-call default is a provisional work budget, not a measured optimum. |
+| Keep architecture without prescribing code | After reviewing current records, the user requested simpler, more readable plans while retaining architecture. Version 0.5.0 adopts a consistent brief and leaves code-level choices to the implementer. Readability and handoff improvements remain to be measured in use. |
 
 Detailed mechanisms, licenses, and immutable source references are in the [repository evidence](repositories.md). Those findings are tied to the 11 October snapshot; this update does not claim to repeat the upstream survey.
 
@@ -28,6 +29,7 @@ Detailed mechanisms, licenses, and immutable source references are in the [repos
 | Lower planning overhead | Instruction-level review budgets and selective source access limit workflow size. | Dollar savings or an optimal effort policy; no controlled cost benchmark was run. |
 | A reusable outcome history | Version 0.2.0 adds a user-wide record/index contract and outcome capture. | Whether lessons improve later decisions over repeated real use. |
 | Focused planning with selective research | Version 0.3.0 separates implementation from planning and adds optional bounded scouts. | Whether delegation improves quality, latency, or cost on real planning tasks. |
+| A readable plan with architectural substance | Version 0.5.0 defines a soft 300–500-word brief with visible decisions, architecture, milestones, and evidence limits. | Whether readers resolve decisions faster and implementers retain sufficient context. |
 
 The original expectations above summarize the recorded research goal retrospectively; they are not newly claimed pre-registered evaluation hypotheses. The [0.1.0 pilot report](evaluation.md) retains its original scope and receipts.
 
@@ -130,3 +132,9 @@ On 15 October the user requested removing effort settings entirely. The skill no
 The `--effort` argument and lean/standard/deep labels are removed from the current skill and usage examples. Review and scout caps remain separate; adding an alternative after a critic retains all earlier calls within the six-call review ceiling. Historical pilot outputs and receipts retain their original labels and have not been reclassified or rerun.
 
 Validation for this instruction change checks frontmatter, current usage examples, local links, Markdown fences, public-path hygiene, version metadata, and installed symlinks. Manual contract review covers a simple reversible task, a consequential disputed choice, and a task that forbids delegation. This is not a new behavioral benchmark; automatic selection quality and cost remain unmeasured. The known `argument-hint` validator mismatch remains, and Mermaid rendering was not tested.
+
+## Readable architecture briefs in version 0.5.0
+
+The user found current records too long and difficult to scan, then chose to keep architecture in the planning skill while leaving code-level details to the implementer. The revised brief has a stable reading order, a soft 300–500-word target, visible unresolved decisions, a small architectural view, and milestones with acceptance conditions. Records lead with the current view and preserve dated expectations and outcomes. Review instructions use the same level of detail so critique does not turn a brief into an implementation specification.
+
+Static checks passed for full YAML parsing, 50 local documentation links, Markdown fences, public-path hygiene, version metadata, installed symlinks, and Git whitespace. The bundled validator retains its known `argument-hint` whitelist mismatch; a temporary projection omitting only that repository-required field passed. Manual contract review checked that critical architectural constraints remain visible, small tasks can stay short, and product/research plans can describe stages rather than software components. No fresh-agent benchmark or reader study was run; readability, handoff quality, and cost effects remain unmeasured.

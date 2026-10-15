@@ -6,7 +6,7 @@ Research: [concise, verified planning approaches](docs/planning-research/overvie
 
 ## grounded-plan
 
-Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources, compares serious alternatives, uses diagrams where relationships matter, and links deliverables to acceptance checks. A short decision brief leads; detailed evidence stays inspectable behind links.
+Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources and compares serious alternatives. The brief usually takes 300–500 words: recommendation, open decisions, architecture, delivery milestones, and risks/evidence. Architecture keeps components, responsibilities, flows, and important boundaries visible; code-level choices belong to the implementer. Detailed evidence stays inspectable behind links.
 
 The planner reads code and may run permitted checks, but writes planning artifacts and disposable probes only. Implementation is a separate authorized phase or handoff. Research stays direct by default; optional [scouts](skills/grounded-plan/scouts.md) handle bulky sources or independent questions, with at most two calls including follow-ups unless the user sets another research budget. The planner checks decisive evidence itself. Scouts and fresh critics have separate roles and budgets.
 
@@ -25,7 +25,7 @@ Scrutiny is inferred from the task's uncertainty, consequences, reversibility, a
 /grounded-plan compare rollout options --store ~/my-planning-library
 ```
 
-Substantive plans, decisions, and outcomes live in `~/.local/share/grounded-plan/`, shared across projects. `--store DIR` or `GROUNDED_PLAN_HOME` can override the root. Each record preserves its original expectations, dated decisions, evidence-backed outcomes, and contextual lessons; `index.md` helps find relevant prior work. Existing external plans stay in place and are linked. Outcome capture updates known results when requested; it does not monitor tasks in the background. See [research decisions and outcomes](docs/planning-research/outcomes.md) for the rationale and workflow.
+Substantive plans, decisions, and outcomes live in `~/.local/share/grounded-plan/`, shared across projects. `--store DIR` or `GROUNDED_PLAN_HOME` can override the root. Each record leads with the current brief and preserves original expectations, dated decisions, evidence-backed outcomes, and contextual lessons; `index.md` helps find relevant prior work. Existing external plans stay in place and are linked. Outcome capture updates known results when requested; it does not monitor tasks in the background. See [research decisions and outcomes](docs/planning-research/outcomes.md) for the rationale and workflow.
 
 Use `$grounded-plan` in hosts with dollar-prefixed skill invocation. Requires source/artifact access; web and fresh reviewers are conditional. No external runtime or model provider is mandatory. Planning does not itself authorize implementation. Original skill files are [MIT-licensed](skills/grounded-plan/LICENSE); that license does not relicense the rest of the toolkit. See the [evaluation record](docs/planning-research/evaluation.md) for the pilot's scope and limits.
 

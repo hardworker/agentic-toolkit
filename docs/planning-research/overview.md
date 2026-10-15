@@ -8,6 +8,8 @@ Follow-up, **14 October 2026**: [research decisions and outcomes](outcomes.md) c
 
 Follow-up, **15 October 2026**: version 0.4.0 removes effort settings at the user's request. The skill infers scrutiny from task context while retaining bounded research and review. Earlier pilot results describe the modes used at that time.
 
+Output follow-up, **15 October 2026**: version 0.5.0 adopts a shorter, consistent brief with an architectural view. Detailed code choices remain with the implementer. See the [design contract](skill-proposal.md#compact-artifact-contract) and [outcomes](outcomes.md).
+
 ## Recommendation
 
 Build a small, standalone planning skill, using **Compound Engineering's `ce-plan` as the strongest ready-made comparator**, ECC's simple inline planning as the cost baseline, and selected verification and review ideas from Ouroboros, Ralplan, and this toolkit. Do not make the new skill depend on any of those systems.
@@ -146,9 +148,9 @@ Spend extra effort where the expected reduction in a consequential mistake excee
 
 ## Keeping the output short without weakening it
 
-Make the **front page** short and the **supporting evidence** inspectable. Target roughly 500–900 words for a substantive decision brief, but let content determine length. A trivial plan may be five lines; a migration needs more than an arbitrary page cap.
+Make the **front page** short and the **supporting evidence** inspectable. Target roughly 300–500 words for a substantive decision brief, often fewer; retain critical constraints and caveats rather than enforcing an arbitrary cap.
 
-The front page should carry the recommendation and reason, constraints, serious alternative, one useful diagram, deliverable steps with acceptance checks, top risks, unresolved decisions, and the verification status. Detailed source excerpts, comparison matrices, and settled debate belong behind links.
+Use a consistent reading order: recommendation, decisions needed, architecture, delivery, and risks/evidence. Omit empty sections. Keep architectural components or stages, responsibilities, interactions, and important boundaries visible, with milestones and acceptance conditions. Leave code-level design and detailed test matrices to the implementer. Detailed source excerpts, comparison matrices, and review receipts belong behind links when long.
 
 Choose the diagram by the uncertainty: component/context for boundaries, sequence for interactions, state for lifecycle, dependency graph for order, and a decision tree for dependent choices. Mark current versus proposed behavior and check it against the prose. Do not draw a diagram merely to satisfy a quota. C4 itself recommends using only the zoom levels that add value. [C4 guidance](https://c4model.com/diagrams).
 
