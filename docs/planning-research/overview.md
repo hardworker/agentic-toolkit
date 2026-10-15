@@ -10,6 +10,8 @@ Follow-up, **15 October 2026**: version 0.4.0 removes effort settings at the use
 
 Output follow-up, **15 October 2026**: version 0.5.0 adopts a shorter, consistent brief with an architectural view. Detailed code choices remain with the implementer. See the [design contract](skill-proposal.md#compact-artifact-contract) and [outcomes](outcomes.md).
 
+Research follow-up, **16 October 2026**: [plan length and structure](output-design.md) compares current upstream output rules and architecture guidance. It recommends replacing the numeric target with adaptive structure and section-level editing; this proposal has not changed the installed skill.
+
 ## Recommendation
 
 Build a small, standalone planning skill, using **Compound Engineering's `ce-plan` as the strongest ready-made comparator**, ECC's simple inline planning as the cost baseline, and selected verification and review ideas from Ouroboros, Ralplan, and this toolkit. Do not make the new skill depend on any of those systems.

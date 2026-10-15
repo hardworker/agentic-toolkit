@@ -1,6 +1,6 @@
 # Grounded Plan: research decisions and outcomes
 
-Updated **15 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
+Updated **16 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
 
 ## What the research changed
 
@@ -138,3 +138,7 @@ Validation for this instruction change checks frontmatter, current usage example
 The user found current records too long and difficult to scan, then chose to keep architecture in the planning skill while leaving code-level details to the implementer. The revised brief has a stable reading order, a soft 300–500-word target, visible unresolved decisions, a small architectural view, and milestones with acceptance conditions. Records lead with the current view and preserve dated expectations and outcomes. Review instructions use the same level of detail so critique does not turn a brief into an implementation specification.
 
 Static checks passed for full YAML parsing, 50 local documentation links, Markdown fences, public-path hygiene, version metadata, installed symlinks, and Git whitespace. The bundled validator retains its known `argument-hint` whitelist mismatch; a temporary projection omitting only that repository-required field passed. Manual contract review checked that critical architectural constraints remain visible, small tasks can stay short, and product/research plans can describe stages rather than software components. No fresh-agent benchmark or reader study was run; readability, handoff quality, and cost effects remain unmeasured.
+
+## Output-policy research, 16 October 2026
+
+The user questioned the length target and prescribed sections. [Focused source research](output-design.md) compares five repositories, architecture/product guidance, and an empirical ADR study. It recommends adaptive length, optional headings, and concise writing within each section. This is a proposal; v0.5.0 remains installed, and no improved reading or handoff outcome has yet been demonstrated.
