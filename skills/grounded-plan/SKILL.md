@@ -1,7 +1,7 @@
 ---
 name: grounded-plan
 description: Create or review concise, evidence-backed plans for engineering, product, and research, with useful diagrams, serious alternatives, and scrutiny matched to the stakes. Use for nontrivial planning, comparing approaches, checking a plan, or recording its decisions, outcomes, and lessons in a user-wide library.
-argument-hint: "[task, plan path, or record ID] [--review | --outcome] [--effort lean|standard|deep] [--store DIR]"
+argument-hint: "[task, plan path, or record ID] [--review | --outcome] [--store DIR]"
 license: MIT
 ---
 
@@ -11,17 +11,17 @@ Deliver a plan the user can understand, challenge, and hand off: a recommendatio
 
 While planning, inspect code and run permitted non-destructive checks, but write only planning artifacts and disposable probes; do not edit product code, tests, or configuration. Implementation belongs to a separate, user-authorized phase or handoff, even when the same agent performs it. These are role instructions, not a filesystem sandbox.
 
-## Scope and effort
+## Match scrutiny to the task
 
-Read the relevant existing work before choosing depth. Say which mode you chose and why in one sentence. Honor an explicit budget or effort setting; the following adaptive default is a starting policy, not a measured optimum.
+Read the relevant existing work, then infer the useful checks from uncertainty, consequences, reversibility, and dependencies. Choose the scrutiny directly; do not ask the user to select a level. Honor stated time, cost, scope, and delegation limits, and disclose any consequential verification gap they leave.
 
-| Mode | Use | Review budget |
+| Task context | Useful scrutiny | Review budget |
 |---|---|---|
-| `lean` | Clear, bounded, reversible work | Source checks and self-check; no review agents |
-| `standard` | A substantive choice with meaningful alternatives or dependencies | One fresh critic; at most one targeted follow-up |
-| `deep` | Requested thorough debate, costly reversal, or consequential disputed assumptions | Two fresh review contexts; at most two dispute rounds |
+| Clear, bounded, reversible work | Source checks and self-check | No review agents |
+| Meaningful alternatives or dependencies that a fresh check could challenge | Add one fresh critic | At most one targeted follow-up |
+| Costly reversal or consequential disputed assumptions that could change the approach | Add a blind alternative alongside the critic | At most two dispute rounds; six review calls total |
 
-For a straightforward action with no meaningful planning decision, give the few steps it needs; do not expand it into this entire workflow. Default to standard for nontrivial planning. Use deep only when the added scrutiny can change the decision; explicit lean remains lean, with any consequential verification gap reported.
+For a straightforward action with no meaningful planning decision, give the few steps it needs. Reassess as evidence arrives: add scrutiny only when it could change the plan or resolve a consequential gap, and explain the specific risk it addresses. A targeted source check may settle a question without another reviewer. Existing calls count toward the caps when scrutiny increases. These budgets are a starting policy, not a measured optimum.
 
 `--review` checks a supplied plan against its goal and evidence. Preserve the original unless editing was requested; return material findings and proposed corrections. Reuse valid prior evidence and decisions instead of restarting discovery.
 
@@ -58,11 +58,11 @@ Adapt to the domain:
 
 First check requirement-to-deliverable coverage, dependencies, existing contracts, source support, and diagram/prose agreement yourself. Self-checking remains useful even when independent review follows.
 
-For standard/deep, read [review.md](review.md) and request the bounded fresh-agent review it defines when the host permits delegation. Give reviewers a compact brief and evidence pointers, not the full conversation. Keep initial judgments separate. Prefer an already available different model family for deep review when authorized; do not install a provider or incur a new paid service merely to fill a role.
+When fresh scrutiny is warranted, read [review.md](review.md) and request the bounded review it defines when the host permits delegation. Give reviewers a compact brief and evidence pointers, not the full conversation. Keep initial judgments separate. For a blind alternative, prefer an already available different model family when authorized; do not install a provider or incur a new paid service merely to fill a role.
 
 If fresh reviewers are unavailable or prohibited, perform the strongest permitted check and report **self-checked; independent review unavailable** with the reason. Never role-play multiple personas and call them independent. State whether actual reviewers used the same model, different models, or unverified model identities.
 
-Resolve material findings against sources. A changed stance needs new evidence or an identified reasoning error. Stop debate when no material dispute remains, a round brings no new evidence or corrected inference, or the mode's cap is reached. Preserve unresolved dissent with its consequence and cheapest next check; votes and agreement are not proof. User-value tradeoffs belong in the decision list, not the defect list.
+Resolve material findings against sources. A changed stance needs new evidence or an identified reasoning error. Stop debate when no material dispute remains, a round brings no new evidence or corrected inference, or the review cap is reached. Preserve unresolved dissent with its consequence and cheapest next check; votes and agreement are not proof. User-value tradeoffs belong in the decision list, not the defect list.
 
 ## Deliver a short, inspectable artifact
 

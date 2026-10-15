@@ -6,6 +6,8 @@ Start here. [Repository evidence](repositories.md) contains the comparisons and 
 
 Follow-up, **14 October 2026**: [research decisions and outcomes](outcomes.md) connects these findings to versions 0.2.0–0.3.0: the user-wide planning library, explicit planning boundary, and selective research scouts. The upstream repository snapshot remains unchanged.
 
+Follow-up, **15 October 2026**: version 0.4.0 removes effort settings at the user's request. The skill infers scrutiny from task context while retaining bounded research and review. Earlier pilot results describe the modes used at that time.
+
 ## Recommendation
 
 Build a small, standalone planning skill, using **Compound Engineering's `ce-plan` as the strongest ready-made comparator**, ECC's simple inline planning as the cost baseline, and selected verification and review ideas from Ouroboros, Ralplan, and this toolkit. Do not make the new skill depend on any of those systems.
@@ -126,13 +128,13 @@ These sources justify a hypothesis worth testing: **grounded planning plus one t
 
 “Cheap” has at least four dimensions: model/search charges, latency, user attention, and maintenance. A ten-turn interview can be monetarily cheap and operationally expensive. Parallel reviews reduce waiting but do not inherently reduce total tokens.
 
-| Mode | Proposed shape | Use when | Main limitation |
+| Scrutiny | Shape | Use when | Main limitation |
 |---|---|---|---|
-| Lean | One planner, source checks, one self-check | Bounded and reversible work with a clear approach | No independent critique |
-| Standard | One planner, one fresh focused critic, one targeted correction pass | Nontrivial engineering/product decisions | Critic sees the plan and may inherit its framing |
-| Deep | Planner plus blind alternative or distinct reviewer; at most two dispute rounds | Costly reversal, contested approach, consequential unknowns | More input duplication, synthesis, and human decisions |
+| Source checks and self-check | One planner | Bounded and reversible work with a clear approach | No independent critique |
+| Fresh critic | One critic and at most one targeted follow-up | Meaningful alternatives or dependencies worth challenging | Critic sees the plan and may inherit its framing |
+| Blind alternative and debate | Critic plus independent alternative; at most two dispute rounds within six total review calls | Costly reversal, contested approach, consequential unknowns | More input duplication, synthesis, and human decisions |
 
-These are **proposed budgets**, not approved defaults or measured multipliers. A full critic pass can be cheaper than another research expedition; a long context can reverse that comparison. Count work by stage, not just agents.
+The user selected inference from task context rather than an effort setting. These remain **provisional budgets**, not measured optima or cost multipliers. A full critic pass can be cheaper than another research expedition; a long context can reverse that comparison. Count work by stage, not just agents.
 
 For API billing, use actual stage usage:
 

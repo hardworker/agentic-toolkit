@@ -14,13 +14,13 @@ The planner reads code and may run permitted checks, but writes planning artifac
 Goal → evidence → options → plan and diagram → bounded challenge → decision and checks
 ```
 
-Adaptive effort: `lean` uses source checks and self-review; `standard` adds one fresh critic with at most one targeted follow-up; `deep` adds a blind alternative and at most two dispute rounds. The skill distinguishes observed/tested evidence from assumptions and future checks. It reports actual reviewer independence and falls back honestly when fresh agents are unavailable. Effort caps control workflow size, not billing.
+Scrutiny is inferred from the task's uncertainty, consequences, reversibility, and dependencies. Simple work uses source checks and self-review; meaningful choices can add a fresh critic; consequential disputed assumptions can add a blind alternative and bounded debate. There is no effort setting to choose. Explicit time, cost, and delegation limits still apply. The skill distinguishes observed/tested evidence from assumptions and future checks, and reports actual reviewer independence. Call caps control workflow size, not billing.
 
 ```text
 /grounded-plan add retry-safe customer exports
-/grounded-plan compare product rollout approaches --effort lean
+/grounded-plan compare product rollout approaches
 /grounded-plan design a research plan for the retention hypothesis
-/grounded-plan docs/plans/migration.md --review --effort deep
+/grounded-plan docs/plans/migration.md --review
 /grounded-plan <record-id> --outcome
 /grounded-plan compare rollout options --store ~/my-planning-library
 ```

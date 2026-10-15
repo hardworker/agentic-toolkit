@@ -4,7 +4,7 @@ Read this only when delegation would help gather evidence. Keep small lookups, t
 
 ## Dispatch
 
-Use the smallest useful assignment. Default to **at most two scout calls total, including follow-ups**, unless the user sets a different research budget. This cap is separate from review calls and does not reset between research rounds. No recursive delegation. Lean mode does not require scouts; deep mode does not automatically add them.
+Use the smallest useful assignment. Default to **at most two scout calls total, including follow-ups**, unless the user sets a different research budget. This cap is separate from review calls and does not reset between research rounds. No recursive delegation. Choose scouts from the research need; additional critique does not automatically add scouts.
 
 Give each scout:
 

@@ -1,6 +1,6 @@
 # Grounded Plan: research decisions and outcomes
 
-Updated **14 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
+Updated **15 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
 
 ## What the research changed
 
@@ -10,7 +10,7 @@ The original requirement combined concise structured plans, useful diagrams, evi
 |---|---|
 | Build a small standalone skill | `ce-plan` was the closest ready-made comparator; selected ECC, Ouroboros, Ralplan, and other mechanisms informed the design. Avoiding their full runtime dependencies fits the requested scope, but the custom candidate has not beaten them in a controlled benchmark. |
 | Separate clarity, agreement, and evidence | A stable specification or agreeing reviewers cannot establish that its factual claims or future implementation are correct. Ouroboros's execution gate illustrates the value of separating executed checks from model review. |
-| Scale review to the decision | Lean, standard, and deep modes bound review work. The pilot found no material improvement from additional critics on its engineering plan, so more debate is not a demonstrated default benefit. |
+| Scale review to the decision | Version 0.4.0 infers scrutiny from task context at the user's request, replacing named effort modes while preserving call caps. The original pilot found no material improvement from additional critics on its engineering plan, so more debate is not a demonstrated default benefit. |
 | Preserve outcomes for later planning | The user requested storing decisions, delivered artifacts, observed results, and lessons. This supplies a place to compare expectations with evidence instead of losing the result after handoff. |
 | Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/grounded-plan/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
 | Keep planning grounded without implementing | Code inspection and permitted checks inform feasibility; product edits belong to a separate authorized phase. The user accepted this boundary and selective research delegation. |
@@ -44,7 +44,7 @@ Version 0.3.0 keeps code reading, source checks, and disposable probes available
 | Claim that decides the recommendation | Planner opens underlying evidence and reconciles contradictions |
 | Challenge to the completed plan | Fresh critic under the existing review policy, not the scout reviewing its own work |
 
-The scout budget defaults to two calls total, including follow-ups, independently of lean/standard/deep review depth. User budgets take precedence. No recursive delegation is allowed. Packets contain provenance, source/version pointers, actual checks, counterevidence, and gaps; detailed evidence can stay behind links. Model settings inherit the host unless an appropriate available alternative is authorized. The receipt counts research and review separately.
+The scout budget defaults to two calls total, including follow-ups, independently of review depth. User budgets take precedence. No recursive delegation is allowed. Packets contain provenance, source/version pointers, actual checks, counterevidence, and gaps; detailed evidence can stay behind links. Model settings inherit the host unless an appropriate available alternative is authorized. The receipt counts research and review separately.
 
 The rationale is conditional: separate research contexts can compress large source collections and explore independent directions, but coordination and additional tokens carry costs. Anthropic's engineering report describes both effects and emphasizes bounded assignments; it does not validate this skill's thresholds. [Multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system).
 
@@ -122,3 +122,11 @@ A fresh-context evaluator used an isolated copy of the existing [engineering fix
 This checks a small direct path and an explicitly requested scout path, not autonomous routing on a large research task. It does not exercise the two-call ceiling, unavailable delegation, scout/critic separation under standard or deep review, or prove quality/cost gains. No token or billing comparison was available; the observed work was one evaluator context plus one scout, with zero review calls. Mermaid rendering was not tested.
 
 Static checks covered changed documentation links, Markdown fences, public-path hygiene, skill frontmatter, plugin version, and both local installation symlinks. The complete frontmatter still encounters the known `argument-hint` validator mismatch; omitting only that field in a temporary projection passed. Version 0.3.0 adds roughly 100 words to the core instructions and loads the separate scout procedure only when relevant.
+
+## Contextual scrutiny in version 0.4.0
+
+On 15 October the user requested removing effort settings entirely. The skill now infers useful checks from uncertainty, consequences, reversibility, and dependencies. It asks for material task decisions, not a review level. Source checks and self-check remain the starting point; a critic or blind alternative is added only when it could change the plan or resolve a consequential gap. Stated time, cost, scope, and delegation limits still govern the work.
+
+The `--effort` argument and lean/standard/deep labels are removed from the current skill and usage examples. Review and scout caps remain separate; adding an alternative after a critic retains all earlier calls within the six-call review ceiling. Historical pilot outputs and receipts retain their original labels and have not been reclassified or rerun.
+
+Validation for this instruction change checks frontmatter, current usage examples, local links, Markdown fences, public-path hygiene, version metadata, and installed symlinks. Manual contract review covers a simple reversible task, a consequential disputed choice, and a task that forbids delegation. This is not a new behavioral benchmark; automatic selection quality and cost remain unmeasured. The known `argument-hint` validator mismatch remains, and Mermaid rendering was not tested.

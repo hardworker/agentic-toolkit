@@ -4,6 +4,8 @@ Status: **a trial implementation is available as [grounded-plan](../../skills/gr
 
 **14 October follow-up:** the user approved outcome capture and selected a separate user-wide folder. Version 0.2.0 implements that extension; [research decisions and outcomes](outcomes.md) documents its contract. This supersedes the original project-local persistence suggestion below. It does not settle the remaining cost-policy choices.
 
+**15 October follow-up:** version 0.4.0 removes effort settings at the user's request. The user surface and scrutiny policy below now reflect inference from task context. Historical pilot results retain their original mode labels; the numeric budgets remain provisional.
+
 ## Intended result
 
 Turn an engineering, product, or research question into a concise decision brief that another person can inspect and act on. Show why the recommendation follows from evidence, what remains uncertain, how the alternatives differ, and which checks would expose a mistake. Stop at planning unless the user has separately authorized implementation.
@@ -17,12 +19,11 @@ $grounded-plan decide how to add background exports
 $grounded-plan compare two product rollout approaches
 $grounded-plan design a research plan for the retention hypothesis
 $grounded-plan path/to/existing-plan.md --review
-$grounded-plan ... --effort lean|standard|deep
 ```
 
 Exact slash/dollar invocation depends on the host. No CLI, MCP server, external model provider, browser, or repository bootstrap is required. Native tools provide reading, research, optional execution of appropriate checks, and fresh review where permitted. Additional tools can improve the workflow but are not prerequisites.
 
-The implemented default is **provisional**: choose adaptively between lean for obvious reversible work and standard for a nontrivial decision; recommend deep only when a consequential uncertainty earns the added work. It is available to trial, not recorded as the user's chosen cost policy. A user-selected mode or budget takes precedence.
+Infer useful scrutiny from uncertainty, consequences, reversibility, and dependencies. Start with source checks and self-check; add a critic or a blind alternative when it could change the plan or resolve a consequential gap. Do not ask the user to choose a level. Stated time, cost, scope, and delegation limits take precedence; numeric budgets remain provisional.
 
 ## Workflow
 
@@ -34,13 +35,13 @@ flowchart TD
     Q --> D[Options and recommendation]
     C -->|No| D
     D --> E[Draft brief and useful diagram]
-    E --> F{Assurance mode}
-    F -->|Lean| L[Self-check against sources]
-    F -->|Standard| S[One fresh focused critic]
-    F -->|Deep| H[Critic and blind alternative]
+    E --> L[Self-check against sources]
+    L --> F{Would fresh scrutiny change the decision?}
+    F -->|Meaningful alternatives or dependencies| S[One fresh focused critic]
+    F -->|Consequential disputed approach| H[Critic and blind alternative]
     S --> V[Verify and resolve material findings]
     H --> V
-    L --> R[Decision-ready artifact]
+    F -->|No| R[Decision-ready artifact]
     V --> R
     V -. missing evidence .-> U[Record unknown and cheapest next check]
     U --> R
@@ -50,26 +51,26 @@ flowchart TD
 2. **Ground.** Read relevant code/artifacts; use current primary sources for external facts that matter. Track material claims with provenance and limits. Two summaries of the same upstream source count as one evidence origin.
 3. **Choose.** Compare the smallest viable/reuse approach with one serious alternative. Add another only when it changes the choice. Name the deciding tradeoff and what evidence would reverse the recommendation. Do not generate decorative alternatives.
 4. **Sketch and plan.** Use the representation that reveals the problem: sequence, component, state, dependency, decision tree, or a table. Define independently checkable deliverables and dependencies at the appropriate level of detail. Avoid speculative implementation bodies.
-5. **Check and challenge.** Verify paths, contracts, source claims, dependency wiring, and criterion coverage. Use the selected assurance mode. Resolve disputed facts by inspection/checks and preference disputes through the user. Do not turn a preference into an alleged defect.
+5. **Check and challenge.** Verify paths, contracts, source claims, dependency wiring, and criterion coverage. Infer additional scrutiny from the task and evidence. Resolve disputed facts by inspection/checks and preference disputes through the user. Do not turn a preference into an alleged defect.
 6. **Compress and hand off.** Keep the recommendation and decisions prominent. Preserve the evidence and rejected alternatives behind links where useful. Report actual verification and review performed, remaining unknowns, and the stopping reason.
 
 ## Assurance and cost policy
 
-| Mode | Proposed default work | Stop rule | Honest label |
+| Task context | Useful work | Stop rule | Honest label |
 |---|---|---|---|
-| Lean | One planner, source checks, a self-check | Deliver once the decision and limits are clear | Self-checked |
-| Standard | Planner + one fresh critic, then targeted fixes/checks | One initial critique; at most one targeted follow-up if a material issue changed | Independently critiqued, same-model if applicable |
-| Deep | Planner + a critic and a blind alternative author, then evidence-led resolution | Two initial calls and at most two dispute rounds: six calls maximum; stop earlier on no new evidence | Report exact model/context diversity |
+| Clear, reversible work | One planner, source checks, a self-check | Deliver once the decision and limits are clear | Self-checked |
+| Meaningful alternatives or dependencies | Add one fresh critic, then targeted fixes/checks | One initial critique; at most one targeted follow-up if a material issue changed | Independently critiqued, same-model if applicable |
+| Costly reversal or consequential disputed assumptions | Critic plus a blind alternative author, then evidence-led resolution | At most two dispute rounds within six total review calls, including earlier critic calls; stop earlier on no new evidence | Report exact model/context diversity |
 
-Budget the research too: begin with the smallest set of questions and sources that could settle the decision. Expand only when a missing fact could change the recommended option or leave a consequential criterion unsupported. A mode cap is a ceiling, not a quota.
+Budget the research too: begin with the smallest set of questions and sources that could settle the decision. Expand only when a missing fact could change the recommended option or leave a consequential criterion unsupported. A call cap is a ceiling, not a quota; it does not reset when scrutiny increases.
 
-If the runtime lacks or disallows fresh agents, use the strongest permitted check and say that independent critique was unavailable. Never simulate multiple personas in one context and label them independent. A second provider is optional; naming a different role does not establish a different model. Do not add paid services just to satisfy a mode.
+If the runtime lacks or disallows fresh agents, use the strongest permitted check and say that independent critique was unavailable. Never simulate multiple personas in one context and label them independent. A second provider is optional; naming a different role does not establish a different model. Do not add paid services just to fill a review role.
 
 The skill's caps are instructions, not a billing enforcement mechanism. If hard monetary limits are required, the host/API layer must enforce them. Report measured usage when available; otherwise use clearly labeled work proxies. Changing a diagram or resolving a wording issue does not justify replaying every research and review stage.
 
 ## The critic's job
 
-The standard critic receives the task, constraints, plan snapshot, acceptance criteria, and relevant evidence pointers. It does not need the complete conversation or the planner's private reasoning. It checks:
+The critic receives the task, constraints, plan snapshot, acceptance criteria, and relevant evidence pointers. It does not need the complete conversation or the planner's private reasoning. It checks:
 
 - A wrong premise, unsupported material claim, or overlooked existing solution.
 - A criterion that no deliverable or check satisfies.
@@ -79,7 +80,7 @@ The standard critic receives the task, constraints, plan snapshot, acceptance cr
 
 Return only material findings, each with the affected claim/task, evidence, consequence, and a specific correction or discriminating check. A clean outcome is valid; do not manufacture disagreement.
 
-In deep mode, a blind alternative author initially receives the brief and evidence, **without** the preferred option or first plan. Compare the resulting choices before exchanging findings. In a dispute, a changed stance must cite new evidence or a corrected inference. Stop on repeated arguments. Preserve unresolved factual uncertainty and user-value tradeoffs; do not settle them by vote.
+When an independent approach is warranted, a blind alternative author initially receives the brief and evidence, **without** the preferred option or first plan. Compare the resulting choices before exchanging findings. In a dispute, a changed stance must cite new evidence or a corrected inference. Stop on repeated arguments. Preserve unresolved factual uncertainty and user-value tradeoffs; do not settle them by vote.
 
 ## Compact artifact contract
 
@@ -154,11 +155,11 @@ Start with three representative tasks and repeat promising comparisons to estima
 | ID | Choice | Recommendation | Alternative |
 |---|---|---|---|
 | D1 | Reuse or build | Trial a thin custom skill against `ce-plan` | Adopt `ce-plan` first and customize only demonstrated gaps |
-| D2 | Normal assurance | Adaptive: lean for simple work, one critic for substantive choices | Always one critic, or always cross-model review |
+| D2 | Normal assurance | Resolved 15 October: infer scrutiny from task context, with no effort selector | Always one critic, or always cross-model review |
 | D3 | Output | Short front page, linked evidence, Mermaid when useful | Full plan always visible |
 | D4 | Human interaction | Batch only decisions that can change the plan; recommend answers | Exhaustive Socratic interview |
 | D5 | Verification boundary | Source inspection and appropriate non-destructive checks; explicit limits | Research-only, with all execution checks deferred |
 | D6 | Review UI | Native artifact/chat first | Add ECC Canvas or Plannotator after a compatibility trial |
 | D7 | Open-source packaging | Original self-contained skill with a scoped MIT license and attribution | Select another license or license the whole toolkit |
 
-No decisions above are recorded as the user's agreement. Scope is already settled: engineering first, with broader product and research applicability. The user requested this overview before selecting the cost policy.
+The original overview preceded implementation. The user has since selected a custom skill, user-wide records, and scrutiny inferred from task context; [dated outcomes](outcomes.md) record those decisions. Scope remains engineering first, with broader product and research applicability. No optimal numeric budget or comparative cost benefit has been established.

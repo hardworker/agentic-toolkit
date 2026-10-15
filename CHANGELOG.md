@@ -4,6 +4,17 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.4.0] — 2026-10-15
+
+### Changed
+
+- Infer scrutiny directly from task uncertainty, consequences, reversibility, and dependencies. Add source checks, a fresh critic, or a blind alternative only when useful; respect stated time, cost, scope, and delegation limits.
+- Preserve review-call counts when escalating to an independent alternative, so added scrutiny cannot reset the budget.
+
+### Removed
+
+- The `--effort` argument and named lean/standard/deep modes. Users describe the task and constraints instead of choosing a level.
+
 ## [0.3.0] — 2026-10-14
 
 ### Added

@@ -1,8 +1,8 @@
 # Bounded review procedure
 
-Read this for standard/deep planning or review of an existing plan. The parent owns the artifact; reviewers return findings rather than modifying it. Use fresh contexts with only the brief, constraints, acceptance criteria, evidence pointers, and the input specified below; do not reuse a research scout as the fresh critic of its own work. Tool access is read-only except a designated scratch output, if needed. Local instructions and the user's limits still apply.
+Read this when the task warrants a fresh critic or a blind alternative, including review of an existing plan. The parent owns the artifact; reviewers return findings rather than modifying it. Use fresh contexts with only the brief, constraints, acceptance criteria, evidence pointers, and the input specified below; do not reuse a research scout as the fresh critic of its own work. Tool access is read-only except a designated scratch output, if needed. Local instructions and the user's limits still apply.
 
-## Standard
+## Fresh critic
 
 Dispatch one fresh critic against a fixed plan snapshot. Its task:
 
@@ -10,11 +10,11 @@ Dispatch one fresh critic against a fixed plan snapshot. Its task:
 
 The parent verifies material findings, corrects supported issues, and records any remaining unknown or user decision. If a correction changes a consequential part of the plan, one targeted follow-up may check that change. Otherwise stop. Do not add reviewers because the first found nothing.
 
-## Deep
+## Blind alternative and dispute
 
-Use two fresh contexts, each with the same task, constraints, acceptance criteria, and evidence access:
+When costly reversal or consequential disputed assumptions warrant an independent approach, use two fresh contexts, each with the same task, constraints, acceptance criteria, and evidence access. If the critic has already run, retain it and add only the alternative author:
 
-1. **Critic:** the standard brief plus the fixed plan snapshot.
+1. **Critic:** the critic brief above plus the fixed plan snapshot.
 2. **Alternative author:** the brief below, **without the first plan, favored option, or critic's findings**.
 
 > Independently recommend the smallest credible approach to this task. Inspect relevant source artifacts. Identify the strongest alternative, the decisive tradeoff, and what observation would change your choice. Surface at most five material assumptions or failure scenarios with evidence or an explicit unknown. A compact recommendation is enough; do not write a second full implementation plan. Do not ask the other reviewer or read their output before returning yours.
@@ -29,10 +29,10 @@ For each dispute, send each reviewer the relevant finding and opposing evidence;
 - **Defend:** supply a new source observation or corrected inference, with a concrete consequence.
 - **Unresolved:** explain the missing observation or user-value choice; do not repeat the argument.
 
-Allow at most two dispute rounds, at most one response per reviewer in each round: **six review calls total**, including the initial two. Stop earlier when settled or when a complete round adds no evidence or corrected inference. The parent adjudicates against sources; an unavailable observation remains unknown. It can accept a user's stated preference without pretending that preference settles an empirical claim.
+Allow at most two dispute rounds, at most one response per reviewer in each round, within **six review calls total**, including initial calls and any earlier critic follow-up. Adding an alternative does not reset the count. Stop earlier when settled or when a complete round adds no evidence or corrected inference. The parent adjudicates against sources; an unavailable observation remains unknown. It can accept a user's stated preference without pretending that preference settles an empirical claim.
 
 Revise the plan once the material choices are resolved. Check altered dependencies, acceptance coverage, and diagram consistency; further independent review must fit the existing cap. Report remaining dissent when the cap or evidence limit prevents resolution. A cap limits work, not what may be reported.
 
 ## Review receipt
 
-Record mode, actual fresh contexts/review calls, model diversity if known, material changes caused by review, unresolved findings, and stop reason (`settled`, `no-new-evidence`, `cap`, or `review-unavailable`). Preserve evidence pointers, not a transcript of private reasoning. Nothing in the receipt proves an unexecuted implementation works.
+Record why the task warranted review, actual fresh contexts/review calls, model diversity if known, material changes caused by review, unresolved findings, and stop reason (`settled`, `no-new-evidence`, `cap`, or `review-unavailable`). Preserve evidence pointers, not a transcript of private reasoning. Nothing in the receipt proves an unexecuted implementation works.

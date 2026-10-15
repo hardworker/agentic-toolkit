@@ -4,7 +4,7 @@ Two debate pipelines, a standalone planner, and two utility skills. The debate p
 
 | Skill | Does | Agents |
 |---|---|---|
-| [grounded-plan](#grounded-plan) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts by mode; optional scouts, two calls by default |
+| [grounded-plan](#grounded-plan) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts inferred from the task; optional scouts, two calls by default |
 | [adversarial-review](#adversarial-review) | cross-model debate review of finished work — diff, working tree, or documents | 4 + 2 Codex calls |
 | [crucible](#crucible) | idea → grill → attacked assumptions → plan → code → verify | 6–12, capped |
 | [session-migration](#session-migration) | find any past session, route it to the surface you want | none |
@@ -29,13 +29,13 @@ flowchart LR
     U -. relevant evidence for future plans .-> B
 ```
 
-The main skill handles intake, grounding, decision-making, representation, and output. `review.md` is loaded only when a fresh review is warranted. Standard mode permits one critic call and one targeted follow-up. Deep mode has a critic and a blind alternative author; their first judgments remain separate, followed by up to two dispute rounds (six review calls total). No-new-evidence and settled-dispute exits stop earlier. Fresh contexts may share a model; the receipt must say so.
+The main skill handles intake, grounding, decision-making, representation, and output. It infers scrutiny from uncertainty, consequences, reversibility, and dependencies, without named effort modes. `review.md` loads only when a fresh critic or blind alternative could change the plan or resolve a consequential gap. A critic may receive one targeted follow-up. Adding a blind alternative permits at most two dispute rounds within six total review calls, including earlier critic calls; escalation never resets the count. Initial judgments remain separate, and settled disputes or no new evidence stop review early. Fresh contexts may share a model; the receipt must say so.
 
 `scouts.md` loads only when research benefits from delegation. Direct research and parallel tool calls are the default. Scouts get bounded, distinct questions and return claims, source/version pointers, counterevidence, and gaps. The default research cap is two scout calls including follow-ups, separately counted from review and adjustable by the user's budget. No recursive delegation is permitted. The planner opens decisive sources and reconciles contradictions; a scout cannot become the fresh critic of its own work. Bulk evidence can stay behind links without losing provenance.
 
 Claims carry evidence states rather than confidence percentages. Deterministic checks or disposable probes may help when permitted, but a planned test is not an executed result and model consensus is not proof. A short front page can link a larger evidence appendix. The plan's dependencies, acceptance criteria, and diagram must agree before handoff.
 
-`--review` preserves the supplied plan unless edits were requested. A missing reviewer degrades to self-checking with explicit limits. Model selection inherits the host unless a different available model is authorized; the skill has no hardcoded model or required external provider. Its effort limits are instruction-level controls, not enforced monetary budgets.
+`--review` preserves the supplied plan unless edits were requested. A missing reviewer degrades to self-checking with explicit limits. Model selection inherits the host unless a different available model is authorized; the skill has no hardcoded model or required external provider. User time, cost, scope, and delegation limits take precedence over inferred scrutiny. Call caps are instruction-level controls, not enforced monetary budgets.
 
 `records.md` defines a user-wide Markdown library at `~/.local/share/grounded-plan/`, overridden by `--store DIR` or `GROUNDED_PLAN_HOME`. A stable record ID identifies the plan or its external reference, original expectations, dated decisions, outcomes, and lessons. The index is derived navigation; each record is authoritative. Relevant records are read selectively, with old evidence checked for applicability. `--outcome` updates a matched record without restarting planning. No background monitor, database, or required runtime is added.
 
