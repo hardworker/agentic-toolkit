@@ -4,6 +4,13 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.6.1] — 2026-10-16
+
+### Fixed
+
+- Address dense sections with one-purpose paragraphs, descriptive topic subheadings, and labeled points for distinct rules and conditions. Make acceptance and blockers easy to locate without adding length limits or prescribed headings.
+- Extend the handoff check to individual text blocks so concise outlines do not conceal overloaded paragraphs, bullets, or table cells.
+
 ## [0.6.0] — 2026-10-16
 
 ### Changed

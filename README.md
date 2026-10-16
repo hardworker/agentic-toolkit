@@ -6,7 +6,9 @@ Research: [concise, verified planning approaches](docs/planning-research/overvie
 
 ## grounded-plan
 
-Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources and compares serious alternatives. Length follows the task; headings adapt around the recommendation, architecture, delivery, and uncertainties. Each section leads with its conclusion, and decisions and constraints have one home rather than being repeated. Architecture keeps components, responsibilities, flows, and important boundaries visible; code-level choices belong to the implementer. Detailed evidence stays inspectable behind links, with consequential caveats visible.
+Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources and compares serious alternatives. Length follows the task; headings adapt around the recommendation, architecture, delivery, and uncertainties. Each section leads with its conclusion; paragraphs have one purpose, and topic subheadings or labeled bullets separate distinct concerns. Acceptance conditions and blockers are easy to find. Decisions and constraints have one home rather than being repeated.
+
+Architecture keeps components, responsibilities, flows, and important boundaries visible; code-level choices belong to the implementer. Detailed evidence stays inspectable behind links, with consequential caveats visible.
 
 The planner reads code and may run permitted checks, but writes planning artifacts and disposable probes only. Implementation is a separate authorized phase or handoff. Research stays direct by default; optional [scouts](skills/grounded-plan/scouts.md) handle bulky sources or independent questions, with at most two calls including follow-ups unless the user sets another research budget. The planner checks decisive evidence itself. Scouts and fresh critics have separate roles and budgets.
 

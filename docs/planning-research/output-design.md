@@ -26,7 +26,7 @@ Fixed structures and local size guidance therefore have legitimate uses. The ins
 
 - **Orient first.** State the recommendation, its decisive reason, and any choice blocking progress before background.
 - **Adapt the structure.** Architecture, delivery, alternatives, open decisions, and evidence are useful section choices. Combine, rename, or omit them when that helps the reader; preserve material constraints and acceptance conditions.
-- **Edit each section.** Start with its conclusion. Keep each paragraph focused on one point and its support. Use bullets for parallel items, tables for comparisons, and diagrams for relationships. Avoid long compound bullets disguised as concise prose.
+- **Edit each section.** Start with its conclusion. Keep each paragraph focused on one point and its support. Use descriptive subheadings for topic changes and labeled bullets for distinct rules or conditions; make acceptance and blockers easy to locate separately from rationale. Tables compare; diagrams explain relationships. A dense paragraph moved into one bullet or table cell is still dense.
 - **Give each fact one home.** Reference a constraint or decision instead of repeating it across architecture, milestones, and risks. Keep large evidence and review receipts linked; retain qualifications beside the claims they limit.
 - **Check usability.** Can a reader find the choice, approach, next action, completion condition, and material uncertainty without reconstructing the investigation? Add detail for a missing answer; remove detail that adds no decision or execution value.
 
@@ -38,7 +38,11 @@ A 2026 study compared five ADR templates through author-led feature analysis, th
 
 Inspected eight files pinned to commits across five public repositories, plus primary architecture/product guidance and the study's methods, results, and limitations. Checked the documentation against the relevant source instructions, including the reasons for fixed headings. No upstream runtimes, reader trial, or cost benchmark were run; the recommendation is an inference. The 11 October source manifest remains a separate historical snapshot.
 
-The next useful check is to apply the adopted policy to one existing plan while preserving its decisions and critical constraints, then ask whether the user can locate and resolve them more easily. Readability outcome: pending.
+### Section readability refinement, version 0.6.1
+
+Real use exposed a remaining problem: paragraphs combined purpose, rules, exceptions, and acceptance conditions despite an organized overall outline. The user clarified that the concern was the sections to read, not total file length.
+
+The refinement makes those concerns separately scannable through topic subheadings, focused paragraphs, and labeled points. It also checks individual text blocks at handoff. One existing private plan was reformatted while preserving its decisions and critical constraints; its contents remain outside this repository. No numeric paragraph limit or mandatory heading set was added. Whether the reader can locate and resolve decisions more easily remains pending feedback.
 
 [ce-chat]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/output-contracts.md
 [ce-sections]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/plan-sections.md
