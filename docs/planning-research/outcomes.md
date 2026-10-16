@@ -15,7 +15,7 @@ The original requirement combined concise structured plans, useful diagrams, evi
 | Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/grounded-plan/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
 | Keep planning grounded without implementing | Code inspection and permitted checks inform feasibility; product edits belong to a separate authorized phase. The user accepted this boundary and selective research delegation. |
 | Delegate research selectively | Direct research remains the default. Scouts can compress bulky sources or investigate separable questions; the planner verifies decisive support. The two-call default is a provisional work budget, not a measured optimum. |
-| Keep architecture without prescribing code | After reviewing current records, the user requested simpler plans while retaining architecture. Version 0.5.0 left code-level choices to the implementer; v0.6.0 replaced its word target and prescribed headings with adaptive output. Version 0.6.1 makes distinct concerns within sections easier to locate. Readability and handoff improvements remain unmeasured. |
+| Keep architecture without prescribing code | After reviewing current records, the user requested simpler plans while retaining architecture. Version 0.5.0 left code-level choices to the implementer; v0.6.0 replaced its word target and prescribed headings with adaptive output. Version 0.6.2 adds direct wording and compact lists after reader feedback on dense prose. Readability and handoff improvements remain unmeasured. |
 
 Detailed mechanisms, licenses, and immutable source references are in the [repository evidence](repositories.md). Those findings are tied to the 11 October snapshot; this update does not claim to repeat the upstream survey.
 
@@ -29,7 +29,7 @@ Detailed mechanisms, licenses, and immutable source references are in the [repos
 | Lower planning overhead | Instruction-level review budgets and selective source access limit workflow size. | Dollar savings or an optimal effort policy; no controlled cost benchmark was run. |
 | A reusable outcome history | Version 0.2.0 adds a user-wide record/index contract and outcome capture. | Whether lessons improve later decisions over repeated real use. |
 | Focused planning with selective research | Version 0.3.0 separates implementation from planning and adds optional bounded scouts. | Whether delegation improves quality, latency, or cost on real planning tasks. |
-| A readable plan with architectural substance | Version 0.6.1 adds focused paragraphs, topic subheadings, and labeled points to the adaptive output policy, retaining architecture, milestones, and evidence limits. | Whether readers resolve decisions faster and implementers retain sufficient context. |
+| A readable plan with architectural substance | Version 0.6.2 uses direct statements and separate list items for independent rules, retaining architecture, milestones, and evidence limits. | Whether readers resolve decisions faster and implementers retain sufficient context. |
 
 The original expectations above summarize the recorded research goal retrospectively; they are not newly claimed pre-registered evaluation hypotheses. The [0.1.0 pilot report](evaluation.md) retains its original scope and receipts.
 
@@ -156,3 +156,11 @@ The user identified dense paragraphs in a real plan and clarified that total fil
 Reformatted the requested private record in place. Checked that its prose was retained through reversible formatting changes, with only label formatting and capitalization cleanup afterward. Its eight source links, Mermaid source, and original expectation text were preserved. A dated presentation-edit receipt distinguishes this work from the original planning verification. Private content remains outside this repository.
 
 Static checks covered full YAML parsing, local links, reference labels, Markdown fences, heading spacing in the edited record, public-path hygiene, version metadata, installed symlinks, and Git whitespace. The bundled validator retains its known `argument-hint` mismatch; a temporary projection omitting only that field passed. No fresh reviewer, source investigation, runtime test, or Mermaid rendering was needed for this presentation change. Reader feedback and broader output-quality effects remain unmeasured.
+
+## Direct wording in version 0.6.2
+
+- **Reader feedback:** the v0.6.1 edit retained verbose sentences and compound bullets. Headings and labels alone did not meet the requested readability.
+- **Change:** direct action/decision/constraint statements, compact lists, and separate items for independent rules. Connected reasoning can remain prose; no word limits or fixed headings were added.
+- **Application:** rewrote the private plan's recommendation, scope, and architecture. Preserved newer user decisions, delivery conditions, evidence links, diagram, and dated history. Private contents remain outside this repository.
+- **Validation:** checked semantic coverage against the prior record and exact preservation of its links, diagram, metadata, delivery, decisions, and history. Checked skill metadata, local links, Markdown structure, installed symlinks, and Git whitespace. The known validator `argument-hint` mismatch remains; the temporary projection passed.
+- **Limit:** no new source investigation, critic, runtime test, or reader acceptance result. This records the correction, not a demonstrated quality gain.

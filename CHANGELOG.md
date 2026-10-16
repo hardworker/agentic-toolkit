@@ -4,6 +4,13 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.6.2] — 2026-10-16
+
+### Fixed
+
+- Rewrite dense plan prose into direct statements and compact lists. Split independent rules within compound bullets; use labels to group related points instead of attaching long paragraphs to them.
+- Preserve consequential conditions and uncertainty while editing wording; retain adaptive length and flexible headings.
+
 ## [0.6.1] — 2026-10-16
 
 ### Fixed

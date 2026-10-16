@@ -26,7 +26,7 @@ Fixed structures and local size guidance therefore have legitimate uses. The ins
 
 - **Orient first.** State the recommendation, its decisive reason, and any choice blocking progress before background.
 - **Adapt the structure.** Architecture, delivery, alternatives, open decisions, and evidence are useful section choices. Combine, rename, or omit them when that helps the reader; preserve material constraints and acceptance conditions.
-- **Edit each section.** Start with its conclusion. Keep each paragraph focused on one point and its support. Use descriptive subheadings for topic changes and labeled bullets for distinct rules or conditions; make acceptance and blockers easy to locate separately from rationale. Tables compare; diagrams explain relationships. A dense paragraph moved into one bullet or table cell is still dense.
+- **Edit each section.** Start with its conclusion. State actions, decisions, and constraints directly. Use compact lists for distinct rules or boundaries; split compound items and group related points when useful. Keep connected reasoning in focused paragraphs. Tables compare; diagrams explain relationships. Rewrite dense wording rather than adding a label to it.
 - **Give each fact one home.** Reference a constraint or decision instead of repeating it across architecture, milestones, and risks. Keep large evidence and review receipts linked; retain qualifications beside the claims they limit.
 - **Check usability.** Can a reader find the choice, approach, next action, completion condition, and material uncertainty without reconstructing the investigation? Add detail for a missing answer; remove detail that adds no decision or execution value.
 
@@ -42,7 +42,18 @@ Inspected eight files pinned to commits across five public repositories, plus pr
 
 Real use exposed a remaining problem: paragraphs combined purpose, rules, exceptions, and acceptance conditions despite an organized overall outline. The user clarified that the concern was the sections to read, not total file length.
 
-The refinement makes those concerns separately scannable through topic subheadings, focused paragraphs, and labeled points. It also checks individual text blocks at handoff. One existing private plan was reformatted while preserving its decisions and critical constraints; its contents remain outside this repository. No numeric paragraph limit or mandatory heading set was added. Whether the reader can locate and resolve decisions more easily remains pending feedback.
+The refinement made those concerns separately scannable through topic subheadings, focused paragraphs, and labeled points. It also checked individual text blocks at handoff. One existing private plan was reformatted while preserving its decisions and critical constraints; its contents remain outside this repository. No numeric paragraph limit or mandatory heading set was added.
+
+### Reader correction, version 0.6.2
+
+The user found that the first edit still left long prose inside bullets. The requested style is concise, direct wording with distinct points expressed as lists.
+
+- Rewrite sentences as well as changing layout.
+- Give independent rules separate items; group related items when useful.
+- Keep qualifiers, authority boundaries, and uncertainty attached to the relevant claim.
+- Retain prose where it explains connected reasoning.
+
+Applied this correction to the existing private plan's recommendation, scope, and architecture. The newer scope decisions and historical record were preserved. Reader acceptance of this revision remains pending.
 
 [ce-chat]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/output-contracts.md
 [ce-sections]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/plan-sections.md
