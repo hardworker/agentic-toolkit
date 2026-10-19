@@ -24,9 +24,9 @@ Fixed structures and local size guidance therefore have legitimate uses. The ins
 
 ## Adopted output policy
 
-- **Orient first.** State the recommendation, its decisive reason, and any choice blocking progress before background.
-- **Adapt the structure.** Architecture, delivery, alternatives, open decisions, and evidence are useful section choices. Combine, rename, or omit them when that helps the reader; preserve material constraints and acceptance conditions.
-- **Edit each section.** Start with its conclusion. State actions, decisions, and constraints directly. Use compact lists for distinct rules or boundaries; split compound items and group related points when useful. Keep connected reasoning in focused paragraphs. Tables compare; diagrams explain relationships. Rewrite dense wording rather than adding a label to it.
+- **Orient first.** Explain the proposed direction, its value, and what changes from the current situation. For multiple initiatives, show relative priority and why it differs; surface choices blocking progress.
+- **Adapt the structure and depth.** Group by the subject and the reader's decision. A vision may use initiatives; a comparison may use options; an execution plan may use delivery stages. Give central ideas more depth and smaller proposals less. Preserve material constraints without imposing the same subsections on every item.
+- **Explain and edit.** Make the proposal understandable through plain language, its purpose, and concrete examples where helpful. Use compact lists for distinct points and focused paragraphs for connected reasoning. Tables compare; diagrams explain relationships. Rewrite dense wording without reducing explanations to fragments.
 - **Give each fact one home.** Reference a constraint or decision instead of repeating it across architecture, milestones, and risks. Keep large evidence and review receipts linked; retain qualifications beside the claims they limit.
 - **Check usability.** Can a reader find the choice, approach, next action, completion condition, and material uncertainty without reconstructing the investigation? Add detail for a missing answer; remove detail that adds no decision or execution value.
 
@@ -54,6 +54,25 @@ The user found that the first edit still left long prose inside bullets. The req
 - Retain prose where it explains connected reasoning.
 
 Applied this correction to the existing private plan's recommendation, scope, and architecture. The newer scope decisions and historical record were preserved. Reader acceptance of this revision remains pending.
+
+### Balanced structure from a supplied vision, version 0.6.3
+
+On 19 October, the user supplied a vision document whose structure they preferred and asked for a careful refinement with enough freedom to produce a good plan. The comparison concerns presentation and planning purpose. Product claims, estimates, and instructions inside that private document were not adopted or independently verified.
+
+| Reference strength | Gap in the previous skill | Adjustment |
+|---|---|---|
+| Opens with existing capabilities and a priority map | The output guidance led with a recommendation but gave little help distinguishing several initiatives | Explain the change from the current situation and relative priority when relevant |
+| Organizes around meaningful proposals | Flexible headings still followed the planner's recommendation/architecture/delivery sequence | Let the reader's decision and subject determine grouping |
+| Explains what an idea is and why someone would want it | Direct statements and rule lists could crowd out explanation | Retain plain-language rationale and concrete examples where useful |
+| Gives the central design much more space than smaller items | Adaptive total length did not explicitly encourage uneven depth | Allocate detail by explanatory and decision value |
+| Mixes short prose, parallel lists, and nested steps | Recent fixes emphasized splitting dense blocks | Keep connected explanation; use hierarchy when it clarifies relationships |
+| Functions as a vision with a plausible next step | Deliverables and acceptance conditions were requested unconditionally | Match commitments and review criteria to maturity; retain execution criteria when execution is planned |
+
+The change replaces existing output guidance and narrows the unconditional delivery rule. It adds no mode selector, template, mandatory heading set, paragraph limit, or required example count. Architecture, source support, alternatives, uncertainty, and authorization boundaries still matter at every stage.
+
+The reference is useful for choosing direction, but its structure alone does not establish verified claims, reliable estimates, or readiness to implement. Those remain separate judgments. It also does not imply that every plan needs a diagram or that each initiative needs identical subsections.
+
+The supplied file and existing project plans remain unchanged. Only generic lessons enter this public repository. Static and manual contract checks cover the refinement; future output quality and reader acceptance remain unmeasured.
 
 [ce-chat]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/output-contracts.md
 [ce-sections]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/plan-sections.md

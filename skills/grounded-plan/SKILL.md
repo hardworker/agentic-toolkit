@@ -7,7 +7,7 @@ license: MIT
 
 # Grounded Plan
 
-Deliver a plan the user can understand, challenge, and hand off: a recommendation, its evidence and alternatives, the shape of the work, and checks that could expose a mistake. Preserve decisions and observed outcomes for later planning.
+Deliver a plan the user can understand, challenge, and use for the decision at hand: a recommendation, its evidence and alternatives, the shape of the work, and checks that could expose a mistake. Preserve decisions and observed outcomes for later planning.
 
 While planning, inspect code and run permitted non-destructive checks, but write only planning artifacts and disposable probes; do not edit product code, tests, or configuration. Implementation belongs to a separate, user-authorized phase or handoff, even when the same agent performs it. These are role instructions, not a filesystem sandbox.
 
@@ -44,7 +44,9 @@ Compare the smallest viable approach, including reuse or doing nothing where cre
 
 Keep the architectural view: major components or stages, responsibilities, interactions, and consequential data, trust, or operational boundaries. Use a small editable Mermaid diagram when it makes those relationships clearer; show the main flow rather than every branch. Mark current versus proposed behavior. Check important edges/states against the prose and evidence; render/check syntax when a renderer is available, and don't claim rendering when it wasn't checked.
 
-Define a handful of deliverables in dependency order, each with its prerequisite and an observable acceptance condition. Specify architectural decisions and constraints that affect feasibility, scope, or acceptance. Leave file layouts, function signatures, field schemas, code snippets, and detailed test matrices to the implementer. Existing code paths may be cited as evidence; they are not a file-by-file work plan. If implementation reveals a conflict with the agreed architecture or acceptance conditions, return that decision for resolution.
+Match commitments to the plan's purpose and maturity. A vision or early exploration needs priorities, consequential dependencies, and the next decision or validation; do not invent delivery certainty. For execution-ready work, define deliverables in dependency order, each with its prerequisite and observable acceptance condition.
+
+Specify architectural decisions and constraints that affect feasibility, scope, or acceptance. Leave file layouts, function signatures, field schemas, code snippets, and detailed test matrices to the implementer. Existing code paths may be cited as evidence; they are not a file-by-file work plan. If implementation reveals a conflict with the agreed architecture or acceptance conditions, return that decision for resolution.
 
 Adapt to the domain:
 
@@ -56,7 +58,7 @@ Adapt to the domain:
 
 ## Challenge and resolve
 
-First check requirement-to-deliverable coverage, dependencies, existing contracts, source support, and diagram/prose agreement yourself. Self-checking remains useful even when independent review follows.
+First check coverage of the requested outcome, dependencies, existing contracts, source support, and diagram/prose agreement yourself; check deliverables and acceptance when execution is being planned. Self-checking remains useful even when independent review follows.
 
 When fresh scrutiny is warranted, read [review.md](review.md) and request the bounded review it defines when the host permits delegation. Give reviewers a compact brief and evidence pointers, not the full conversation. Keep initial judgments separate. For a blind alternative, prefer an already available different model family when authorized; do not install a provider or incur a new paid service merely to fill a role.
 
@@ -66,12 +68,12 @@ Resolve material findings against sources. A changed stance needs new evidence o
 
 ## Deliver a short, inspectable artifact
 
-Lead with the recommendation and its decisive reason. Keep the desired outcome, scope, serious alternatives, architectural boundaries, acceptance conditions, and material uncertainties visible where relevant.
+Orient the reader to the proposed direction, why it matters, and what changes from the current situation. For multiple initiatives, make relative priority and its rationale clear. Keep scope, serious alternatives, architectural boundaries, acceptance conditions, and material uncertainties visible where relevant.
 
-- **Adaptive length:** let the task determine detail, without a word target or milestone quota. Add detail when it changes a decision, exposes a dependency, or defines acceptance. More scrutiny should strengthen the evidence without automatically lengthening the brief.
-- **Flexible sections:** use a recognizable progression through recommendation, approach/architecture, delivery, and uncertainties. Combine, rename, or omit headings to fit the content. Make the next action easy to find.
-- **Direct wording:** start each section with its conclusion. State the action, decision, or constraint directly; cut narration and repeated subjects. Prefer compact, parallel statements with enough context to stand alone.
-- **Scannable structure:** use lists for distinct responsibilities, scope boundaries, rules, and acceptance conditions. Split compound items into separate points; group related points under a short label or subheading when useful. Keep connected reasoning in focused paragraphs, comparisons in tables, and relationships in diagrams. Adding a bullet marker or bold label does not make a paragraph concise.
+- **Selective depth:** spend space where it helps understanding or changes a decision. A central concept may need explanation, examples, and architectural detail while a smaller proposal needs only a few lines. No word target, equal-size sections, or milestone quota; more scrutiny need not lengthen the brief.
+- **Useful grouping:** organize around the reader's decisions and the subject: initiatives, capabilities, options, questions, or delivery stages as appropriate. Familiar labels can help navigation, but neither a supplied example nor the planning workflow dictates the headings. Make the next action easy to find.
+- **Explain the proposal:** make clear what it means, why it helps, and how it fits existing work. Use a concrete example or short scenario when it makes an abstract idea understandable. These are useful questions, not mandatory subsections for every item.
+- **Direct, readable writing:** use plain language and focused paragraphs for explanation; compact, parallel lists for distinct points; tables for comparisons; diagrams for relationships. Split compound rules, and group related points when useful. Preserve the connective explanation that makes the plan understandable; avoid both paragraph-sized bullets and a checklist of unexplained fragments.
 - **One home for each fact:** reference decisions and constraints instead of repeating them across sections. Link bulky evidence and review receipts while keeping consequential caveats beside the claims they qualify. Do not add a code-level implementation appendix by default.
 
 Give unresolved choices stable IDs (`D1`, `D2`), options, a recommendation, and what they block; settled choices become constraints. Include checks and review actually performed, important limits, and the stop reason.

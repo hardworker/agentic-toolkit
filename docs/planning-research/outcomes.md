@@ -15,7 +15,7 @@ The original requirement combined concise structured plans, useful diagrams, evi
 | Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/grounded-plan/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
 | Keep planning grounded without implementing | Code inspection and permitted checks inform feasibility; product edits belong to a separate authorized phase. The user accepted this boundary and selective research delegation. |
 | Delegate research selectively | Direct research remains the default. Scouts can compress bulky sources or investigate separable questions; the planner verifies decisive support. The two-call default is a provisional work budget, not a measured optimum. |
-| Keep architecture without prescribing code | After reviewing current records, the user requested simpler plans while retaining architecture. Version 0.5.0 left code-level choices to the implementer; v0.6.0 replaced its word target and prescribed headings with adaptive output. Version 0.6.2 adds direct wording and compact lists after reader feedback on dense prose. Readability and handoff improvements remain unmeasured. |
+| Keep architecture without prescribing code | After reviewing current records, the user requested simpler plans while retaining architecture. Version 0.5.0 left code-level choices to the implementer; v0.6.0 replaced its word target and prescribed headings with adaptive output. Version 0.6.3 balances direct wording, explanation, and selective depth for the decision at hand. Readability and handoff improvements remain unmeasured. |
 
 Detailed mechanisms, licenses, and immutable source references are in the [repository evidence](repositories.md). Those findings are tied to the 11 October snapshot; this update does not claim to repeat the upstream survey.
 
@@ -29,7 +29,7 @@ Detailed mechanisms, licenses, and immutable source references are in the [repos
 | Lower planning overhead | Instruction-level review budgets and selective source access limit workflow size. | Dollar savings or an optimal effort policy; no controlled cost benchmark was run. |
 | A reusable outcome history | Version 0.2.0 adds a user-wide record/index contract and outcome capture. | Whether lessons improve later decisions over repeated real use. |
 | Focused planning with selective research | Version 0.3.0 separates implementation from planning and adds optional bounded scouts. | Whether delegation improves quality, latency, or cost on real planning tasks. |
-| A readable plan with architectural substance | Version 0.6.2 uses direct statements and separate list items for independent rules, retaining architecture, milestones, and evidence limits. | Whether readers resolve decisions faster and implementers retain sufficient context. |
+| A readable plan with architectural substance | Version 0.6.3 organizes around the reader's decision, explains the proposal, and matches depth and execution commitments to its purpose. Architecture and evidence limits remain visible. | Whether readers resolve decisions faster and implementers retain sufficient context. |
 
 The original expectations above summarize the recorded research goal retrospectively; they are not newly claimed pre-registered evaluation hypotheses. The [0.1.0 pilot report](evaluation.md) retains its original scope and receipts.
 
@@ -164,3 +164,12 @@ Static checks covered full YAML parsing, local links, reference labels, Markdown
 - **Application:** rewrote the private plan's recommendation, scope, and architecture. Preserved newer user decisions, delivery conditions, evidence links, diagram, and dated history. Private contents remain outside this repository.
 - **Validation:** checked semantic coverage against the prior record and exact preservation of its links, diagram, metadata, delivery, decisions, and history. Checked skill metadata, local links, Markdown structure, installed symlinks, and Git whitespace. The known validator `argument-hint` mismatch remains; the temporary projection passed.
 - **Limit:** no new source investigation, critic, runtime test, or reader acceptance result. This records the correction, not a demonstrated quality gain.
+
+## Balanced planning structure in version 0.6.3
+
+- **Reader evidence:** the user preferred a supplied vision's balance of explanatory prose, concrete examples, lists, and unequal section depth. Its structure was inspected; its product claims were not independently verified.
+- **Gap:** our recent edits focused on local concision while the skill still leaned toward an execution brief. The [comparison and design rationale](output-design.md#balanced-structure-from-a-supplied-vision-version-063) records the specific differences.
+- **Change:** replace the output guidance with purpose-led grouping, clear value and priorities, optional examples, and selective depth. Require deliverables and acceptance for execution plans; early visions identify consequential dependencies and the next decision or validation. Review uses the same distinction.
+- **Freedom retained:** no new mode, template, fixed labels, mandatory examples, or length limits. Source grounding, architectural substance, visible uncertainty, and the planning/implementation boundary remain intact.
+- **Validation:** metadata, local links and anchors, Markdown structure, public-path hygiene, installed symlinks, and Git whitespace; manual contract review of a multi-initiative vision, an execution plan, and a research exploration. The known `argument-hint` validator mismatch remains; a temporary projection passed. The reference file and existing project plans were left unchanged.
+- **Limit:** no new agent evaluation, product investigation, or runtime test. The user's preference supports this design choice, not a measured quality or cost improvement.

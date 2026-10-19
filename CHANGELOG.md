@@ -4,6 +4,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # grounded-plan
 
+## [0.6.3] — 2026-10-19
+
+### Fixed
+
+- Match structure and commitments to the decision at hand: visions and early explorations can organize around initiatives or questions; execution plans retain deliverables and acceptance conditions.
+- Emphasize purpose, relative priority, concrete examples, and selective depth while balancing concise prose and lists. Treat supplied plans as references, not compulsory templates.
+- Align review with the artifact's intended decision instead of requiring execution detail from every plan.
+
 ## [0.6.2] — 2026-10-16
 
 ### Fixed
