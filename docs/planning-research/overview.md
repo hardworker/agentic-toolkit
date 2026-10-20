@@ -12,6 +12,8 @@ Output follow-up, **15 October 2026**: version 0.5.0 adopts a shorter, consisten
 
 Research follow-up, **16 October 2026**: [plan length and structure](output-design.md) compares current upstream output rules and architecture guidance. The user adopted its recommendation in version 0.6.0: adaptive length, flexible sections, concise writing within sections, and one home for each fact.
 
+Research follow-up, **20 October 2026**: [learning from planning conversations](conversation-learning.md) compares memory, background reflection, playbook updates, and evaluated skill optimization. It proposes automatic plan reconciliation and scoped learning from Q&A; this extension is not implemented.
+
 ## Recommendation
 
 Build a small, standalone planning skill, using **Compound Engineering's `ce-plan` as the strongest ready-made comparator**, ECC's simple inline planning as the cost baseline, and selected verification and review ideas from Ouroboros, Ralplan, and this toolkit. Do not make the new skill depend on any of those systems.

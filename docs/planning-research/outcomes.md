@@ -1,6 +1,6 @@
 # Grounded Plan: research decisions and outcomes
 
-Updated **16 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
+Updated **20 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
 
 ## What the research changed
 
@@ -173,3 +173,11 @@ Static checks covered full YAML parsing, local links, reference labels, Markdown
 - **Freedom retained:** no new mode, template, fixed labels, mandatory examples, or length limits. Source grounding, architectural substance, visible uncertainty, and the planning/implementation boundary remain intact.
 - **Validation:** metadata, local links and anchors, Markdown structure, public-path hygiene, installed symlinks, and Git whitespace; manual contract review of a multi-initiative vision, an execution plan, and a research exploration. The known `argument-hint` validator mismatch remains; a temporary projection passed. The reference file and existing project plans were left unchanged.
 - **Limit:** no new agent evaluation, product investigation, or runtime test. The user's preference supports this design choice, not a measured quality or cost improvement.
+
+## Conversation learning research, 20 October 2026
+
+- **Need:** meaningful planning questions should refine the saved plan and supply evidence for improving future planning, without a separate capture request.
+- **Finding:** current memory and skill-learning approaches supply useful pieces, but capture, plan reconciliation, personal guidance, and evaluated procedural improvement are distinct responsibilities. [Comparison and proposed design](conversation-learning.md).
+- **Verified limits:** the inspected ECC observer path captures tool events; a pure-function probe showed the Hermes add-on's scorer rewarding an instruction and its negation equally; ACE's inspected operation applier left update/delete requests unapplied.
+- **Proposed next step:** add a small reconciliation and scoped-learning contract to the existing skill and user-wide records. Introduce host hooks or multi-candidate optimization only when justified.
+- **Status:** research saved; skill remains v0.6.3. No learning runtime, hook, background job, or automatic skill mutation was enabled. No quality or cost improvement has been measured.

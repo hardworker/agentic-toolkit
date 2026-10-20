@@ -1,0 +1,169 @@
+{
+  "inspected": "2026-10-20",
+  "repositories": [
+    {
+      "repo": "affaan-m/ECC",
+      "sha": "6f1881aeafa3c48f7b603cc4be4b2e4e70daad59",
+      "commit_date": "2026-10-20T03:39:18Z",
+      "license": "MIT",
+      "retrieval_errors": [
+        {
+          "path": "skills/continuous-learning-v2/scripts/start-observer.sh",
+          "error": "HTTP Error 404: Not Found"
+        }
+      ],
+      "retrieved_files": [
+        {
+          "path": "skills/continuous-learning-v2/SKILL.md",
+          "sha256": "ddad12451a0d582c6ef1b197b7be193bef613cbc74eba4117fcb74fc7a4ecd00"
+        },
+        {
+          "path": "skills/continuous-learning-v2/hooks/observe.sh",
+          "sha256": "1f4b95054252a3c0fa88a6bde5365006418d6acf80d73993cfecc054733da37d"
+        },
+        {
+          "path": "hooks/hooks.json",
+          "sha256": "9261a5b87959aae473c8145f44c4858965cbf6e6b9dc0d57cd914ef045eaf3a2"
+        },
+        {
+          "path": "skills/continuous-learning-v2/scripts/instinct-cli.py",
+          "sha256": "d5450455a0cb3a1fa57c960a503c6e47f72910e2bb065874674bd567212549d4"
+        },
+        {
+          "path": "skills/continuous-learning-v2/agents/start-observer.sh",
+          "sha256": "6f5beed1e96f685c09ffa7f614f9673ba68f1466a60830252b8b9138efe05e84"
+        },
+        {
+          "path": "scripts/hooks/observe-runner.js",
+          "sha256": "12a6cc569047400fa22f664df77a0eb97d5a4b873aa743119919fb7bdfda9e16"
+        }
+      ]
+    },
+    {
+      "repo": "NousResearch/hermes-agent",
+      "sha": "bd3cbe91a90097f9804f16ea5c1768f5cbaaf0b7",
+      "commit_date": "2026-10-20T13:33:34Z",
+      "license": "MIT",
+      "retrieval_errors": [],
+      "retrieved_files": [
+        {
+          "path": "agent/background_review.py",
+          "sha256": "b177b1cfe8b06f9e787e37920fd9a7b023a038ecbac951bde4e81535d88aa4dc"
+        },
+        {
+          "path": "agent/turn_finalizer.py",
+          "sha256": "4c1e83c6a23bcb7fc10f942306459b54b130975fdce3d76d8fd7f2432698632e"
+        },
+        {
+          "path": "tools/skill_ledger.py",
+          "sha256": "56121bfa4e5daa57ca7f9eb1767817e06e0ad00fae2e4c7f72bcaaf299e43c27"
+        }
+      ]
+    },
+    {
+      "repo": "NousResearch/hermes-agent-self-evolution",
+      "sha": "0a929e3aa20e15cf04dc7c28492a7d41a5139125",
+      "commit_date": "2026-06-17T11:53:04Z",
+      "license": null,
+      "retrieval_errors": [],
+      "retrieved_files": [
+        {
+          "path": "README.md",
+          "sha256": "ebecc0a1f483e655041b9aa531ef7535ee0165f7058b65420896d6e89c7acc92"
+        },
+        {
+          "path": "evolution/skills/evolve_skill.py",
+          "sha256": "54067fff8d78592918593067f15b5c490b1acef8c036a3ab482c9d190b83dc79"
+        },
+        {
+          "path": "evolution/core/fitness.py",
+          "sha256": "e3e6ac5cd8129fc41994c310172f24bc4acadb9ea173bb829a49da0bd5139bda"
+        },
+        {
+          "path": "evolution/core/constraints.py",
+          "sha256": "d1b60fd178210a7906c8eaaa984838b9159af886971c80cfc7c3a3fab7d0cb12"
+        }
+      ]
+    },
+    {
+      "repo": "ace-agent/ace",
+      "sha": "82709de050e1db6e6ef2f07bcb0393560b94992a",
+      "commit_date": "2026-08-24T18:49:59Z",
+      "license": "Apache-2.0",
+      "retrieval_errors": [],
+      "retrieved_files": [
+        {
+          "path": "README.md",
+          "sha256": "49ade80bc5d5947a439f8c9861b57bde31531e2962638f78ff53b57b90428cd0"
+        },
+        {
+          "path": "ace/core/curator.py",
+          "sha256": "a22f7f233761acfb00852914d78112a776274c55bc022738af7defca95897617"
+        },
+        {
+          "path": "ace/core/reflector.py",
+          "sha256": "fe5ae8fb006fd16fdef7b8e7ad38dc746195a4bf0a366a82e69c473c9982b811"
+        },
+        {
+          "path": "playbook_utils.py",
+          "sha256": "c67943f06cb0ee747be04d0599216e40d6c00e0cdf96ddc6af38fc26143e3a07"
+        }
+      ]
+    },
+    {
+      "repo": "langchain-ai/langmem",
+      "sha": "48e3c11f5bb527282c7d5339c6a87a0b35abccfc",
+      "commit_date": "2026-10-02T19:35:19Z",
+      "license": "MIT",
+      "retrieval_errors": [],
+      "retrieved_files": [
+        {
+          "path": "README.md",
+          "sha256": "e1edd000d263bfea842c34273add82421340c2caf2d7b87edd285daf02156ca3"
+        },
+        {
+          "path": "docs/docs/guides/optimize_memory_prompt.md",
+          "sha256": "f0610a7052100e1746af554a1464949ed88d5d13a06279ebcdd03e076c251939"
+        },
+        {
+          "path": "src/langmem/prompts/optimization.py",
+          "sha256": "eba463458e6ab7de7d51edf4c9a48a949af2205911e6cf7685043ce92ab47862"
+        }
+      ]
+    }
+  ],
+  "scope": "Selected source inspection, not exhaustive review or executed upstream runtimes.",
+  "documentation": [
+    {
+      "url": "https://code.claude.com/docs/en/memory",
+      "accessed": "2026-10-20"
+    },
+    {
+      "url": "https://code.claude.com/docs/en/hooks",
+      "accessed": "2026-10-20"
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/hooks",
+      "accessed": "2026-10-20"
+    },
+    {
+      "url": "https://docs.letta.com/configuration/memory",
+      "accessed": "2026-10-20"
+    },
+    {
+      "url": "https://gepa-ai.github.io/gepa/blog/2026/02/18/automatically-learning-skills-for-coding-agents/",
+      "accessed": "2026-10-20"
+    }
+  ],
+  "checks": {
+    "scope": "AST-extracted pure functions only; no model requests, installation, upstream suite or full runtime execution",
+    "hermes_addon_positive_and_negated_scores": [
+      1.0,
+      1.0
+    ],
+    "ace_operations_leave_playbook_unchanged": {
+      "UPDATE": true,
+      "DELETE": true
+    }
+  }
+}
