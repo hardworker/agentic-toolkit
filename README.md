@@ -2,7 +2,7 @@
 
 Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Six skills:
 
-Research: [concise, verified planning approaches](docs/planning-research/overview.md) — an October 2026 comparison of current repositories, cost tradeoffs, and the design behind `grounded-plan`.
+Research: [concise, verified planning approaches](docs/planning-research/overview.md) — an October 2026 comparison of current repositories, cost tradeoffs, and the design behind `planning`.
 
 ## self-learning
 
@@ -14,13 +14,15 @@ One-time setup: `python3 skills/self-learning/install.py`. Restart the agents an
 
 Read-only `discover --project <directory> [--source codex:<id>]` lists canonical artifacts and distinct supporting-evidence, delivery and reported-outcome relationships. It calls no model and creates no receipts; manual feedback stays attached to its artifact without a guessed source.
 
-## grounded-plan
+## planning
+
+Formerly `grounded-plan`. Use `/planning` for this skill; `/plan` is Claude Code's built-in plan-mode command.
 
 Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources and compares serious alternatives. Structure follows the decision at hand: a vision may organize by initiative, while an execution plan may follow delivery stages. Explain what changes, why it matters, and how it fits; use examples where helpful and give central ideas more depth. Direct prose and compact lists work together. Decisions and constraints have one home rather than being repeated.
 
 Architecture keeps components, responsibilities, flows, and important boundaries visible; code-level choices belong to the implementer. Early plans identify priorities, dependencies, and the next decision or validation; execution plans add deliverables and acceptance conditions. Detailed evidence stays inspectable behind links, with consequential caveats visible. No fixed template or length limit is required.
 
-The planner reads code and may run permitted checks, but writes planning artifacts and disposable probes only. Implementation is a separate authorized phase or handoff. Research stays direct by default; optional [scouts](skills/grounded-plan/scouts.md) handle bulky sources or independent questions, with at most two calls including follow-ups unless the user sets another research budget. The planner checks decisive evidence itself. Scouts and fresh critics have separate roles and budgets.
+The planner reads code and may run permitted checks, but writes planning artifacts and disposable probes only. Implementation is a separate authorized phase or handoff. Research stays direct by default; optional [scouts](skills/planning/scouts.md) handle bulky sources or independent questions, with at most two calls including follow-ups unless the user sets another research budget. The planner checks decisive evidence itself. Scouts and fresh critics have separate roles and budgets.
 
 ```text
 Goal → evidence → options → plan and diagram → bounded challenge → decision and checks
@@ -29,19 +31,19 @@ Goal → evidence → options → plan and diagram → bounded challenge → dec
 Scrutiny is inferred from the task's uncertainty, consequences, reversibility, and dependencies. Simple work uses source checks and self-review; meaningful choices can add a fresh critic; consequential disputed assumptions can add a blind alternative and bounded debate. There is no effort setting to choose. Explicit time, cost, and delegation limits still apply. The skill distinguishes observed/tested evidence from assumptions and future checks, and reports actual reviewer independence. Call caps control workflow size, not billing.
 
 ```text
-/grounded-plan add retry-safe customer exports
-/grounded-plan compare product rollout approaches
-/grounded-plan design a research plan for the retention hypothesis
-/grounded-plan docs/plans/migration.md --review
-/grounded-plan <record-id> --outcome
-/grounded-plan compare rollout options --store ~/my-planning-library
-/grounded-plan continue rollout work --session <session-id>
-/grounded-plan explore a separate rollout topic --new-session
+/planning add retry-safe customer exports
+/planning compare product rollout approaches
+/planning design a research plan for the retention hypothesis
+/planning docs/plans/migration.md --review
+/planning <record-id> --outcome
+/planning compare rollout options --store ~/my-planning-library
+/planning continue rollout work --session <session-id>
+/planning explore a separate rollout topic --new-session
 ```
 
-Substantive plans, decisions, and outcomes live in `~/.local/share/grounded-plan/`, shared across projects. `--store DIR` or `GROUNDED_PLAN_HOME` can override the root. New work uses readable `sessions/<topic>/` folders with an entry linking its plans, evidence, artifacts and outcomes. The stdlib `sessions.py` helper serializes registration and index updates; `--session ID/path` selects continuation, while `--new-session` starts separate work. Session titles are independent of source-chat renames. Each record leads with the current brief and preserves original expectations, dated decisions, evidence-backed outcomes, and contextual lessons; `index.md` helps find relevant prior work. Existing and legacy plans stay in place and retain their IDs. Optional read-only learning snapshots link canonical generated artifacts, preserving explicitly selected links. See the [storage contract and commands](skills/grounded-plan/records.md) and [controlled pilot](docs/session-artifacts.md). Outcome capture updates known results when requested; it does not monitor tasks in the background. See [research decisions and outcomes](docs/planning-research/outcomes.md) for the rationale and workflow.
+The existing storage location and `GROUNDED_PLAN_HOME` setting retain their names for compatibility. Substantive plans, decisions, and outcomes live in `~/.local/share/grounded-plan/`, shared across projects. `--store DIR` or `GROUNDED_PLAN_HOME` can override the root. New work uses readable `sessions/<topic>/` folders with an entry linking its plans, evidence, artifacts and outcomes. The stdlib `sessions.py` helper serializes registration and index updates; `--session ID/path` selects continuation, while `--new-session` starts separate work. Session titles are independent of source-chat renames. Each record leads with the current brief and preserves original expectations, dated decisions, evidence-backed outcomes, and contextual lessons; `index.md` helps find relevant prior work. Existing and legacy plans stay in place and retain their IDs. Optional read-only learning snapshots link canonical generated artifacts, preserving explicitly selected links. See the [storage contract and commands](skills/planning/records.md) and [controlled pilot](docs/session-artifacts.md). Outcome capture updates known results when requested; it does not monitor tasks in the background. See [research decisions and outcomes](docs/planning-research/outcomes.md) for the rationale and workflow.
 
-Use `$grounded-plan` in hosts with dollar-prefixed skill invocation. Requires source/artifact access; web and fresh reviewers are conditional. The session helper uses Python 3.9+ standard library; self-learning and an external model provider are optional. Planning does not itself authorize implementation. Original skill files are [MIT-licensed](skills/grounded-plan/LICENSE); that license does not relicense the rest of the toolkit. See the [evaluation record](docs/planning-research/evaluation.md) for the pilot's scope and limits.
+Use `$planning` in hosts with dollar-prefixed skill invocation. Requires source/artifact access; web and fresh reviewers are conditional. The session helper uses Python 3.9+ standard library; self-learning and an external model provider are optional. Planning does not itself authorize implementation. Original skill files are [MIT-licensed](skills/planning/LICENSE); that license does not relicense the rest of the toolkit. See the [evaluation record](docs/planning-research/evaluation.md) for the pilot's scope and limits.
 
 ## adversarial-review
 

@@ -5,7 +5,7 @@ Two debate pipelines, a standalone planner, two utility skills, and an automatic
 | Skill | Does | Agents |
 |---|---|---|
 | [self-learning](#self-learning) | automatic cross-session procedural learning and improvement proposals for Claude and Codex | one bounded headless CLI call per eligible reflection |
-| [grounded-plan](#grounded-plan) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts inferred from the task; optional scouts, two calls by default |
+| [planning](#planning) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts inferred from the task; optional scouts, two calls by default |
 | [adversarial-review](#adversarial-review) | cross-model debate review of finished work — diff, working tree, or documents | 4 + 2 Codex calls |
 | [crucible](#crucible) | idea → grill → attacked assumptions → plan → code → verify | 6–12, capped |
 | [session-migration](#session-migration) | find any past session, route it to the surface you want | none |
@@ -40,7 +40,9 @@ Skills and proposals need user evidence from two independent sessions. Skills ad
 
 Installation merges owned native hooks into both hosts and symlinks the management skill. Generated procedures live in one canonical scoped store; context hooks supply them to either host. Reflection is event-driven; quota-limited work waits for later source activity. [Operating details and attribution](docs/self-learning.md).
 
-## grounded-plan
+## planning
+
+The skill was renamed from `grounded-plan`; its storage root, environment override and session metadata marker retain their existing names so saved records remain compatible. Historical evaluation snapshots retain their original paths and hashes.
 
 Planning ends with a decision brief and handoff. The planner may inspect code and run permitted checks, but writes only planning artifacts and disposable probes. Product implementation is a separate authorized phase, possibly performed by the same agent. This is a role boundary, not filesystem enforcement.
 
@@ -75,7 +77,7 @@ Claims carry evidence states rather than confidence percentages. Deterministic c
 
 `sessions.py` uses a library lock, reads entries under that lock, and atomically replaces entries/indexes. Explicit identity wins; source association can resume only one unambiguous same-project session. A creation key distinguishes work from titles and makes concurrent retries converge; collisions get readable suffixed folders. Session titles change only deliberately, and title updates retain stable folder paths. Entries are authoritative for grouping; the index is rebuildable. Incomplete indexing is reported after preserving saved artifacts.
 
-Optional foreground discovery queries self-learning by project and native sources and refreshes a timestamped derived snapshot. Explicit canonical links survive refresh failures or changed matches. The learning runtime never writes planner entries; its database, generated skills, evidence gates and budgets remain unchanged. Planning works without learning. Physical relocation is deferred. [Contract and commands](skills/grounded-plan/records.md), [temporary-fixture pilot](docs/session-artifacts.md).
+Optional foreground discovery queries self-learning by project and native sources and refreshes a timestamped derived snapshot. Explicit canonical links survive refresh failures or changed matches. The learning runtime never writes planner entries; its database, generated skills, evidence gates and budgets remain unchanged. Planning works without learning. Physical relocation is deferred. [Contract and commands](skills/planning/records.md), [temporary-fixture pilot](docs/session-artifacts.md).
 
 The [research dossier](docs/planning-research/overview.md) explains source selection, tradeoffs, and alternatives. The [evaluation record](docs/planning-research/evaluation.md) distinguishes observed pilot behavior from unmeasured quality/cost claims. [Research decisions and outcomes](docs/planning-research/outcomes.md) connects that evidence to the current skill and documents the storage boundary.
 
@@ -318,7 +320,7 @@ agentic-toolkit/
 │   ├── plugin.json          # repo root doubles as the plugin
 │   └── marketplace.json     # ...and as its own marketplace (source "./")
 ├── skills/
-│   ├── grounded-plan/
+│   ├── planning/
 │   │   ├── SKILL.md              # planning contract, effort routing, evidence and output
 │   │   ├── scouts.md             # conditional research dispatch and evidence packets
 │   │   ├── review.md             # conditional critic and blind-alternative procedure

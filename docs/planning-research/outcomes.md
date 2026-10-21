@@ -1,4 +1,4 @@
-# Grounded Plan: research decisions and outcomes
+# Planning: research decisions and outcomes
 
 Updated **21 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
 
@@ -52,7 +52,7 @@ The rationale is conditional: separate research contexts can compress large sour
 
 The revised scaling study likewise reports task-dependent benefits and coordination costs across 260 configurations and six benchmarks. Applying those results to this planner is a design inference, not direct evidence of savings. The adopted policy favors direct investigation until delegation has a concrete purpose. [Scaling Agent Systems, v3](https://arxiv.org/abs/2512.08296v3).
 
-The complete conditional procedure lives in [scouts.md](../../skills/grounded-plan/scouts.md). No new flag, runtime, mandatory model tier, or always-on agent team is introduced.
+The complete conditional procedure lives in [scouts.md](../../skills/planning/scouts.md). No new flag, runtime, mandatory model tier, or always-on agent team is introduced.
 
 ## Storage and use
 
@@ -79,17 +79,17 @@ flowchart LR
 Examples:
 
 ```text
-$grounded-plan compare rollout options
-$grounded-plan <record-id> --outcome
-$grounded-plan record what we learned from the onboarding experiment
-$grounded-plan plan a migration --store ~/my-planning-library
+$planning compare rollout options
+$planning <record-id> --outcome
+$planning record what we learned from the onboarding experiment
+$planning plan a migration --store ~/my-planning-library
 ```
 
 The skill opens the index and a few relevant records, checks whether their evidence and conditions still apply, and cites useful prior work. `--outcome` matches an existing record and appends known results without restarting the planning workflow. Ambiguous matches require choosing the intended record before editing. Index rows are derived navigation; records remain authoritative if index repair is needed.
 
 The workflow uses ordinary file tools, with no database, background watcher, scheduled follow-up, or required external provider. A request to update outcomes authorizes recording available results, not inventing evidence or launching new experiments. Private records are not automatically copied into repository documentation.
 
-The executable contract is the prose in [SKILL.md](../../skills/grounded-plan/SKILL.md) and [records.md](../../skills/grounded-plan/records.md); [review.md](../../skills/grounded-plan/review.md) still governs optional critique. Installation follows the existing skill symlinks, so local edits take effect there without a second copied implementation.
+The executable contract is the prose in [SKILL.md](../../skills/planning/SKILL.md) and [records.md](../../skills/planning/records.md); [review.md](../../skills/planning/review.md) still governs optional critique. Installation follows the existing skill symlinks, so local edits take effect there without a second copied implementation.
 
 ## Validation of the outcome extension
 
@@ -188,3 +188,11 @@ Static checks covered full YAML parsing, local links, reference labels, Markdown
 - **Observed:** current planning storage is flat. The separately installed self-learning runtime already records provenance and outcomes but lacks session-oriented artifact discovery. Its generated discovery proposal cites two source sessions; this is evidence of requests, not measured benefit.
 - **Recommendation:** named folders for new planning work, references to existing and externally owned artifacts, stable identities, and optional read-only learning discovery. [Design summary](session-artifacts.md).
 - **Status:** planning and source checks only. Skill/runtime changes, installation refresh, migration, and usefulness evaluation remain future work. Private source sessions and the detailed record stay outside the public repository.
+
+## Simpler name in version 0.8.0
+
+The user asked for a simpler name after discussing what “grounded” means. The skill is now `planning`, invoked as `$planning` or `/planning`. `plan` was considered, but the inspected Claude Code installation already reserves `/plan` for its built-in plan mode.
+
+The source folder, current documentation links and installed skill symlinks use the new name. Planning behavior is unchanged. The existing `~/.local/share/grounded-plan/` library, `GROUNDED_PLAN_HOME` override and session metadata marker remain compatible; no records are migrated. Frozen evaluation fixtures, receipts and hashes retain the historical name.
+
+Validation: all 14 session/discovery tests passed from the renamed folder; 98 local documentation links resolve. The skill body differs only in its name/title, and support files plus frozen evaluation artifacts remain unchanged. Both installed links resolve to the renamed source. Ruby parsed the YAML frontmatter successfully; the bundled validator could not run because PyYAML is unavailable. No new planning-quality benchmark was needed for this naming change.

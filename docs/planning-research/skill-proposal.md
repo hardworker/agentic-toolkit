@@ -1,6 +1,6 @@
 # A small planning skill: design and decisions
 
-Status: **a trial implementation is available as [grounded-plan](../../skills/grounded-plan/SKILL.md), with a [pilot evaluation](evaluation.md)**. This document preserves the design rationale and choices the user can resolve. Return to the [research overview](overview.md) and [repository comparisons](repositories.md).
+Status: **a trial implementation is available as [planning](../../skills/planning/SKILL.md), with a [pilot evaluation](evaluation.md)**. This document preserves the design rationale and choices the user can resolve. Return to the [research overview](overview.md) and [repository comparisons](repositories.md).
 
 **14 October follow-up:** the user approved outcome capture and selected a separate user-wide folder. Version 0.2.0 implements that extension; [research decisions and outcomes](outcomes.md) documents its contract. This supersedes the original project-local persistence suggestion below. It does not settle the remaining cost-policy choices.
 
@@ -14,15 +14,15 @@ Status: **a trial implementation is available as [grounded-plan](../../skills/gr
 
 Turn an engineering, product, or research question into a concise decision brief that another person can inspect and act on. Show why the recommendation follows from evidence, what remains uncertain, how the alternatives differ, and which checks would expose a mistake. Stop at planning unless the user has separately authorized implementation.
 
-Name: **`grounded-plan`**. This is an original small skill, not a fork of a runtime. Its [MIT license](../../skills/grounded-plan/LICENSE) covers the self-contained skill folder. Design inspirations are linked in this dossier; upstream code and prompt text were not copied into the skill. The license does not relicense the rest of this repository, which has no root LICENSE file.
+Current name: **`planning`**, originally `grounded-plan`. This is an original small skill, not a fork of a runtime. Its [MIT license](../../skills/planning/LICENSE) covers the self-contained skill folder. Design inspirations are linked in this dossier; upstream code and prompt text were not copied into the skill. The license does not relicense the rest of this repository, which has no root LICENSE file.
 
 ## User surface
 
 ```text
-$grounded-plan decide how to add background exports
-$grounded-plan compare two product rollout approaches
-$grounded-plan design a research plan for the retention hypothesis
-$grounded-plan path/to/existing-plan.md --review
+$planning decide how to add background exports
+$planning compare two product rollout approaches
+$planning design a research plan for the retention hypothesis
+$planning path/to/existing-plan.md --review
 ```
 
 Exact slash/dollar invocation depends on the host. No CLI, MCP server, external model provider, browser, or repository bootstrap is required. Native tools provide reading, research, optional execution of appropriate checks, and fresh review where permitted. Additional tools can improve the workflow but are not prerequisites.
@@ -98,7 +98,7 @@ Lead with the recommendation, then use a recognizable progression through approa
 | Delivery | A handful of ordered milestones with dependencies, “done when” conditions, and a clear next step |
 | Risks and evidence | Consequential assumptions, risks, reversal conditions, source pointers, checks/review performed, and limits |
 
-Length follows the decisions, dependencies, and acceptance conditions the task needs. Each section starts with its conclusion, followed by decisive support in focused prose, parallel bullets, comparisons, or useful diagrams. State each fact once and reference it elsewhere; link bulky evidence and review receipts while keeping consequential caveats visible. Read code to establish feasibility and cite it as evidence, while leaving code-level choices to the implementer. The [record procedure](../../skills/grounded-plan/records.md) defines storage: the user-wide library by default, with explicit destinations respected and existing plans referenced in place.
+Length follows the decisions, dependencies, and acceptance conditions the task needs. Each section starts with its conclusion, followed by decisive support in focused prose, parallel bullets, comparisons, or useful diagrams. State each fact once and reference it elsewhere; link bulky evidence and review receipts while keeping consequential caveats visible. Read code to establish feasibility and cite it as evidence, while leaving code-level choices to the implementer. The [record procedure](../../skills/planning/records.md) defines storage: the user-wide library by default, with explicit destinations respected and existing plans referenced in place.
 
 ### Example evidence rows
 

@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT / "skills/self-learning"))
 import learning
 import install
 
-spec = importlib.util.spec_from_file_location("planning_sessions", ROOT / "skills/grounded-plan/sessions.py")
+spec = importlib.util.spec_from_file_location("planning_sessions", ROOT / "skills/planning/sessions.py")
 sessions = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sessions)
 
@@ -34,7 +34,7 @@ class Fixtures(unittest.TestCase):
         self.temp.cleanup()
 
     def cli(self, *args, project=None, check=True):
-        result = subprocess.run([sys.executable, "-B", str(ROOT / "skills/grounded-plan/sessions.py"),
+        result = subprocess.run([sys.executable, "-B", str(ROOT / "skills/planning/sessions.py"),
                                  "--store", str(self.library), "--project", str(project or self.project),
                                  *args], capture_output=True, text=True, check=check)
         return json.loads(result.stdout) if check else result

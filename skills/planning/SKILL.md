@@ -1,11 +1,11 @@
 ---
-name: grounded-plan
+name: planning
 description: Create or review concise, evidence-backed plans for engineering, product, and research, with useful diagrams, serious alternatives, and scrutiny matched to the stakes. Use for nontrivial planning, comparing approaches, checking a plan, or recording its decisions, outcomes, and lessons in a user-wide library.
 argument-hint: "[task, plan path, or record ID] [--review | --outcome] [--store DIR] [--session ID/path | --new-session]"
 license: MIT
 ---
 
-# Grounded Plan
+# Planning
 
 Deliver a plan the user can understand, challenge, and use for the decision at hand: a recommendation, its evidence and alternatives, the shape of the work, and checks that could expose a mistake. Preserve decisions and observed outcomes for later planning.
 

@@ -34,7 +34,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 - Bounded model calls, input and lifetime; shared daily quota; recursion suppression; preservation of existing hooks; reversible installation.
 - Regression coverage for both transcript formats, concurrency, scope, evidence, feedback, installation and the headless worker protocol.
 
-# grounded-plan
+# planning (formerly grounded-plan)
+
+## [0.8.0] — 2026-10-21
+
+### Changed
+
+- Rename the skill and source folder to `planning`, with `$planning` and `/planning` invocation examples; keep clear of Claude Code's built-in `/plan` command.
+- Update current documentation links and installed symlinks while preserving the existing record-library path, environment override, session metadata and historical evaluation snapshots. Planning behavior is unchanged.
 
 ## [0.7.1] — 2026-10-21
 

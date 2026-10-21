@@ -1,6 +1,6 @@
 # Named sessions: implementation and controlled pilot
 
-Implemented 21 October 2026. New planning work can use readable session folders while legacy plans and learning artifacts retain their canonical locations. Bulk relocation and live installation are deferred. The [storage contract](../skills/grounded-plan/records.md) gives the commands and ownership rules; [learning discovery](self-learning.md#read-only-artifact-discovery) describes the optional interface.
+Implemented 21 October 2026. New planning work can use readable session folders while legacy plans and learning artifacts retain their canonical locations. Bulk relocation and live installation are deferred. The [storage contract](../skills/planning/records.md) gives the commands and ownership rules; [learning discovery](self-learning.md#read-only-artifact-discovery) describes the optional interface.
 
 ## Contract
 
