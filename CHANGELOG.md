@@ -2,7 +2,54 @@
 
 Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently.
 
+# self-learning
+
+## [0.2.0] — 2026-10-21
+
+### Added
+
+- Read-only, project/session artifact discovery with canonical paths, IDs, revision/status, historical supporting evidence, deliveries and reported outcomes. Manual feedback retains its original attribution; listing creates no receipts or model calls.
+- Isolated installer/discovery verification and optional planning integration that preserves the existing generated-store ownership, evidence gates and budgets.
+
+## [0.1.1] — 2026-10-20
+
+### Fixed
+
+- Ignore generic request words during recall and wait for task terms before delivering skills or consuming proposal notifications.
+- Require automatic outcome evidence strictly after the delivery snapshot, including the last-row boundary.
+- Explain automatic feedback processing in injected context and distinguish proposed infrastructure from existing capabilities.
+
+### Added
+
+- Opt-in native Claude/Codex end-to-end evaluation with real probe execution, detached reflection, held-out application, scope checks and automatic negative-feedback withdrawal.
+- Live abstention checks against repeated polling, unrelated sessions and injected log instructions, plus a documented output-quality assessment.
+
+## [0.1.0] — 2026-10-20
+
+### Added
+
+- Automatic native Claude and Codex hooks, shared local evidence and detached cross-session reflection through either installed CLI.
+- Reused a pinned MIT-licensed Self-Improving Skills queue for deduplication, coalescing, leases, retries and crash recovery.
+- Scoped generated procedures, workflow improvement proposals, revision history, source quotations, relevance-based context and explicit helpful/harmful outcomes.
+- Bounded model calls, input and lifetime; shared daily quota; recursion suppression; preservation of existing hooks; reversible installation.
+- Regression coverage for both transcript formats, concurrency, scope, evidence, feedback, installation and the headless worker protocol.
+
 # grounded-plan
+
+## [0.7.1] — 2026-10-21
+
+### Fixed
+
+- Preserve the accepted 0.6.1–0.6.3 readability and purpose-aware planning/review guidance alongside named-session storage and optional learning discovery.
+- Isolate the worktree-scope test from user commit signing and Git hooks with command-scoped settings; user configuration remains unchanged.
+
+## [0.7.0] — 2026-10-21
+
+### Added
+
+- Readable named sessions for new planning work, stable session/plan identities, explicit or unambiguous continuation, independent session-title authority, project/worktree scope and serialized collision-safe registration.
+- Compact entries linking plans, evidence, artifacts and outcomes, optional timestamped learning snapshots, preserved selected canonical links and legacy-ID lookup. Existing plans and explicit destinations remain in place; bulk relocation is deferred.
+- Temporary-fixture navigation pilot and regression coverage for concurrency, compatibility, missing sources, feedback refresh and canonical ownership.
 
 ## [0.6.3] — 2026-10-19
 

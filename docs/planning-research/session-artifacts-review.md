@@ -41,6 +41,10 @@ No additional reviewer or model evaluation was needed for these targeted correct
 
 ## Delivery boundary
 
-The implementation, corrections and controlled fixture pilot exist as local commits. Live runtime copies, management-skill symlinks, hooks and existing user artifacts were not changed. No migration or remote write was performed. The reviewed corrections are closed; ordinary-use navigation benefit and production host behavior remain unmeasured.
+The implementation, corrections and controlled fixture pilot were prepared as local commits. During implementation and review, live runtime copies, management-skill symlinks, hooks and existing user artifacts were not changed; those phases performed no migration or remote write. The reviewed corrections are closed; ordinary-use navigation benefit and production host behavior remain unmeasured.
 
-See the [design](session-artifacts.md). The implementation branch contains its own `docs/session-artifacts.md` receipt and operational commands; this planning branch records the review without importing runtime changes.
+## Publication integration
+
+The verified implementation and its prerequisite self-learning commits were integrated with the planning research and review records in a linear history. Implementation files, tests and operating documentation match `1b325899`; the existing research additions are preserved. The integrated checkout passed all 33 tests, whitespace checks and a scan for known private paths/session identifiers before publication. This integration does not reinstall deployed runtime copies or move existing artifacts.
+
+See the [design](session-artifacts.md) and [implementation receipt](../session-artifacts.md) for the contract, operating commands and validation limits.

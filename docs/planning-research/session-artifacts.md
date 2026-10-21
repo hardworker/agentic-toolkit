@@ -1,8 +1,8 @@
 # Named sessions and artifact discovery
 
-Proposed **21 October 2026**. This records the design direction; no storage migration or skill/runtime change is implemented here. The detailed planning record and private evidence live in the user-wide library.
+Proposed **21 October 2026**. This preserves the original design direction; subsequent implementation and review are recorded below. The detailed planning record and private evidence live in the user-wide library.
 
-A separate implementation at `7f84d415`, corrected in `1b325899`, passed [independent review](session-artifacts-review.md) and all 33 tests. Live rollout and migration remain deferred; the design baseline below is preserved.
+A separate implementation at `7f84d415`, corrected in `1b325899`, passed [independent review](session-artifacts-review.md) and all 33 tests. The verified source is now integrated with the research and review records. Live runtime deployment and migration remain deferred; the design baseline below is preserved.
 
 ## Direction
 

@@ -1,8 +1,18 @@
 # agentic-toolkit
 
-Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Five skills:
+Personal agent toolkit. See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pipelines work and [CHANGELOG.md](CHANGELOG.md) for history. Six skills:
 
 Research: [concise, verified planning approaches](docs/planning-research/overview.md) — an October 2026 comparison of current repositories, cost tradeoffs, and the design behind `grounded-plan`.
+
+## self-learning
+
+Automatic local learning across Claude Code and Codex. Native hooks enqueue completed work; a detached worker reflects across independent sessions from the same project. It creates or revises shared procedural skills and proposes changes that could remove recurring manual work, such as monitoring CI duration regressions. Relevant procedures reach both agents through prompt context, without manual reflection commands.
+
+Uses Python's standard library and an attributed, pinned SQLite queue from [Self-Improving Skills](https://github.com/UniM0cha/self-improving-skills). State stays under `~/.local/share/agentic-learning`; reflection uses an authenticated installed CLI and its model provider. No memory service or embeddings are required. Generated skills activate after the evidence gate; workflow changes remain proposals. The worker cannot edit product code, existing user skills, or external systems.
+
+One-time setup: `python3 skills/self-learning/install.py`. Restart the agents and trust the new Codex hooks when prompted. Recall waits for meaningful task terms; generic requests do not consume improvement suggestions. See the [operating guide](docs/self-learning.md) for controls, bounds, removal and attribution, and the [native end-to-end evaluation](docs/self-learning-evaluation.md) for tested behavior and output quality.
+
+Read-only `discover --project <directory> [--source codex:<id>]` lists canonical artifacts and distinct supporting-evidence, delivery and reported-outcome relationships. It calls no model and creates no receipts; manual feedback stays attached to its artifact without a guessed source.
 
 ## grounded-plan
 
@@ -25,11 +35,13 @@ Scrutiny is inferred from the task's uncertainty, consequences, reversibility, a
 /grounded-plan docs/plans/migration.md --review
 /grounded-plan <record-id> --outcome
 /grounded-plan compare rollout options --store ~/my-planning-library
+/grounded-plan continue rollout work --session <session-id>
+/grounded-plan explore a separate rollout topic --new-session
 ```
 
-Substantive plans, decisions, and outcomes live in `~/.local/share/grounded-plan/`, shared across projects. `--store DIR` or `GROUNDED_PLAN_HOME` can override the root. Each record leads with the current brief and preserves original expectations, dated decisions, evidence-backed outcomes, and contextual lessons; `index.md` helps find relevant prior work. Existing external plans stay in place and are linked. Outcome capture updates known results when requested; it does not monitor tasks in the background. See [research decisions and outcomes](docs/planning-research/outcomes.md) for the rationale and workflow.
+Substantive plans, decisions, and outcomes live in `~/.local/share/grounded-plan/`, shared across projects. `--store DIR` or `GROUNDED_PLAN_HOME` can override the root. New work uses readable `sessions/<topic>/` folders with an entry linking its plans, evidence, artifacts and outcomes. The stdlib `sessions.py` helper serializes registration and index updates; `--session ID/path` selects continuation, while `--new-session` starts separate work. Session titles are independent of source-chat renames. Each record leads with the current brief and preserves original expectations, dated decisions, evidence-backed outcomes, and contextual lessons; `index.md` helps find relevant prior work. Existing and legacy plans stay in place and retain their IDs. Optional read-only learning snapshots link canonical generated artifacts, preserving explicitly selected links. See the [storage contract and commands](skills/grounded-plan/records.md) and [controlled pilot](docs/session-artifacts.md). Outcome capture updates known results when requested; it does not monitor tasks in the background. See [research decisions and outcomes](docs/planning-research/outcomes.md) for the rationale and workflow.
 
-Use `$grounded-plan` in hosts with dollar-prefixed skill invocation. Requires source/artifact access; web and fresh reviewers are conditional. No external runtime or model provider is mandatory. Planning does not itself authorize implementation. Original skill files are [MIT-licensed](skills/grounded-plan/LICENSE); that license does not relicense the rest of the toolkit. See the [evaluation record](docs/planning-research/evaluation.md) for the pilot's scope and limits.
+Use `$grounded-plan` in hosts with dollar-prefixed skill invocation. Requires source/artifact access; web and fresh reviewers are conditional. The session helper uses Python 3.9+ standard library; self-learning and an external model provider are optional. Planning does not itself authorize implementation. Original skill files are [MIT-licensed](skills/grounded-plan/LICENSE); that license does not relicense the rest of the toolkit. See the [evaluation record](docs/planning-research/evaluation.md) for the pilot's scope and limits.
 
 ## adversarial-review
 

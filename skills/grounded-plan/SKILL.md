@@ -1,7 +1,7 @@
 ---
 name: grounded-plan
 description: Create or review concise, evidence-backed plans for engineering, product, and research, with useful diagrams, serious alternatives, and scrutiny matched to the stakes. Use for nontrivial planning, comparing approaches, checking a plan, or recording its decisions, outcomes, and lessons in a user-wide library.
-argument-hint: "[task, plan path, or record ID] [--review | --outcome] [--store DIR]"
+argument-hint: "[task, plan path, or record ID] [--review | --outcome] [--store DIR] [--session ID/path | --new-session]"
 license: MIT
 ---
 
@@ -80,6 +80,6 @@ Give unresolved choices stable IDs (`D1`, `D2`), options, a recommendation, and 
 
 Before handoff, scan the outline and each text block: can the reader quickly find what is proposed, why, how it fits together, what happens next, and what remains unresolved? Rewrite dense wording as well as splitting blocks; preserve conditions, uncertainty, and authority boundaries. Do not enforce paragraph lengths or a fixed heading scheme.
 
-Save substantive plans and their decisions in the user-wide library using [records.md](records.md), with an outcome initially marked pending. Default to `~/.local/share/grounded-plan/`; an explicit `--store DIR` or `GROUNDED_PLAN_HOME` can override it. Honor an explicit artifact destination or request not to save. Existing plans remain at their original paths and can be referenced by a library record; do not migrate or duplicate them automatically. Maintain one canonical plan, preserve original expectations and dated decisions, and reread the record after context loss. Return the saved artifact link and record ID. If access is unavailable, report the unsaved record rather than silently storing it in the repository.
+Save substantive plans and their decisions in the user-wide library using [records.md](records.md), with an outcome initially marked pending. Default to `~/.local/share/grounded-plan/`; an explicit `--store DIR` or `GROUNDED_PLAN_HOME` can override it. Honor an explicit artifact destination or request not to save. Existing plans remain at their original paths and can be referenced by a library record; do not migrate or duplicate them automatically. Maintain one canonical plan, preserve original expectations and dated decisions, and reread the record after context loss. Use the named-session registration/continuation contract in `records.md`; honor `--session ID/path` and start separate work with `--new-session`. Refresh the compact entry after substantive continuation/delivery, including optional read-only learning discovery when available. Return the session entry, relevant plan link, and record ID. If access is unavailable, report the unsaved record rather than silently storing it in the repository.
 
 Report actual token/tool usage when available. Otherwise give work proxies, counting scout calls, review calls, and checks separately. Do not invent prices or cost savings. Agent limits are instruction-level budgets, not host-enforced billing limits. Recheck changed decisions and affected evidence; don't replay the whole process for cosmetic revisions.

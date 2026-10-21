@@ -1,14 +1,44 @@
 # agentic-toolkit — Architecture
 
-Two debate pipelines, a standalone planner, and two utility skills. The debate pipelines challenge claims before delivery and cap their fan-out. The planner matches scrutiny to the decision's stakes and records the limits of its evidence. These workflows are prose run by the host agent, not orchestrator scripts.
+Two debate pipelines, a standalone planner, two utility skills, and an automatic learning runtime. The debate pipelines challenge claims before delivery and cap their fan-out. The planner matches scrutiny to the decision's stakes and records evidence limits. Planning and debate decisions are prose run by the host agent; a stdlib helper serializes planning-session registration. Self-learning adds deterministic Python hooks, a queue, and a bounded background worker.
 
 | Skill | Does | Agents |
 |---|---|---|
+| [self-learning](#self-learning) | automatic cross-session procedural learning and improvement proposals for Claude and Codex | one bounded headless CLI call per eligible reflection |
 | [grounded-plan](#grounded-plan) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts inferred from the task; optional scouts, two calls by default |
 | [adversarial-review](#adversarial-review) | cross-model debate review of finished work — diff, working tree, or documents | 4 + 2 Codex calls |
 | [crucible](#crucible) | idea → grill → attacked assumptions → plan → code → verify | 6–12, capped |
 | [session-migration](#session-migration) | find any past session, route it to the surface you want | none |
 | [cf-access](#cf-access) | keep CLI tools, Node clients and MCP servers authenticated to Cloudflare Access | none |
+
+## self-learning
+
+~~~mermaid
+flowchart LR
+    H[Claude and Codex hooks] --> Q[Shared SQLite queue]
+    Q --> E[Bounded project evidence]
+    E --> R[Headless reflection]
+    R --> V[Host validates evidence and scope]
+    V --> S[Generated procedural skills]
+    V --> P[Workflow improvement proposals]
+    S --> C[Relevant context at startup and prompts]
+    P --> C
+    C --> H
+    E --> F[Explicit later user outcomes]
+    F --> V
+~~~
+
+`upstream_queue.py` is vendored unchanged from a pinned MIT-licensed Self-Improving Skills commit. It owns deduplication, coalescing, single-worker ownership, retry states and crash recovery. `learning.py` adds project identity, evidence, budgets, versioned artifacts, delivery receipts and SQLite FTS5 relevance search. Git worktrees sharing a local common Git directory share scope.
+
+`evidence.py` normalizes transcripts at captured row cutoffs, preserves user intent in long traces, and redacts common credential shapes. Raw transcripts remain in their host locations; selected excerpts and generated artifacts live in private local state. Recall ignores generic request words and waits for task terms before injecting skills or consuming a proposal notification; startup without a task only checks health notices.
+
+`reflection.py` runs an installed CLI in a disposable directory with tools/customizations disabled where supported, a read-only Codex sandbox, structured output, a timeout and process-group cleanup. The model returns data. The host validates the entire output before publishing generated artifacts; it cannot edit existing user skills or external systems.
+
+Skills and proposals need user evidence from two independent sessions. Skills additionally need observed tool results. Repetition is a synthesis gate, not proof of correctness. Explicit harmful feedback withdraws artifacts. Automatic outcomes must cite user evidence strictly after the delivery snapshot in that source session; loading a skill and silence are not usefulness signals. Injected guidance explains asynchronous feedback processing and keeps proposed infrastructure distinct from existing capabilities.
+
+`discover` bypasses `Store` initialization and opens a read-only SQLite snapshot. Project/native-session filters include historical supporting evidence, deliveries, and attributable reported outcomes separately. Explicit artifact selections remain project-scoped; manual feedback has no invented source. Listing does not call reflection, alter settings or create delivery/usefulness receipts.
+
+Installation merges owned native hooks into both hosts and symlinks the management skill. Generated procedures live in one canonical scoped store; context hooks supply them to either host. Reflection is event-driven; quota-limited work waits for later source activity. [Operating details and attribution](docs/self-learning.md).
 
 ## grounded-plan
 
@@ -41,7 +71,11 @@ Claims carry evidence states rather than confidence percentages. Deterministic c
 
 `--review` preserves the supplied plan unless edits were requested. A missing reviewer degrades to self-checking with explicit limits. Model selection inherits the host unless a different available model is authorized; the skill has no hardcoded model or required external provider. User time, cost, scope, and delegation limits take precedence over inferred scrutiny. Call caps are instruction-level controls, not enforced monetary budgets.
 
-`records.md` defines a user-wide Markdown library at `~/.local/share/grounded-plan/`, overridden by `--store DIR` or `GROUNDED_PLAN_HOME`. A stable record ID identifies the plan or its external reference, original expectations, dated decisions, outcomes, and lessons. A current brief leads the record; original expectations and dated history remain below it or behind links. The index is derived navigation; each record is authoritative. Relevant records are read selectively, with old evidence checked for applicability. `--outcome` updates a matched record without restarting planning. No background monitor, database, or required runtime is added.
+`records.md` defines the user-wide library and its existing `--store DIR` / `GROUNDED_PLAN_HOME` overrides. New work lives in readable `sessions/<topic>/` folders; a `README.md` entry owns stable session identity, title, project scope, native source references and grouping. Plans retain independent IDs and canonical contents, expectations, decisions and outcomes. Legacy records and explicit destinations remain usable in place.
+
+`sessions.py` uses a library lock, reads entries under that lock, and atomically replaces entries/indexes. Explicit identity wins; source association can resume only one unambiguous same-project session. A creation key distinguishes work from titles and makes concurrent retries converge; collisions get readable suffixed folders. Session titles change only deliberately, and title updates retain stable folder paths. Entries are authoritative for grouping; the index is rebuildable. Incomplete indexing is reported after preserving saved artifacts.
+
+Optional foreground discovery queries self-learning by project and native sources and refreshes a timestamped derived snapshot. Explicit canonical links survive refresh failures or changed matches. The learning runtime never writes planner entries; its database, generated skills, evidence gates and budgets remain unchanged. Planning works without learning. Physical relocation is deferred. [Contract and commands](skills/grounded-plan/records.md), [temporary-fixture pilot](docs/session-artifacts.md).
 
 The [research dossier](docs/planning-research/overview.md) explains source selection, tradeoffs, and alternatives. The [evaluation record](docs/planning-research/evaluation.md) distinguishes observed pilot behavior from unmeasured quality/cost claims. [Research decisions and outcomes](docs/planning-research/outcomes.md) connects that evidence to the current skill and documents the storage boundary.
 
@@ -288,7 +322,8 @@ agentic-toolkit/
 │   │   ├── SKILL.md              # planning contract, effort routing, evidence and output
 │   │   ├── scouts.md             # conditional research dispatch and evidence packets
 │   │   ├── review.md             # conditional critic and blind-alternative procedure
-│   │   ├── records.md            # user-wide plans, decisions, outcomes, and reuse
+│   │   ├── records.md            # session/plan ownership, continuation, outcomes and reuse
+│   │   ├── sessions.py           # locked registration, entries, index and optional discovery
 │   │   └── LICENSE               # MIT, scoped to this skill
 │   ├── adversarial-review/
 │   │   └── SKILL.md              # the whole pipeline: args, stage prompts, guards, report
