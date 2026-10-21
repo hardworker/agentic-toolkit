@@ -14,6 +14,8 @@ Research follow-up, **16 October 2026**: [plan length and structure](output-desi
 
 Research follow-up, **20 October 2026**: [learning from planning conversations](conversation-learning.md) compares memory, background reflection, playbook updates, and evaluated skill optimization. It proposes automatic plan reconciliation and scoped learning from Q&A; this extension is not implemented.
 
+Storage follow-up, **21 October 2026**: [named sessions and artifact discovery](session-artifacts.md) proposes grouping new planning artifacts under readable session names and linking existing learning artifacts through a shared entry point. Storage migration and learning integration remain planned.
+
 ## Recommendation
 
 Build a small, standalone planning skill, using **Compound Engineering's `ce-plan` as the strongest ready-made comparator**, ECC's simple inline planning as the cost baseline, and selected verification and review ideas from Ouroboros, Ralplan, and this toolkit. Do not make the new skill depend on any of those systems.

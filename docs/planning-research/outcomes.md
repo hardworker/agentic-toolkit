@@ -1,6 +1,6 @@
 # Grounded Plan: research decisions and outcomes
 
-Updated **20 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
+Updated **21 October 2026**. This is repository documentation about the skill and its evaluation. Individual planning records live in a separate user-wide library. Start with the [research overview](overview.md), [pinned repository comparisons](repositories.md), and [pilot evidence](evaluation.md).
 
 ## What the research changed
 
@@ -181,3 +181,10 @@ Static checks covered full YAML parsing, local links, reference labels, Markdown
 - **Verified limits:** the inspected ECC observer path captures tool events; a pure-function probe showed the Hermes add-on's scorer rewarding an instruction and its negation equally; ACE's inspected operation applier left update/delete requests unapplied.
 - **Proposed next step:** add a small reconciliation and scoped-learning contract to the existing skill and user-wide records. Introduce host hooks or multi-candidate optimization only when justified.
 - **Status:** research saved; skill remains v0.6.3. No learning runtime, hook, background job, or automatic skill mutation was enabled. No quality or cost improvement has been measured.
+
+## Session organization proposal, 21 October 2026
+
+- **Request:** plan meaningful session storage for plans, evidence, and related artifacts; assess changes to self-learning.
+- **Observed:** current planning storage is flat. The separately installed self-learning runtime already records provenance and outcomes but lacks session-oriented artifact discovery. Its generated discovery proposal cites two source sessions; this is evidence of requests, not measured benefit.
+- **Recommendation:** named folders for new planning work, references to existing and externally owned artifacts, stable identities, and optional read-only learning discovery. [Design summary](session-artifacts.md).
+- **Status:** planning and source checks only. Skill/runtime changes, installation refresh, migration, and usefulness evaluation remain future work. Private source sessions and the detailed record stay outside the public repository.
