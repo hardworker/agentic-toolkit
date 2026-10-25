@@ -196,3 +196,11 @@ The user asked for a simpler name after discussing what “grounded” means. Th
 The source folder, current documentation links and installed skill symlinks use the new name. Planning behavior is unchanged. The existing `~/.local/share/grounded-plan/` library, `GROUNDED_PLAN_HOME` override and session metadata marker remain compatible; no records are migrated. Frozen evaluation fixtures, receipts and hashes retain the historical name.
 
 Validation: all 14 session/discovery tests passed from the renamed folder; 98 local documentation links resolve. The skill body differs only in its name/title, and support files plus frozen evaluation artifacts remain unchanged. Both installed links resolve to the renamed source. Ruby parsed the YAML frontmatter successfully; the bundled validator could not run because PyYAML is unavailable. No new planning-quality benchmark was needed for this naming change.
+
+## Readability without content loss, version 0.8.1
+
+- **Trigger:** a private plan remained hard to process despite headings and bullets. Items bundled several concerns, while repeated constraints and detailed verification obscured the main proposal.
+- **Change:** meaningful items, the main behavior before exceptions, findable supporting detail, and a preservation check after shortening or moving content. Review guidance asks for concrete clarity improvements without enforcing a layout. [Rationale and limits](output-design.md#meaningful-items-and-supporting-detail-version-081).
+- **Freedom retained:** adaptive depth, flexible sections, architectural substance and connected explanation. No length limit, item quota, mandatory supporting file, or new review stage; already-clear content needs no rewrite.
+- **Validation:** source inspection and manual contract review across the dense example, a short proposal and an early exploration. Metadata, 43 local links, eight anchors, Markdown fences, public-path hygiene, both installed symlinks and Git whitespace checks passed. Ruby validated YAML; the bundled validator could not run because PyYAML is unavailable.
+- **Limits:** no independent output trial or reader-comprehension benchmark was run; future readability remains to be observed. The live example was not edited by this change.

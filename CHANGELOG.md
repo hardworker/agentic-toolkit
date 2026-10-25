@@ -36,6 +36,13 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # planning (formerly grounded-plan)
 
+## [0.8.1] — 2026-10-25
+
+### Fixed
+
+- Make list items useful to assess individually, explain the main behavior before exceptions, and keep supporting detail findable without burying consequential constraints.
+- Check readability edits for preserved decisions, rationale, scope, dependencies, acceptance and evidence limits. Retain flexible structure and depth; already-clear content needs no rewrite.
+
 ## [0.8.0] — 2026-10-21
 
 ### Changed

@@ -26,9 +26,9 @@ Fixed structures and local size guidance therefore have legitimate uses. The ins
 
 - **Orient first.** Explain the proposed direction, its value, and what changes from the current situation. For multiple initiatives, show relative priority and why it differs; surface choices blocking progress.
 - **Adapt the structure and depth.** Group by the subject and the reader's decision. A vision may use initiatives; a comparison may use options; an execution plan may use delivery stages. Give central ideas more depth and smaller proposals less. Preserve material constraints without imposing the same subsections on every item.
-- **Explain and edit.** Make the proposal understandable through plain language, its purpose, and concrete examples where helpful. Use compact lists for distinct points and focused paragraphs for connected reasoning. Tables compare; diagrams explain relationships. Rewrite dense wording without reducing explanations to fragments.
-- **Give each fact one home.** Reference a constraint or decision instead of repeating it across architecture, milestones, and risks. Keep large evidence and review receipts linked; retain qualifications beside the claims they limit.
-- **Check usability.** Can a reader find the choice, approach, next action, completion condition, and material uncertainty without reconstructing the investigation? Add detail for a missing answer; remove detail that adds no decision or execution value.
+- **Explain and edit.** Make the proposal understandable through plain language, its purpose, and concrete examples where helpful. Establish the main behavior before exceptions. Lists separate points the reader can assess individually, with their essential conditions; prose explains connections. Tables compare; diagrams explain relationships. Rewrite dense wording without reducing explanations to fragments.
+- **Give each fact one home.** Reference a constraint or decision instead of repeating it across architecture, milestones, and risks. Use named supporting sections or links for detailed cases, verification, evidence, and review receipts when they interrupt the main explanation; retain consequential qualifications beside the claims they limit.
+- **Check usability and preservation.** Can a reader find the choice, approach, next action, completion condition, and material uncertainty without reconstructing the investigation? Add detail for a missing answer; remove detail that adds no decision or execution value. Verify that edits preserve substantive decisions and constraints, and that relocated content is actually present at its destination. Already-clear content needs no readability rewrite.
 
 These writing rules apply within the existing skill. Code-level choices remain with the implementer, and evidence and outcome-history requirements remain in place.
 
@@ -73,6 +73,20 @@ The change replaces existing output guidance and narrows the unconditional deliv
 The reference is useful for choosing direction, but its structure alone does not establish verified claims, reliable estimates, or readiness to implement. Those remain separate judgments. It also does not imply that every plan needs a diagram or that each initiative needs identical subsections.
 
 The supplied file and existing project plans remain unchanged. Only generic lessons enter this public repository. Static and manual contract checks cover the refinement; future output quality and reader acceptance remain unmeasured.
+
+### Meaningful items and supporting detail, version 0.8.1
+
+On 25 October, another private plan exposed a remaining failure: an outline and bullets could still bury the proposal under bundled rules, exceptions, and verification detail. The user asked for easier reading without losing substance or tightening the format.
+
+The refinement replaces existing guidance rather than adding a template:
+
+- Make each list item a point the reader can assess or act on separately, with its essential conditions. Keep connected explanation in prose.
+- Establish the main behavior before exceptions. Put interrupting detail in a named supporting section or link when useful; keep decision-changing caveats visible.
+- Check both readability and preservation. A shorter plan must retain its decisions, rationale, scope, dependencies, acceptance and uncertainty; moved detail must exist at its destination.
+
+The manual contract review considered the dense example, a short already-clear proposal, and an early exploration. The rules allow related rationale to stay with its point, require relocated detail to remain recoverable, and add no execution sections to exploratory work. No word limit, item quota, fixed headings, mandatory split into files, or new review stage was added.
+
+The live example was shortened elsewhere during inspection and was not edited by this change. Only generic observations enter this public record. These are source inspection and self-checks, not an independent output trial or evidence of improved reader comprehension.
 
 [ce-chat]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/output-contracts.md
 [ce-sections]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/plan-sections.md
