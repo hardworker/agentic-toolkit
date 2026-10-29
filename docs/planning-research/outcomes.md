@@ -204,3 +204,10 @@ Validation: all 14 session/discovery tests passed from the renamed folder; 98 lo
 - **Freedom retained:** adaptive depth, flexible sections, architectural substance and connected explanation. No length limit, item quota, mandatory supporting file, or new review stage; already-clear content needs no rewrite.
 - **Validation:** source inspection and manual contract review across the dense example, a short proposal and an early exploration. Metadata, 43 local links, eight anchors, Markdown fences, public-path hygiene, both installed symlinks and Git whitespace checks passed. Ruby validated YAML; the bundled validator could not run because PyYAML is unavailable.
 - **Limits:** no independent output trial or reader-comprehension benchmark was run; future readability remains to be observed. The live example was not edited by this change.
+
+## Critical idea shaping, 29 October 2026
+
+- **Request:** learn from a supplied handoff to make planning more structured, critical of input and selective in scope.
+- **Recommendation:** sharpen outcome-versus-mechanism separation, scope selection and final synthesis within the existing skill. [Proposed refinement and adoption check](idea-shaping.md).
+- **Evidence:** full artifact and skill inspection, plus one fresh critic. Two textual gaps in the reference were confirmed: a pilot/evidence mismatch and unresolved later-feedback semantics. These support using existing acceptance/dependency checks more carefully, not adding a new review stage.
+- **Status:** research complete; skill remains v0.8.1. No candidate output comparison or current product validation ran. The reference and installed skill are unchanged; planning-quality and cost effects remain unmeasured.
