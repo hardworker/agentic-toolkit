@@ -211,3 +211,10 @@ Validation: all 14 session/discovery tests passed from the renamed folder; 98 lo
 - **Recommendation:** sharpen outcome-versus-mechanism separation, scope selection and final synthesis within the existing skill. [Proposed refinement and adoption check](idea-shaping.md).
 - **Evidence:** full artifact and skill inspection, plus one fresh critic. Two textual gaps in the reference were confirmed: a pilot/evidence mismatch and unresolved later-feedback semantics. These support using existing acceptance/dependency checks more carefully, not adding a new review stage.
 - **Status:** research complete; skill remains v0.8.1. No candidate output comparison or current product validation ran. The reference and installed skill are unchanged; planning-quality and cost effects remain unmeasured.
+
+## Ouroboros source review, 29 October 2026
+
+- **Verified scope:** pinned interview/seed prompts, implementation and selected tests, plus a small executed provenance-module probe. [Findings, sources and limits](ouroboros-planning.md).
+- **Proposed borrowing:** challenge consequential premises, test necessity while preserving requested breadth, distill acceptance into outcomes, retain decision provenance, and close on material uncertainty. Refine existing instructions; add no mandatory agents, quotas or plan schema.
+- **Contrary evidence:** strict distillation is path-dependent; verbatim preservation can duplicate requirements; untagged and auto-generated answers can classify as user decisions. Clarity scores and prompt-text tests do not establish plan quality.
+- **Status:** installed skill remains v0.8.1. A matched output trial and reader judgment are still needed; cost and readability gains are unmeasured.

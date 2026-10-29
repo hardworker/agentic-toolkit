@@ -92,6 +92,8 @@ The live example was shortened elsewhere during inspection and was not edited by
 
 The 29 October [idea-shaping comparison](idea-shaping.md) proposes a focused change to intake and scope selection. A clearer final artifact also depends on challenging consequential assumptions and selecting the work to include. This is proposed work, not another adopted output policy or a new template.
 
+The follow-up [Ouroboros source review](ouroboros-planning.md) distinguishes adaptable premise, scope, outcome and closure checks from its runtime gates. Source inspection and a provenance probe do not establish improved readability; a candidate output trial remains pending.
+
 [ce-chat]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/output-contracts.md
 [ce-sections]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/plan-sections.md
 [superpowers]: https://github.com/obra/superpowers/blob/bb92a77741419a4ab5f06e711a283343f1ada0c3/skills/brainstorming/SKILL.md

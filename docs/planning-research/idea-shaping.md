@@ -14,6 +14,8 @@ Improve intake and scope selection within the current skill:
 | Select scope | Include work that serves the outcome, resolves a prerequisite, or protects a consequential constraint. Explain material scope cuts and conditions for revisiting them. |
 | Synthesize | Present the selected direction, essential architecture and next useful proof. Include later work when it affects this decision or was requested. |
 
+The subsequent [Ouroboros source review](ouroboros-planning.md) makes two checks more concrete: ask what breaks if proposed work is removed, and merge acceptance items that merely describe a means toward another outcome. Preserve required methods as constraints and consequential design choices as architecture. Keep decisions distinct from observed facts, examples and agent suggestions; narrowing must not erase another requested output.
+
 Respect explicit requirements and settled decisions. Scope reductions remain recommendations until resolved; do not quietly drop requested breadth. Clear tasks need no manufactured objection or interview, and early exploration need not produce an implementation plan.
 
 A useful reading order is **decision → existing capability and gap → essential design → next proof → unresolved choices**. Adapt or combine it; it is not a heading template.
@@ -28,4 +30,4 @@ A fresh critic found the proposal ready for a bounded trial and identified two s
 
 Compare current and candidate instructions on an overbuilt idea, an explicitly broad survey, a clear small plan and an early exploration. Check justified scope decisions, preserved obligations and caveats, a clear next step, readability and added interaction/tool cost. Do not score shorter output as inherently better.
 
-The supplied artifact was inspected, not regenerated. One fresh review used inherited model settings; no different-model evaluation or behavioral trial was run. No current product claims or generating runtime were verified. The reference and installed skill are unchanged; expected improvements remain unmeasured. Private sources and detailed review stay in the user-wide library.
+The supplied artifact was inspected, not regenerated. One fresh review used inherited model settings; no different-model evaluation or behavioral trial was run. A subsequent pinned Ouroboros source review and small provenance-module probe establish mechanisms and limits, not which process generated that artifact or improved output quality. Current product behavior was not verified. The reference and installed skill are unchanged; expected improvements remain unmeasured. Private sources and detailed review stay in the user-wide library.
