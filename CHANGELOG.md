@@ -36,6 +36,15 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # planning (formerly grounded-plan)
 
+## [0.9.0] — 2026-10-31
+
+### Changed
+
+- Challenge consequential proposed mechanisms before elaborating them; justify scope while preserving requested breadth, decisions and architectural constraints.
+- Define acceptance as observable outcomes, keep required methods as constraints, preserve corrections, and stop intake when further answers would not change the decision.
+- Condense the main skill and its review, scout and record references by combining overlapping instructions. Preserve flexible output, review/scout budgets, invocation, canonical records and storage compatibility; the helper is unchanged.
+- Record a controlled current/candidate output comparison and its limits; shorter instructions do not establish improved plan readability or lower cost.
+
 ## [0.8.1] — 2026-10-25
 
 ### Fixed

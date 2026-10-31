@@ -2,6 +2,8 @@
 
 **29 October 2026 · Source review; proposed adaptations, not adopted.** Inspected [Q00/ouroboros at `cc0d89e`](https://github.com/Q00/ouroboros/tree/cc0d89e5a994aa7e38d7f3151aa25698a6c31f8d), including prompts, Python implementation and selected tests. The repository is [MIT-licensed][license]. This snapshot does not establish which version or process produced the supplied handoff.
 
+**31 October follow-up:** the user authorized the adaptations and a shorter skill. Version 0.9.0 implements them; [comparison and limits](refinement-evaluation.md). The source observations below retain their original date; improved readability remains unestablished.
+
 The useful pattern is **question the proposed solution, select justified requirements, then preserve the decisions that survive**. Its mechanisms are concrete enough to trial. Their presence does not demonstrate better plans or readability.
 
 ## How it works

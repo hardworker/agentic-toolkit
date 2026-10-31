@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-31",
+  "baseline_git_ref": "df8a07d06b36b9eca22c2be7523326d750f31408",
+  "fixture": "../../eval-fixtures/planning-refinement.md",
+  "fixture_sha256": "c837cf91df0961e4630d42ae22f3f18d1572e8535f99e4b44923d1a552c4c5f6",
+  "method": "Three fresh inherited-model contexts, each handling the same four independent requests once. One fresh instruction critic with one targeted follow-up. Parent source/constraint inspection, not blind grading. No live-library writes or nested agents in artifact runs.",
+  "normalization": "Only scratch/home path placeholders and the relative fixture link were normalized in preserved outputs; no content edits.",
+  "initial_candidate_reconstruction": "Reverse initial-to-final.patch against the final released skill to recover the initial candidate.",
+  "snapshots": {
+    "baseline": {
+      "SKILL.md": {
+        "words": 1909,
+        "sha256": "acb442d40581d1f6c677b949a3db73e882a322333db80c2658417efaaae47d6e"
+      },
+      "records.md": {
+        "words": 1753,
+        "sha256": "b9e56de4409065d144122836f28a1322c3bacf2867e7bffe439905c2d3798940"
+      },
+      "review.md": {
+        "words": 802,
+        "sha256": "b09f437f10cf6b3ec8a9331b2bf18853d466499d2394ac83cabac51cf0deb546"
+      },
+      "scouts.md": {
+        "words": 478,
+        "sha256": "07429ffea0fb640a755b35f7ce8f5f4154a8748a446d6d5feb050ab11f67ee8a"
+      }
+    },
+    "initial-candidate": {
+      "SKILL.md": {
+        "words": 1077,
+        "sha256": "ae419418400bbfaf12cf730cfc26f14bb897dfe25b1340b8ca4da1296b51068b"
+      },
+      "records.md": {
+        "words": 957,
+        "sha256": "720412d155ab7b790f0859ba2dcac9b3e87e71129f9cb5e9056de7d12b36dc85"
+      },
+      "review.md": {
+        "words": 531,
+        "sha256": "6a758bc653e3b571e0fc4a6ad76b5b01dc19b147812ac837f200e34accc32374"
+      },
+      "scouts.md": {
+        "words": 287,
+        "sha256": "adb61f083561f3431b3e072070aeacca1ae492f5b45440ff67cf2a1c9fe33d16"
+      }
+    },
+    "final-candidate": {
+      "SKILL.md": {
+        "words": 1095,
+        "sha256": "c681799cf5dbd23363beae2979acff60de811d6f0078929de72401f3a0d172c0"
+      },
+      "records.md": {
+        "words": 971,
+        "sha256": "c1aeb2434382027f40632eef3ff50485db349ca3065b525390cf9343ceca006b"
+      },
+      "review.md": {
+        "words": 531,
+        "sha256": "6a758bc653e3b571e0fc4a6ad76b5b01dc19b147812ac837f200e34accc32374"
+      },
+      "scouts.md": {
+        "words": 287,
+        "sha256": "adb61f083561f3431b3e072070aeacca1ae492f5b45440ff67cf2a1c9fe33d16"
+      }
+    }
+  },
+  "outputs": {
+    "baseline": {
+      "case-1.md": {
+        "words": 1153,
+        "sha256": "0aa7a11c9653f67a32657aad816f20c56610eb1b945ef06d1e347066e81c9c32",
+        "raw_sha256": "e6a829857ab59d722590671fe97f7ede3f780590939608cbff8e64d953df976e"
+      },
+      "case-2.md": {
+        "words": 1170,
+        "sha256": "3c030749d0eddab522298f171a05ba4f08248986cacc67c2814b9dc638324a98",
+        "raw_sha256": "5ed2b282f1d4770df9cbc5100cc5da1ab1ecf67c3a3fdf753ad15c8217f186f0"
+      },
+      "case-3.md": {
+        "words": 149,
+        "sha256": "bfc9fe1e04ba8ab889dbf402bb7a3c2b25718a7fd1e41a5771a86e9a127111e2",
+        "raw_sha256": "52334d54a2bb13828048bf230ab3a058ba64e75a5d94f02e7b3fdd89c5cf7eda"
+      },
+      "case-4.md": {
+        "words": 1074,
+        "sha256": "78d178ad5ef5f444c7929d05272b39ca95acf7dfe6cf4763a513a4fe4ddd7fb7",
+        "raw_sha256": "0ae6e625ba619a51e5774e46d78b603edb93e7a86f3e29f9bc70a052f7a4a5fc"
+      },
+      "receipt.md": {
+        "words": 294,
+        "sha256": "06e6df36371909246975b3fbf1388d3bfd61e0e9d8c1a7317f0d1dc87c5c5cb5",
+        "raw_sha256": "a40f6719d80611e49af9ae63e7523a1b82e07eef982eb3d7be7442600c0de09b"
+      }
+    },
+    "initial-candidate": {
+      "case-1.md": {
+        "words": 880,
+        "sha256": "357fccc6044d6c2ef33933c3fb2264fd8400ecfa79ebf4093307e5707238cf83",
+        "raw_sha256": "cbc6a9d7e761816096449ccc74b696de587017c55fd0197541132dd22968152c"
+      },
+      "case-2.md": {
+        "words": 1033,
+        "sha256": "43e5391e41b51f849fd546a1eb930f36d88822cac2236f61ebbfc093594d6bd3",
+        "raw_sha256": "134169eda9991bb53a7eb40ab5713052b9c8982857520549f85c261554cafef9"
+      },
+      "case-3.md": {
+        "words": 134,
+        "sha256": "1a22cc4a9e55aeca069acef0949dff1550a12b1f32027e51ee43d1b52fd0f513",
+        "raw_sha256": "e58982f1222a47d32328fedbbac7f84a4afa143c6bf0b466db66c5c600de8c5b"
+      },
+      "case-4.md": {
+        "words": 1038,
+        "sha256": "7a11971c07aa2b0790bf7c497e913ce32ccd3f8831ae17cebed57af6c37c4385",
+        "raw_sha256": "9dc9d02aead9603baaba588a11026281e1be2d0645e43702624af0d5382f794b"
+      },
+      "receipt.md": {
+        "words": 400,
+        "sha256": "b4d54814c66b89b0f1d86a72fe9dc1b74754f85369057af5879fb570f66758fb",
+        "raw_sha256": "8d696d730231605ab1023b738e2e8e6bea5114b17cd1b269d1617f097f665674"
+      }
+    },
+    "final-candidate": {
+      "case-1.md": {
+        "words": 894,
+        "sha256": "7c6a5621879c532284bfee0e715de74f2ec29a9313365fc8793a86762cf1e55e",
+        "raw_sha256": "7c6a5621879c532284bfee0e715de74f2ec29a9313365fc8793a86762cf1e55e"
+      },
+      "case-2.md": {
+        "words": 974,
+        "sha256": "900523e2cde0934b2383172fc4e79d4a419ffe0defc1096f9c36f4520813fa7d",
+        "raw_sha256": "900523e2cde0934b2383172fc4e79d4a419ffe0defc1096f9c36f4520813fa7d"
+      },
+      "case-3.md": {
+        "words": 161,
+        "sha256": "70eecf4730e0d2cbdc3aaba4d101e6859d21d9b779dcb59dece60ced991eff4c",
+        "raw_sha256": "70eecf4730e0d2cbdc3aaba4d101e6859d21d9b779dcb59dece60ced991eff4c"
+      },
+      "case-4.md": {
+        "words": 962,
+        "sha256": "accfe2de25403a2903c362e913c4d8b50d383abce0ca458c25bf9993171c719f",
+        "raw_sha256": "accfe2de25403a2903c362e913c4d8b50d383abce0ca458c25bf9993171c719f"
+      },
+      "receipt.md": {
+        "words": 246,
+        "sha256": "7e6620646a87df137e4d7144a7a9becc0bf0bab7cdbc8c506ccd44d89e804220",
+        "raw_sha256": "513c87cdaacfe51e7ae25cecac69e969882e0d74c07b077298d8a5c838bd4b76"
+      }
+    }
+  }
+}

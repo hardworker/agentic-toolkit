@@ -18,6 +18,8 @@ Read-only `discover --project <directory> [--source codex:<id>]` lists canonical
 
 Formerly `grounded-plan`. Use `/planning` for this skill; `/plan` is Claude Code's built-in plan-mode command.
 
+The planner separates desired outcomes from suggested mechanisms, checks what deserves to enter scope, and preserves accepted decisions through refinement. Acceptance describes finished results; required methods and architectural decisions retain their place. Clear tasks need no forced interview, and broad requests keep their breadth. The [0.9.0 comparison](docs/planning-research/refinement-evaluation.md) records what the shorter instructions were checked against and what remains unmeasured.
+
 Concise planning and plan review for engineering, product, and research. Grounds decisions in actual sources and compares serious alternatives. Structure follows the decision at hand: a vision may organize by initiative, while an execution plan may follow delivery stages. Explain what changes, why it matters, and how it fits; use examples where helpful and give central ideas more depth. Lists separate meaningful points; prose explains their connections. Establish the main behavior before exceptions, and give decisions and constraints one home.
 
 Architecture keeps components, responsibilities, flows, and important boundaries visible; code-level choices belong to the implementer. Early plans identify priorities, dependencies, and the next decision or validation; execution plans add deliverables and acceptance conditions. Supporting detail stays findable in named sections or links, with consequential caveats visible. Editing checks content preservation as well as readability. No fixed template or length limit is required.
@@ -25,7 +27,7 @@ Architecture keeps components, responsibilities, flows, and important boundaries
 The planner reads code and may run permitted checks, but writes planning artifacts and disposable probes only. Implementation is a separate authorized phase or handoff. Research stays direct by default; optional [scouts](skills/planning/scouts.md) handle bulky sources or independent questions, with at most two calls including follow-ups unless the user sets another research budget. The planner checks decisive evidence itself. Scouts and fresh critics have separate roles and budgets.
 
 ```text
-Goal → evidence → options → plan and diagram → bounded challenge → decision and checks
+Outcome and assumptions → evidence → justified scope and options → plan → bounded challenge → decision and checks
 ```
 
 Scrutiny is inferred from the task's uncertainty, consequences, reversibility, and dependencies. Simple work uses source checks and self-review; meaningful choices can add a fresh critic; consequential disputed assumptions can add a blind alternative and bounded debate. There is no effort setting to choose. Explicit time, cost, and delegation limits still apply. The skill distinguishes observed/tested evidence from assumptions and future checks, and reports actual reviewer independence. Call caps control workflow size, not billing.

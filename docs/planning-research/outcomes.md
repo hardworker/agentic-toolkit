@@ -218,3 +218,10 @@ Validation: all 14 session/discovery tests passed from the renamed folder; 98 lo
 - **Proposed borrowing:** challenge consequential premises, test necessity while preserving requested breadth, distill acceptance into outcomes, retain decision provenance, and close on material uncertainty. Refine existing instructions; add no mandatory agents, quotas or plan schema.
 - **Contrary evidence:** strict distillation is path-dependent; verbatim preservation can duplicate requirements; untagged and auto-generated answers can classify as user decisions. Clarity scores and prompt-text tests do not establish plan quality.
 - **Status:** installed skill remains v0.8.1. A matched output trial and reader judgment are still needed; cost and readability gains are unmeasured.
+
+## Idea shaping and concise instructions, version 0.9.0
+
+- **Authorization:** on 31 October, the user approved the refinement plan and asked to make the whole skill concise.
+- **Delivered:** premise challenge, justified scope, outcome-based acceptance, decision preservation and material closure within the existing workflow. All four instruction files were condensed from 4,942 to 2,884 words; scripts, storage and invocation remain unchanged.
+- **Verification:** three controlled artifact runs across four requests, one instruction critic with a targeted follow-up, 14 existing session/discovery tests and document/package checks. The first candidate's dense paragraphs prompted a clearer grouping instruction; review restored new-session precedence and dated outcomes. [Evidence and limits](refinement-evaluation.md).
+- **Outcome boundary:** instruction reduction and the observed sample structures are established. Better reader comprehension, general planning quality and cost savings remain unmeasured; the baseline already preserved the key requirements in these examples.

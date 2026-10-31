@@ -1,40 +1,35 @@
-# Bounded review procedure
+# Bounded review
 
-Read this when the task warrants a fresh critic or a blind alternative, including review of an existing plan. The parent owns the artifact; reviewers return findings rather than modifying it. Use fresh contexts with only the brief, constraints, acceptance criteria, evidence pointers, and the input specified below; do not reuse a research scout as the fresh critic of its own work. Tool access is read-only except a designated scratch output, if needed. Local instructions and the user's limits still apply.
+Use fresh contexts with the task, constraints, intended decision and evidence pointers. The parent owns the plan; reviewers return findings. Access is read-only except designated scratch output. A research scout cannot review its own work as a fresh critic.
 
 ## Fresh critic
 
-Dispatch one fresh critic against a fixed plan snapshot. Its task:
+Freeze the draft and dispatch one critic:
 
-Judge readiness for the decision the artifact supports. A vision can leave execution detail open while making its priorities, consequential dependencies, and next validation clear; an execution plan needs deliverables and acceptance conditions. Do not force either into the other's structure.
+> Assess readiness for the decision this plan supports. Open relevant sources. Check requested outcomes, unnecessary scope, missed reuse, unsupported claims, dependencies, failure paths, existing contracts, acceptance and diagram/prose agreement. Suggest a smaller alternative only when it preserves the goal. Preserve explicit constraints and requested breadth; flag lost decisions or guesses presented as commitments. Distinguish observed behavior from proposals and future checks.
+>
+> Judge architecture and acceptance without requiring code-level choices unless they affect feasibility. An exploration needs priorities and next validation; execution plans need deliverables and acceptance. Flag repetition or overloaded items that obscure the direction, rationale or next step; preserve substance without enforcing headings or length.
+>
+> Return at most five material findings, each with an affected claim, source, consequence and resolving correction or observation. No finding is required. Label uncertainty and give a short verdict: ready, revise or unresolved. This is advice, not implementation authorization.
 
-> Check this plan against the requested outcome and the supplied source artifacts. Open the relevant sources; do not judge only from the author's summary. Seek unsupported decision-changing claims, missed reuse, missing acceptance coverage, infeasible interfaces, dependency gaps, failure paths, and disagreement between diagrams and prose. Assess architecture, dependencies, and acceptance; missing code-level choices are not defects unless they affect feasibility, scope, or acceptance. Flag repetition, overloaded items, or scattered conditions when they obscure the proposal, decisions, dependencies, or risks. Suggest a clearer grouping or wording that preserves substance; do not enforce word counts or heading names. Challenge unnecessary complexity with a concrete smaller alternative that preserves the goal. Distinguish existing behavior from proposed behavior and future checks from executed evidence. Report at most five material findings. No finding is required when the plan is sound. For each, give the affected claim/task, evidence pointer, consequence, and correction or observation that would resolve it. Label uncertainty honestly. Return a short verdict: ready, revise, or unresolved; this is advice, not implementation authorization.
-
-The parent verifies material findings, corrects supported issues, and records any remaining unknown or user decision. If a correction changes a consequential part of the plan, one targeted follow-up may check that change. Otherwise stop. Do not add reviewers because the first found nothing.
+Verify findings against evidence and correct supported issues. Allow **one targeted follow-up** only if a consequential correction needs checking. Otherwise stop; do not add reviewers because none found a defect.
 
 ## Blind alternative and dispute
 
-When costly reversal or consequential disputed assumptions warrant an independent approach, use two fresh contexts, each with the same task, constraints, acceptance criteria, and evidence access. If the critic has already run, retain it and add only the alternative author:
+For costly reversal or consequential disputed assumptions, retain any existing critic and add an alternative author. Give it the same brief and source access, **without the draft, favored option or critic findings**:
 
-1. **Critic:** the critic brief above plus the fixed plan snapshot.
-2. **Alternative author:** the brief below, **without the first plan, favored option, or critic's findings**.
+> Independently recommend the smallest credible approach. Inspect sources; identify the strongest alternative, decisive tradeoff and observation that would change your choice. Surface at most five material assumptions or failure scenarios with evidence or an explicit unknown. Return a compact recommendation, not another full plan. Do not consult the other reviewer before returning it.
 
-> Independently recommend the smallest credible approach to this task. Inspect relevant source artifacts. Identify the strongest alternative, the decisive tradeoff, and what observation would change your choice. Surface at most five material assumptions or failure scenarios with evidence or an explicit unknown. A compact recommendation is enough; do not write a second full implementation plan. Do not ask the other reviewer or read their output before returning yours.
+Freeze the parent's draft before either result arrives. Keep initial judgments separate, including when contexts run sequentially. Prefer an available different model family only when authorized; do not install providers or incur a new paid service for diversity. Reusing one reviewer for both roles is not independence.
 
-The parent should freeze its draft before receiving the alternative. First answers stay separate until both return. If only one context can run at a time, run them sequentially with the same information boundary. Reusing one reviewer to play both roles does not create a second initial judgment.
+Deduplicate findings and challenge only disagreements that could change the plan or leave acceptance unsupported. Send each reviewer the opposing evidence and request:
 
-Compare the resulting choices and findings. Combine identical findings once; distinguish agreement reached independently from concessions during discussion. Challenge only disagreements that could alter the plan or leave a consequential acceptance criterion unsupported.
+- **Accept/correct:** identify the error that changes the position.
+- **Defend:** provide new evidence or corrected inference and its consequence.
+- **Unresolved:** name the missing observation or user-value choice.
 
-For each dispute, send each reviewer the relevant finding and opposing evidence; ask for one of:
+Allow **at most two dispute rounds within six total review calls**, including initial calls and earlier critic follow-ups. Escalation never resets the count. Stop sooner when settled or a full round adds no evidence or correction. The parent adjudicates from sources; preferences can resolve value choices, not empirical uncertainty. Preserve unresolved dissent and the cheapest next check.
 
-- **Accept/correct:** identify the evidence or reasoning error that changes the position.
-- **Defend:** supply a new source observation or corrected inference, with a concrete consequence.
-- **Unresolved:** explain the missing observation or user-value choice; do not repeat the argument.
+## Receipt
 
-Allow at most two dispute rounds, at most one response per reviewer in each round, within **six review calls total**, including initial calls and any earlier critic follow-up. Adding an alternative does not reset the count. Stop earlier when settled or when a complete round adds no evidence or corrected inference. The parent adjudicates against sources; an unavailable observation remains unknown. It can accept a user's stated preference without pretending that preference settles an empirical claim.
-
-Revise the plan once the material choices are resolved. Check altered dependencies, acceptance coverage, and diagram consistency; further independent review must fit the existing cap. Report remaining dissent when the cap or evidence limit prevents resolution. A cap limits work, not what may be reported.
-
-## Review receipt
-
-Record why the task warranted review, actual fresh contexts/review calls, model diversity if known, material changes caused by review, unresolved findings, and stop reason (`settled`, `no-new-evidence`, `cap`, or `review-unavailable`). Preserve evidence pointers, not a transcript of private reasoning. Nothing in the receipt proves an unexecuted implementation works.
+Record why review was useful, actual contexts/calls, known model diversity, changes caused by review, unresolved findings and stop reason: `settled`, `no-new-evidence`, `cap` or `review-unavailable`. If unavailable or prohibited, self-check and state the reason. Keep evidence pointers, not private reasoning transcripts. Review agreement does not establish implementation correctness or planning benefit.

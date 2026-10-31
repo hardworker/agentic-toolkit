@@ -1,6 +1,6 @@
 # Shape the decision before expanding the plan
 
-**29 October 2026 · Proposed refinement; not adopted.** The installed planning skill remains v0.8.1.
+**31 October 2026 · Implemented in planning v0.9.0.** This note preserves the 29 October proposal. The user subsequently authorized its implementation and compaction of the whole skill; [comparison and verification](refinement-evaluation.md) distinguish completed changes from unmeasured benefits.
 
 A supplied engineering handoff prompted a closer comparison. Its useful qualities were a narrower immediate objective, an explicit existing-capability/gap distinction, semantic architectural boundaries, and stages tied to acceptance. Its detailed schemas, repeated delivery lists and future metrics are not necessary to reproduce those strengths.
 
@@ -30,4 +30,4 @@ A fresh critic found the proposal ready for a bounded trial and identified two s
 
 Compare current and candidate instructions on an overbuilt idea, an explicitly broad survey, a clear small plan and an early exploration. Check justified scope decisions, preserved obligations and caveats, a clear next step, readability and added interaction/tool cost. Do not score shorter output as inherently better.
 
-The supplied artifact was inspected, not regenerated. One fresh review used inherited model settings; no different-model evaluation or behavioral trial was run. A subsequent pinned Ouroboros source review and small provenance-module probe establish mechanisms and limits, not which process generated that artifact or improved output quality. Current product behavior was not verified. The reference and installed skill are unchanged; expected improvements remain unmeasured. Private sources and detailed review stay in the user-wide library.
+The 29 October research inspected the supplied artifact without regenerating it. One fresh review used inherited model settings; that stage ran no different-model evaluation or behavioral trial. The pinned Ouroboros source review and provenance-module probe establish mechanisms and limits, not which process generated the artifact or improved output quality. Current product behavior was not verified. The reference remains unchanged. The later implementation and controlled output comparison are recorded separately; expected readability and cost benefits remain unmeasured. Private sources and detailed review stay in the user-wide library.

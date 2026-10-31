@@ -63,6 +63,8 @@ flowchart LR
 
 The main skill handles intake, grounding, decision-making, representation, and output. It infers scrutiny from uncertainty, consequences, reversibility, and dependencies, without named effort modes. `review.md` loads only when a fresh critic or blind alternative could change the plan or resolve a consequential gap. A critic may receive one targeted follow-up. Adding a blind alternative permits at most two dispute rounds within six total review calls, including earlier critic calls; escalation never resets the count. Initial judgments remain separate, and settled disputes or no new evidence stop review early. Fresh contexts may share a model; the receipt must say so.
 
+Intake distinguishes desired outcomes from suggested mechanisms and challenges only consequential unsupported premises. Scope selection checks necessity without dropping explicit requirements or other requested outputs. Acceptance describes finished outcomes; required methods remain constraints and consequential design choices stay in the architecture. Synthesis preserves decisions, corrections and evidence status. These checks refine existing stages; they add no mandatory interview, panel or schema. Version 0.9.0 condenses all four instruction files while preserving the helper and storage contract; [comparison and limits](docs/planning-research/refinement-evaluation.md).
+
 `scouts.md` loads only when research benefits from delegation. Direct research and parallel tool calls are the default. Scouts get bounded, distinct questions and return claims, source/version pointers, counterevidence, and gaps. The default research cap is two scout calls including follow-ups, separately counted from review and adjustable by the user's budget. No recursive delegation is permitted. The planner opens decisive sources and reconciles contradictions; a scout cannot become the fresh critic of its own work. Bulk evidence can stay behind links without losing provenance.
 
 The artifact's structure follows its purpose and the reader's decision, with initiatives, capabilities, options, questions, or delivery stages as possible organizing units. It explains what changes, why it matters, and how it fits existing work; examples clarify abstract ideas. Central concepts receive more depth than smaller proposals. Lists separate meaningful points with their essential conditions; prose explains connections. The main behavior precedes exceptions, and supporting cases and verification may use named sections or links. Consequential caveats stay visible. Editing checks content preservation and findability; no template, paragraph quota, or equal-size section rule is imposed.
@@ -321,7 +323,7 @@ agentic-toolkit/
 │   └── marketplace.json     # ...and as its own marketplace (source "./")
 ├── skills/
 │   ├── planning/
-│   │   ├── SKILL.md              # planning contract, effort routing, evidence and output
+│   │   ├── SKILL.md              # planning contract, scrutiny, evidence and output
 │   │   ├── scouts.md             # conditional research dispatch and evidence packets
 │   │   ├── review.md             # conditional critic and blind-alternative procedure
 │   │   ├── records.md            # session/plan ownership, continuation, outcomes and reuse

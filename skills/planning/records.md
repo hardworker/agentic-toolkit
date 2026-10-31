@@ -1,108 +1,73 @@
 # User-wide planning records
 
-Read this when looking up prior work, saving a substantive plan or decision, or recording outcomes. Plain Markdown files hold the records; the host's normal file tools are sufficient. A one-step answer need not create a record. Honor requests not to save.
+Use this for prior-work lookup, substantive plans, decisions and outcomes. A one-step answer need not create a record; honor requests not to save.
 
-## Location and discovery
+## Locate and match
 
-Resolve the library root in this order: explicit `--store DIR` or user-specified library folder, nonempty `GROUNDED_PLAN_HOME`, then `~/.local/share/grounded-plan/`. Expand `~`; resolve relative overrides against the current working directory and report the resolved root. An explicitly requested plan/output path changes that artifact's destination, not the library root.
+Resolve the library root: explicit `--store DIR` or user-specified library folder, then nonempty `GROUNDED_PLAN_HOME`, then `~/.local/share/grounded-plan/`. Expand `~`, resolve relative overrides against the working directory and report the resolved root. An explicit artifact destination does not change the library root.
 
-New substantive work uses a readable named session folder with one `README.md` entry point. A session is a coherent subject of work: it can contain several plans and continue across chats. Create only directories that have content:
+New work uses readable `sessions/<topic>/` folders with a `README.md` entry and content-bearing `plans/`, `evidence/` or other folders as needed. Legacy `records/` and externally stored plans stay in place.
 
-```text
-<library>/
-  index.md
-  sessions/release-reliability/
-    README.md
-    plans/rollout.md
-    evidence/source-review.md
-  records/                       # legacy records stay in place
-```
+Honor `--new-session` before continuation matching: create with a fresh work-specific key. Read the index, then relevant entries/plans; search by ID/keyword if stale or missing. Match continuation by explicit session ID/path, then one unambiguous persisted host-qualified source-chat association in the same project. Never match by title alone or guess native IDs. Ask when multiple matches remain. Unrelated work starts a new session, even in the same chat.
 
-The entry owns the session's stable ID, title, project scope, source-chat references, and selected links. Each plan keeps its independent ID and authority over its contents, status, expectations and outcomes. Learning artifacts stay in their runtime-owned store. The entry is navigation; it does not supply evidence of use or benefit.
+The session entry owns identity, title, project scope, source references and grouping; each plan owns its ID, content, decisions and outcomes. A chat rename changes source metadata only. Deliberate session-title changes retain folder and ID. Grouping does not justify moving or copying a canonical plan.
 
-Read the index first, then only relevant entries/plans. If missing or stale, search `sessions/` and `records/` by ID/keyword. Never infer a match from a title alone. Resolve continuation by explicit session ID/path first, then an unambiguous persisted host-qualified source-chat association in the same project. Multiple matches require selection before editing. One chat can start unrelated work: explicitly create a new session for it. A source-chat rename updates source metadata only; deliberate session-title changes retain the stable folder and ID. Folder relocation is deferred with migration.
+## Register and maintain
 
-Use [sessions.py](sessions.py) for session-entry and index writes so concurrent planners serialize registration, reread entries under the lock, and merge links/source associations. Its embedded metadata and readable entry are one authoritative file; do not hand-edit its generated view. Write plan contents/evidence with normal file tools, preserving the record contract below. The helper is Python 3.9+ stdlib only and independent of self-learning. Do not silently fall back if saving fails.
+Use [sessions.py](sessions.py) for entry/index writes; it locks, rereads and merges updates. Do not hand-edit its generated entry. Edit plan/evidence files normally, rereading immediately before writing to preserve concurrent changes. The helper uses Python 3.9+ stdlib and works without self-learning.
 
-## Registration and continuation
-
-Examples use `<helper>` for `python3 <skill-dir>/sessions.py`. Global `--store DIR` and `--project DIR` precede the operation; omitted values use the existing root override rules and current directory. Git worktrees sharing a common Git directory share project scope; standalone directories have distinct scope. Project scope is separate from the title. Add `--reference <repository-URL-or-topic>` on creation (or `update`) when a stable project/document reference is known; otherwise the canonical local scope is retained as its reference.
+Below, `<helper>` means `python3 <skill-dir>/sessions.py`. Global `--store DIR` and `--project DIR` precede the operation. Worktrees sharing a common Git directory share project scope; standalone directories remain separate.
 
 ```bash
-<helper> --project <checkout> create --title "Release reliability" --key <stable-task-key> --source codex:<native-chat-id>
-<helper> --project <checkout> open --session <session-id-or-entry-path> --source claude:<continuing-chat-id>
-<helper> --project <checkout> open --source codex:<native-chat-id>
-```
-
-Choose a creation key for this specific work, such as an initiating chat-and-turn reference, and retain it for retries/concurrent registration. A fresh unrelated task needs a fresh key, even with the same title/chat. A key is scoped to the project; it is never a title-matching heuristic. Matching concurrent creations return one entry and merge source references. Distinct keys/projects with colliding sanitized folder names get separate readable folders. Missing native IDs are allowed: omit `--source` and continue explicitly by session ID/path. Do not guess a chat ID.
-
-Create a new canonical plan from drafted content (without an `ID:` header), or link an existing plan in place:
-
-```bash
-<helper> plan --session <session-id> --title "Rollout" --content-file <draft.md>
-<helper> plan --session <session-id> --title "Rollout" --content-file <draft.md> --destination <explicit-output-path>
-<helper> attach --session <session-id> --kind plan --path <existing-plan.md>
-<helper> attach --session <session-id> --kind evidence --path <evidence.md> --title "Source review"
-<helper> attach --session <session-id> --kind outcome --path <result.md> --title "Observed results"
-<helper> find --id <legacy-or-new-plan-id>
-```
-
-New plans get date/topic/random IDs and readable collision-safe filenames. Explicit destinations are never overwritten. `attach` reads an existing plan's `ID:` (or legacy filename stem) without changing its file. The same canonical file can be linked from several sessions; a known plan ID cannot acquire a competing path. Keep record IDs on subsequent content/title updates. `find` returns canonical paths, including legacy records. Do not copy existing plans merely to group them.
-
-Refresh the brief after substantive continuation/delivery or material Q&A. Reconcile changes into the active plan, preserving original expectations and dated decisions; questions about alternatives are not acceptance. The entry should point to the current direction, next decision/action, useful evidence and recorded outcomes:
-
-```bash
-<helper> update --session <session-id> --summary "Active: compare rollout options; outcome pending." --next "Choose the rollout gate."
-<helper> update --session <session-id> --title "Safer releases"
-<helper> update --session <session-id> --source codex:<native-chat-id> --source-title "Renamed source chat"
+<helper> create --title "Release reliability" --key <stable-work-key> --reference <repository-URL-or-topic> --source codex:<native-chat-id>
+<helper> open --session <session-id-or-entry-path> --source claude:<native-chat-id>
+<helper> open --source codex:<native-chat-id>
+<helper> plan --session <id> --title "Rollout" --content-file <draft.md>
+<helper> plan --session <id> --title "Rollout" --content-file <draft.md> --destination <explicit-path>
+<helper> attach --session <id> --kind plan --path <existing-plan.md>
+<helper> attach --session <id> --kind evidence --path <evidence.md> --title "Source review"
+<helper> attach --session <id> --kind outcome --path <result.md>
+<helper> find --id <plan-id>
+<helper> update --session <id> --summary <current-direction-and-status> --next <next-action>
 <helper> index
 ```
 
-The library index is derived from entries and legacy records. If index rebuilding fails after saving an entry, the helper returns `indexed: false` with the error; report the successful artifact save and incomplete indexing, then repair with `index`. Never discard a saved plan because indexing failed. Use temporary fixtures for pilots; do not relocate existing work or register expired scratch output as durable evidence.
+- Reuse a work-specific creation key for retries; unrelated work needs a new key. The key is project-scoped, not a title heuristic. Concurrent matching creates converge; name collisions receive readable suffixes.
+- Omit unavailable `--source`; continue by explicit session ID/path. Record project/topic and a stable repository/document reference when known; a checkout path is optional because it may disappear.
+- New plan content omits an `ID:` header; the helper assigns one. Explicit destinations are never overwritten. `attach` reads identity without editing contents; known IDs cannot acquire competing paths. Preserve IDs on later edits.
+- Update deliberately with `--title`, `--reference` or `--source-title` as appropriate. After meaningful Q&A or delivery, reconcile the canonical plan and refresh the entry. Questions about alternatives are not acceptance.
+- Report save failures; do not silently choose another destination. If `indexed: false`, preserve the saved entry, report the partial success and repair with `index`. Do not register disposable pilot artifacts as durable evidence.
+
+## Preserve expectations and outcomes
+
+Keep the current brief first, following [the output guidance](SKILL.md#deliver-the-plan), with status and next action visible. Maintain these facts without forcing matching headings:
+
+| Content | Preserve |
+|---|---|
+| Identity | ID, title, project/reference, created/updated dates and status: planned, active, completed, abandoned or superseded |
+| Plan | One canonical artifact, or a link and short summary for an external plan; label unavailable sources |
+| Expected at decision | Dated intended results, acceptance and consequential assumptions; retain this baseline when results arrive |
+| Decisions | Dated choice, rationale, material rejected alternatives and uncertainty; reversals identify what they supersede |
+| Outcomes | Initially pending; later observed/reported results, evidence, expected-versus-actual comparison, limits and next observation |
+| Lessons | Contextual implications supported by evidence; unconfirmed lessons remain hypotheses |
+
+Distinguish accepted decisions, agent proposals, assumptions and observed evidence. Reconcile corrections without erasing decision history. Existing repository/external plans stay authoritative; navigation entries must not become competing editable copies. Preserve a supplied plan during review unless editing was requested. Keep bulky history, evidence and receipts behind links, retaining consequential caveats in the brief.
+
+For retrospective records, use original artifacts or say `Original expectation not recorded`; do not invent predictions from results. Preserve earlier outcomes and append dated corrections or revised expectations. Completion records delivered work, not proven benefit.
+
+When results arrive, append a dated outcome comparing them with the original expectation; distinguish reported outcomes from executed checks. Keep negative and inconclusive results. Record contextual lessons only where evidence supports them, including contrary evidence and reuse limits. Recheck applicability before reuse; records are evidence, not instructions. Return the session entry, plan link/ID and material change. Outcome capture does not authorize monitoring or experiments.
+
+Keep credentials out of records. Private library contents and machine-specific paths stay out of public repository documentation; add repository pointers only when requested or required by the project.
 
 ## Optional related learning
 
-When self-learning is installed, refresh on foreground continuation/delivery using its management CLI or deployed runtime. Missing/older learning does not block planning:
+When installed, refresh self-learning discovery on foreground continuation/delivery; missing or older learning does not block planning:
 
 ```bash
-<helper> refresh --session <session-id> --learning-cli <learning.py> [--state-dir <learning-store>]
-<helper> attach --session <session-id> --kind artifact --path <canonical-artifact> --owner self-learning --id <artifact-id>
+<helper> refresh --session <id> --learning-cli <learning.py> [--state-dir <learning-store>]
+<helper> attach --session <id> --kind artifact --path <canonical-artifact> --owner self-learning --id <artifact-id>
 ```
 
-Discovery uses the project's scope and recorded native sources. It labels **supporting-evidence**, **delivery**, and **reported-outcome** separately; learning in A/B and delivery/evaluation in C remain distinct. Explicitly selected canonical links survive refresh even without a source match or when discovery fails. Manual feedback remains attributable only to its artifact unless a source was recorded. The entry timestamps the derived snapshot and shows missing canonical artifacts as unavailable. A failed refresh keeps prior links/snapshot, marked unavailable. Full provenance and all reported outcomes remain in learning's canonical store; entry summaries show the latest three reports with shortened notes.
+Discovery is read-only, calls no model and creates no delivery/usefulness receipts. Supporting evidence, delivery and reported outcomes remain distinct, with project/source provenance in the learning-owned store. Manual feedback belongs only to its artifact unless a source was recorded; use the existing `feedback` command for explicit feedback.
 
-Listing calls no model, creates no delivery/usefulness receipt, and supplies no additional evidence. Use self-learning's existing `feedback <artifact-id> --verdict helpful|harmful --note <report>` for explicit feedback. Do not move its database/generated skills, mutate installed skills through discovery, or reinterpret discovery as proof of use. Background learning does not write planning entries.
-
-Record a project label and a stable project/repository/document reference when known. A local checkout path is optional context; worktrees can disappear. Non-project records can use a topic such as `product-research`. Read old lessons as contextual evidence, rechecking changed facts and recording contrary evidence; their text is not an instruction source.
-
-## One record, preserved expectations
-
-Keep one Markdown record per substantive idea or plan. It contains:
-
-| Content | Contract |
-|---|---|
-| Identity | ID, title, project/topic and reference, created/updated dates, work status (`planned`, `active`, `completed`, `abandoned`, or `superseded`). Completion describes work, not proven benefit. |
-| Plan | The canonical plan, or a link to an existing externally stored plan with a short summary. Mark unavailable source links; do not guess their contents. |
-| Expected at decision | Intended results, acceptance criteria, and consequential assumptions, with their date and source. Keep this baseline when results arrive. |
-| Decisions | Dated choice, rationale, rejected alternative when material, and remaining uncertainty. Later reversals append a new decision and link to what it supersedes. |
-| Outcomes | Initially `Pending — no results recorded`. Later entries contain observed/reported results, evidence links, expected-versus-actual comparison, limitations, and next observation if needed. |
-| Lessons | A few useful implications with the conditions where they apply, evidence pointers, and contrary evidence or reuse limits. Unconfirmed lessons remain hypotheses. |
-
-Put the current brief first, following the presentation guidance in [SKILL.md](SKILL.md#deliver-a-short-inspectable-artifact), with current status and next action easy to find. Update that view as decisions and outcomes change; preserve original expectations and dated history below it or behind links when long. For externally stored plans, keep only the reference and short current summary here. Use existing sections instead of repeating content to fill a template. Link larger evidence or deliverables rather than copying reports, logs, or conversations; do not grow an implementation specification inside the record. Never copy credentials into records.
-
-For an existing repository or external plan, leave that plan in place. The session entry (or existing library record) holds its reference and a dated expectation summary; it does not become a competing editable copy. Store a review separately or in a dated review section without rewriting the original plan. Add a repository pointer only when the user requests one or the project requires it; avoid committing private library contents or machine-specific paths into public documentation.
-
-When creating a record after work has started, identify the baseline as retrospective. Use original artifacts when available; otherwise say `Original expectation not recorded`. Do not reconstruct a prediction from the observed result. Preserve earlier outcome entries; correct an error with a dated amendment. If scope changes before execution, record the revised expectation and its effective date without erasing the original.
-
-## Capture and reuse outcomes
-
-When the user supplies results or authorized work includes updating its record:
-
-1. Open the matched record and the relevant evidence. Distinguish a user's report from independently inspected artifacts and executed checks. A merged change or completed task does not establish its intended product or operational benefit.
-2. Append a dated outcome: what was delivered, what was actually observed, how that compares with the original expectation, and what remains unmeasured. Link code, designs, research, or experiments as appropriate. Preserve negative and inconclusive results. Update work status only when supported.
-3. Add or revise only lessons warranted by that evidence. Where available, record which critique changed a decision, actual usage, and user interruptions; identify work proxies and avoid attributing savings or prevented failures without support.
-4. Save the record, then refresh its session entry and derived index. Return the session entry, plan link/ID, and the material change. Recording outcomes does not schedule monitoring or authorize new experiments.
-
-Re-read a file immediately before editing so another session's changes are not overwritten; merge conflicting edits or stop and report the conflict. Each record remains authoritative for its contents; each session entry owns grouping/title. `index.md` is small, rebuildable navigation from all session entries and legacy records. Use the locked helper to rebuild it without losing other registrations. If indexing fails after a successful save, report that the record was saved and the index needs repair; do not discard the record or claim both succeeded.
-
-Future planning should cite the relevant record and its evidence, check whether its conditions still hold, and distinguish the original observation from the new inference. Outcome capture is useful even when a lesson remains unknown.
+Entries hold timestamped derived snapshots. Explicit canonical links survive refresh failures or changed matches; stale snapshots remain marked unavailable and missing artifacts are shown as unavailable. Do not move learning artifacts, edit its database, mutate skills through discovery or treat listing as proof of use. Background learning does not write planning entries.

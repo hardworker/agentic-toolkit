@@ -92,7 +92,11 @@ The live example was shortened elsewhere during inspection and was not edited by
 
 The 29 October [idea-shaping comparison](idea-shaping.md) proposes a focused change to intake and scope selection. A clearer final artifact also depends on challenging consequential assumptions and selecting the work to include. This is proposed work, not another adopted output policy or a new template.
 
-The follow-up [Ouroboros source review](ouroboros-planning.md) distinguishes adaptable premise, scope, outcome and closure checks from its runtime gates. Source inspection and a provenance probe do not establish improved readability; a candidate output trial remains pending.
+The follow-up [Ouroboros source review](ouroboros-planning.md) distinguishes adaptable premise, scope, outcome and closure checks from its runtime gates. Source inspection and a provenance probe do not establish improved readability; at that stage a candidate output trial remained pending.
+
+### Implemented refinement and instruction compaction, version 0.9.0
+
+On 31 October, the user authorized the refinement and shortening of the whole skill. The main instructions and their three references now consolidate overlapping guidance while retaining flexible output, architecture and evidence boundaries. The [controlled output comparison](refinement-evaluation.md) records its observations and limits; instruction reduction alone is not evidence of improved reader comprehension.
 
 [ce-chat]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/output-contracts.md
 [ce-sections]: https://github.com/EveryInc/compound-engineering-plugin/blob/fac349c0c31a543d497fd4825af9b44bdb7e7dfe/skills/ce-plan/references/plan-sections.md
