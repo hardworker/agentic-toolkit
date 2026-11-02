@@ -42,7 +42,7 @@ Installation merges owned native hooks into both hosts and symlinks the manageme
 
 ## planning
 
-The skill was renamed from `grounded-plan`; its storage root, environment override and session metadata marker retain their existing names so saved records remain compatible. Historical evaluation snapshots retain their original paths and hashes.
+The skill, default library (`~/.local/share/planning/`), environment override (`PLANNING_HOME`) and session marker (`planning-session`) share the same name. The helper accepts older configuration and markers, and discovers the old default library when the new one is absent. Historical snapshots and stable record IDs retain their original names.
 
 Planning ends with a decision brief and handoff. The planner may inspect code and run permitted checks, but writes only planning artifacts and disposable probes. Product implementation is a separate authorized phase, possibly performed by the same agent. This is a role boundary, not filesystem enforcement.
 
@@ -75,7 +75,7 @@ Claims carry evidence states rather than confidence percentages. Deterministic c
 
 `--review` preserves the supplied plan unless edits were requested. A missing reviewer degrades to self-checking with explicit limits. Model selection inherits the host unless a different available model is authorized; the skill has no hardcoded model or required external provider. User time, cost, scope, and delegation limits take precedence over inferred scrutiny. Call caps are instruction-level controls, not enforced monetary budgets.
 
-`records.md` defines the user-wide library and its existing `--store DIR` / `GROUNDED_PLAN_HOME` overrides. New work lives in readable `sessions/<topic>/` folders; a `README.md` entry owns stable session identity, title, project scope, native source references and grouping. Plans retain independent IDs and canonical contents, expectations, decisions and outcomes. Legacy records and explicit destinations remain usable in place.
+`records.md` defines the user-wide library and its `--store DIR` / `PLANNING_HOME` overrides. New work lives in readable `sessions/<topic>/` folders; a `README.md` entry owns stable session identity, title, project scope, native source references and grouping. Plans retain independent IDs and canonical contents, expectations, decisions and outcomes. Legacy records and explicit destinations remain usable in place.
 
 `sessions.py` uses a library lock, reads entries under that lock, and atomically replaces entries/indexes. Explicit identity wins; source association can resume only one unambiguous same-project session. A creation key distinguishes work from titles and makes concurrent retries converge; collisions get readable suffixed folders. Session titles change only deliberately, and title updates retain stable folder paths. Entries are authoritative for grouping; the index is rebuildable. Incomplete indexing is reported after preserving saved artifacts.
 

@@ -1,6 +1,6 @@
 # Learning from planning conversations
 
-Inspected **20 October 2026**. Status: **research and proposed extension**, not implemented. Grounded-plan remains v0.6.3. [Snapshot manifest and probe results](conversation-learning-sources.json).
+Inspected **20 October 2026**. Status: **research and proposed extension**, not implemented. Planning remains v0.6.3. [Snapshot manifest and probe results](conversation-learning-sources.json).
 
 ## Recommendation
 

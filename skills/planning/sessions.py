@@ -16,7 +16,8 @@ import unicodedata
 from urllib.parse import quote
 import uuid
 
-MARKER = "<!-- grounded-plan-session\n"
+MARKER = "<!-- planning-session\n"
+LEGACY_MARKER = "<!-- grounded-plan-session\n"
 
 
 def now():
@@ -24,8 +25,13 @@ def now():
 
 
 def library_root(store=None):
-    return Path(store or os.environ.get("GROUNDED_PLAN_HOME") or
-                "~/.local/share/grounded-plan").expanduser().resolve()
+    override = store or os.environ.get("PLANNING_HOME") or os.environ.get("GROUNDED_PLAN_HOME")
+    if override:
+        return Path(override).expanduser().resolve()
+    root = Path.home() / ".local/share/planning"
+    legacy = root.with_name("grounded-plan")
+    # Do not hide an existing library when upgrading the skill.
+    return (legacy if not root.exists() and legacy.exists() else root).resolve()
 
 
 def project_scope(project):
@@ -60,9 +66,10 @@ def atomic(path, content):
 
 def entry(path):
     text = Path(path).read_text()
-    if not text.startswith(MARKER):
+    marker = next((value for value in (MARKER, LEGACY_MARKER) if text.startswith(value)), None)
+    if marker is None:
         raise ValueError("not a managed session entry: " + str(path))
-    data = json.loads(text[len(MARKER):text.index("\n-->")])
+    data = json.loads(text[len(marker):text.index("\n-->")])
     if data.get("version") != 1:
         raise ValueError("unsupported session entry version")
     data["entry"] = str(Path(path).resolve())
@@ -166,7 +173,7 @@ def record_id(path):
 def plan_locations(root, identifier):
     paths = {p.resolve() for p in (root / "records").glob("*.md") if record_id(p) == identifier}
     for data in all_entries(root):
-        paths.update(Path(link["path"]) for link in data["links"]
+        paths.update(Path(link["path"]).resolve() for link in data["links"]
                      if link["kind"] == "plan" and link["id"] == identifier)
     return sorted(str(path) for path in paths)
 

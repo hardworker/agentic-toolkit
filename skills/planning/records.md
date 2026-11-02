@@ -4,7 +4,7 @@ Use this for prior-work lookup, substantive plans, decisions and outcomes. A one
 
 ## Locate and match
 
-Resolve the library root: explicit `--store DIR` or user-specified library folder, then nonempty `GROUNDED_PLAN_HOME`, then `~/.local/share/grounded-plan/`. Expand `~`, resolve relative overrides against the working directory and report the resolved root. An explicit artifact destination does not change the library root.
+Resolve the library root: explicit `--store DIR` or user-specified library folder, then nonempty `PLANNING_HOME`, then `~/.local/share/planning/`. Expand `~`, resolve relative overrides against the working directory and report the resolved root. An explicit artifact destination does not change the library root. For older installs, the helper accepts `GROUNDED_PLAN_HOME` below `PLANNING_HOME` and reuses `~/.local/share/grounded-plan/` if the new default is absent. Existing session markers remain readable; saves use `planning-session`.
 
 New work uses readable `sessions/<topic>/` folders with a `README.md` entry and content-bearing `plans/`, `evidence/` or other folders as needed. Legacy `records/` and externally stored plans stay in place.
 

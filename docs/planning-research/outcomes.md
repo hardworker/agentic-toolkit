@@ -12,7 +12,7 @@ The original requirement combined concise structured plans, useful diagrams, evi
 | Separate clarity, agreement, and evidence | A stable specification or agreeing reviewers cannot establish that its factual claims or future implementation are correct. Ouroboros's execution gate illustrates the value of separating executed checks from model review. |
 | Scale review to the decision | Version 0.4.0 infers scrutiny from task context at the user's request, replacing named effort modes while preserving call caps. The original pilot found no material improvement from additional critics on its engineering plan, so more debate is not a demonstrated default benefit. |
 | Preserve outcomes for later planning | The user requested storing decisions, delivered artifacts, observed results, and lessons. This supplies a place to compare expectations with evidence instead of losing the result after handoff. |
-| Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/grounded-plan/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
+| Keep records user-wide | The user selected a separate user-wide folder. The implementation default is `~/.local/share/planning/`, configurable without changing the skill. Repository docs describe the method and public research evidence; personal records remain outside the checkout. |
 | Keep planning grounded without implementing | Code inspection and permitted checks inform feasibility; product edits belong to a separate authorized phase. The user accepted this boundary and selective research delegation. |
 | Delegate research selectively | Direct research remains the default. Scouts can compress bulky sources or investigate separable questions; the planner verifies decisive support. The two-call default is a provisional work budget, not a measured optimum. |
 | Keep architecture without prescribing code | After reviewing current records, the user requested simpler plans while retaining architecture. Version 0.5.0 left code-level choices to the implementer; v0.6.0 replaced its word target and prescribed headings with adaptive output. Version 0.6.3 balances direct wording, explanation, and selective depth for the decision at hand. Readability and handoff improvements remain unmeasured. |
@@ -57,13 +57,13 @@ The complete conditional procedure lives in [research scouts](../../skills/plann
 ## Storage and use
 
 ```text
-~/.local/share/grounded-plan/
+~/.local/share/planning/
   index.md
   records/
     YYYY-MM-DD-topic-<random-suffix>.md
 ```
 
-The root resolves from explicit `--store DIR` or a user-specified library folder, then `GROUNDED_PLAN_HOME`, then the default above. An explicit plan destination is respected without changing the library root. Existing plans are referenced where they already live; no automatic migration or competing copy is created.
+The root resolves from explicit `--store DIR` or a user-specified library folder, then `PLANNING_HOME`, then the default above, with [compatibility for older installs](../session-artifacts.md#storage-naming-and-relocation). An explicit plan destination is respected without changing the library root. Existing plans are referenced where they already live; no automatic migration or competing copy is created.
 
 A record contains the plan or its reference, project/topic context, original expectations, dated decisions, outcome entries, and lessons with applicability limits. Work may be completed while its intended benefit remains unmeasured. Results supplied by a user are labeled as reports unless separately verified. Outcome entries preserve earlier evidence and expectations; corrections and scope changes are dated amendments.
 
@@ -231,3 +231,9 @@ Validation: all 14 session/discovery tests passed from the renamed folder; 98 lo
 On 2 November, the user approved consolidating planning, scout and review guidance in `SKILL.md`, with `records.md` retained for storage conventions and commands. The existing procedure text, budgets and role boundaries were preserved; `sessions.py`, invocation, storage and installed symlinks are unchanged. Live links now target sections of the main skill. The 0.9.0 evaluation is pinned to its original Git revision so its source hashes and reconstruction patch remain reproducible.
 
 Verification covered preserved procedure text, local links/anchors, metadata, historical snapshot reconstruction and installed symlinks. No new behavioral trial or runtime test was needed for this file reorganization; loading more instructions at once has not been evaluated for cost or output quality.
+
+## Storage naming, version 0.9.2
+
+On 2 November, the user requested removal of remaining active `grounded-plan` names. The library default is now `~/.local/share/planning/`, its override is `PLANNING_HOME`, and entries are written with `planning-session`. Earlier environment settings, markers and unmoved libraries remain readable. Historical evidence and stable record IDs are preserved; relocation is explicit and keeps old links usable through an alias.
+
+All 17 session/discovery tests passed, including configuration precedence, marker conversion, canonical lookup after relocation and external-plan preservation. This changes naming and compatibility, not planning behavior or demonstrated plan quality.

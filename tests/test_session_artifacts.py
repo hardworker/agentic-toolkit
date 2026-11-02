@@ -143,12 +143,41 @@ class SessionArtifactsTest(Fixtures):
         self.assertNotEqual(self.cli("attach", "--session", data["id"], "--path", str(copy), "--kind", "plan",
                                     check=False).returncode, 0)
 
-    def test_root_overrides_and_index_failure_preserves_session(self):
-        with patch.dict(os.environ, {"GROUNDED_PLAN_HOME": str(self.library)}):
+    def test_root_overrides_and_existing_library_discovery(self):
+        with patch.dict(os.environ, {"PLANNING_HOME": "", "GROUNDED_PLAN_HOME": str(self.library)}):
             self.assertEqual(sessions.library_root(), self.library)
             self.assertEqual(sessions.library_root(str(self.root)), self.root)
-        with patch.dict(os.environ, {"GROUNDED_PLAN_HOME": ""}):
+            with patch.dict(os.environ, {"PLANNING_HOME": str(self.project)}):
+                self.assertEqual(sessions.library_root(), self.project)
+                self.assertEqual(sessions.library_root(str(self.root)), self.root)
+        with patch.dict(os.environ, {"PLANNING_HOME": "", "GROUNDED_PLAN_HOME": ""}), \
+                patch.object(Path, "home", return_value=self.root):
             self.assertEqual(sessions.library_root("relative"), (Path.cwd() / "relative").resolve())
+            current = self.root / ".local/share/planning"
+            legacy = current.with_name("grounded-plan")
+            self.assertEqual(sessions.library_root(), current)
+            legacy.mkdir(parents=True)
+            self.assertEqual(sessions.library_root(), legacy)
+            current.mkdir()
+            self.assertEqual(sessions.library_root(), current)
+
+    def test_legacy_marker_upgrades_without_changing_identity_or_links(self):
+        data = self.create()
+        path = Path(data["entry"])
+        legacy_plan = self.library / "records" / "old-plan.md"
+        legacy_plan.parent.mkdir()
+        legacy_plan.write_text("# Plan\n\nID: grounded-plan-stable\n\nDated decisions.\n")
+        data = self.cli("attach", "--session", data["id"], "--path", str(legacy_plan), "--kind", "plan")
+        path.write_text(path.read_text().replace(sessions.MARKER, sessions.LEGACY_MARKER, 1))
+        original = legacy_plan.read_bytes()
+        reopened = self.cli("open", "--source", "codex:a")
+        for key in ("id", "key", "created", "sources", "links"):
+            self.assertEqual(reopened[key], data[key])
+        self.assertTrue(path.read_text().startswith(sessions.MARKER))
+        self.assertEqual(legacy_plan.read_bytes(), original)
+        self.assertEqual(self.cli("find", "--id", "grounded-plan-stable")["paths"], [str(legacy_plan)])
+
+    def test_index_failure_preserves_session(self):
         data = self.create()
         with sessions.locked(self.library), patch.object(sessions, "index", side_effect=OSError("fixture")):
             data["summary"] = "Updated independently of index."
@@ -157,6 +186,29 @@ class SessionArtifactsTest(Fixtures):
         self.assertEqual(sessions.entry(data["entry"])["summary"], data["summary"])
         self.cli("index")
         self.assertIn(data["summary"], (self.library / "index.md").read_text())
+
+    def test_library_rename_with_alias_preserves_canonical_plans(self):
+        data = self.create()
+        plan = self.library / "records" / "old-plan.md"
+        plan.parent.mkdir()
+        plan.write_text("# Plan\n\nID: stable-plan\n\nOriginal expectations.\n")
+        self.cli("attach", "--session", data["id"], "--path", str(plan), "--kind", "plan")
+        external = self.root / "external.md"
+        external.write_text("# External\n\nID: external-plan\n")
+        self.cli("attach", "--session", data["id"], "--path", str(external), "--kind", "plan")
+        original = plan.read_bytes()
+        legacy = self.library
+        self.library = self.root / "planning"
+        legacy.rename(self.library)
+        legacy.symlink_to(self.library, target_is_directory=True)
+        canonical = self.library / "records" / plan.name
+        reopened = self.cli("open", "--session", data["entry"])
+        self.assertEqual(reopened["id"], data["id"])
+        self.assertEqual(self.cli("find", "--id", "stable-plan")["paths"], [str(canonical)])
+        attached = self.cli("attach", "--session", data["id"], "--path", str(canonical), "--kind", "plan")
+        self.assertEqual(len(attached["links"]), 2)
+        self.assertEqual(self.cli("find", "--id", "external-plan")["paths"], [str(external)])
+        self.assertEqual(plan.read_bytes(), original)
 
     def test_symlink_entry_cannot_redirect_planning_writes(self):
         data = self.create()

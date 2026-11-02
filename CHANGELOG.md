@@ -34,7 +34,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 - Bounded model calls, input and lifetime; shared daily quota; recursion suppression; preservation of existing hooks; reversible installation.
 - Regression coverage for both transcript formats, concurrency, scope, evidence, feedback, installation and the headless worker protocol.
 
-# planning (formerly grounded-plan)
+# planning
+
+## [0.9.2] — 2026-11-02
+
+### Changed
+
+- Align the default library, environment override and written session marker with `planning`. Keep older configuration, markers and existing libraries readable, with explicit storage taking precedence.
+- Resolve canonical plan paths through aliases so relocating a library does not create duplicate identities or reject an existing plan. Document relocation while retaining historical evaluation evidence and stable record IDs.
 
 ## [0.9.1] — 2026-11-02
 

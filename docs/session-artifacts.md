@@ -2,6 +2,14 @@
 
 Implemented 21 October 2026. New planning work can use readable session folders while legacy plans and learning artifacts retain their canonical locations. Bulk relocation and live installation are deferred. The [storage contract](../skills/planning/records.md) gives the commands and ownership rules; [learning discovery](self-learning.md#read-only-artifact-discovery) describes the optional interface.
 
+## Storage naming and relocation
+
+Since planning 0.9.2, the default library is `~/.local/share/planning/`; `--store DIR` takes precedence over `PLANNING_HOME`. The helper still accepts `GROUNDED_PLAN_HOME` below the new override and discovers the old `~/.local/share/grounded-plan/` library when the new default is absent. New and updated entries use `planning-session`; earlier markers remain readable.
+
+Relocation is explicit, never an automatic merge. Pause library writers, move the whole old directory to the unused new location, and leave an old-path symlink pointing to `planning` so saved links keep working. Rebuild navigation with `python3 <skill-dir>/sessions.py index`. If both directories contain data, select a store explicitly and reconcile them before moving either. Keep stable IDs, archived evidence and externally owned artifacts unchanged. Canonical plan lookup resolves aliases to the same file.
+
+Verification: 17 session/discovery tests passed, including new/default/legacy root selection, marker upgrades preserving identity, and relocation with a compatibility alias. The relocation fixture checks that existing plans remain readable and attachable without duplicate identities, and that external plans retain their paths.
+
 ## Contract
 
 A session entry owns grouping and title independently of source-chat names. Plans keep their existing identities and authority. Creation uses an explicit task key within project scope; continuation uses explicit identity first or one unambiguous saved native-chat association. Titles never merge work. A library lock serializes registration and entry/index updates, and atomic file replacement preserves complete entries. Index failure leaves saved artifacts usable and reports the repair needed.
@@ -29,7 +37,7 @@ The originating chat reviewed the initial implementation commit independently an
 
 The fixture now uses command-scoped `commit.gpgsign=false` and an empty `core.hooksPath` for temporary repository initialization, commit and worktree creation. It changes no user/global configuration. The exact documented suite above was rerun without external overrides: **33 tests passed**.
 
-The accepted 0.6.1–0.6.3 changes were applied selectively to planning/review guidance and its public README, architecture, rationale and version history. Purpose-led structure, selective depth, connected explanation and execution-appropriate commitments coexist with the named-session contract. No shared document was replaced wholesale from the branch that lacks self-learning. Session/discovery/runtime code remains unchanged from the reviewed implementation. Grounded-plan is now 0.7.1; the plugin is 1.25.1; self-learning remains 0.2.0.
+The accepted 0.6.1–0.6.3 changes were applied selectively to planning/review guidance and its public README, architecture, rationale and version history. Purpose-led structure, selective depth, connected explanation and execution-appropriate commitments coexist with the named-session contract. No shared document was replaced wholesale from the branch that lacks self-learning. Session/discovery/runtime code remains unchanged from the reviewed implementation. Planning is now 0.7.1; the plugin is 1.25.1; self-learning remains 0.2.0.
 
 Verification also checks the integrated guidance against `a532136`, retention of the named-session additions, unchanged self-learning/runtime files, YAML frontmatter, local documentation links, public-path hygiene and whitespace. These corrections are self-checked and ready for originating-chat re-review; they do not establish ordinary-use navigation benefit.
 

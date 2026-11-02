@@ -36,7 +36,7 @@ The inspected self-learning runtime already records source sessions, artifact id
 
 Recommend a read-only discovery operation scoped by project and native source sessions. Return canonical artifact links and IDs, revision/status, and reported outcome evidence. Include supporting-evidence, delivery, and outcome relationships separately: a skill learned in A/B can be delivered and evaluated in C. Preserve explicitly selected links; do not invent a source session for manual feedback. Title/grouping metadata stays with the planning entry, avoiding a second registry.
 
-Grounded-plan refreshes related links when continuing or delivering work and shows the refresh time. The background worker retains its existing write boundary. Naming and listing need no additional model call or reflection loop. Existing feedback and evidence rules remain in force; simply listing an artifact creates neither a delivery receipt nor a usefulness report.
+Planning refreshes related links when continuing or delivering work and shows the refresh time. The background worker retains its existing write boundary. Naming and listing need no additional model call or reflection loop. Existing feedback and evidence rules remain in force; simply listing an artifact creates neither a delivery receipt nor a usefulness report.
 
 The installed runtime uses a stable copy of its Python files, while the management skill is symlinked. Future runtime changes need installer refresh and verification, alongside the normal skill/documentation updates.
 

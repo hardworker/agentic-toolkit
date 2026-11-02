@@ -34,7 +34,7 @@ git diff --check
 
 - **33/33 tests passed** using the exact suite command above, without external Git overrides. Temporary Git commands now disable commit signing and use an empty hooks directory; no user configuration is edited.
 - Compared the final planning guidance with `a532136`: `review.md` matches; `SKILL.md` differs only by the intended session arguments and storage/handoff additions. Selective depth, direct writing, flexible grouping and purpose-aware commitments are preserved.
-- Inspected the selectively reconciled README, architecture, design rationale and changelog. Current self-learning content remains present. Grounded-plan is 0.7.1, self-learning remains 0.2.0 and the plugin is 1.25.1.
+- Inspected the selectively reconciled README, architecture, design rationale and changelog. Current self-learning content remains present. Planning is 0.7.1, self-learning remains 0.2.0 and the plugin is 1.25.1.
 - Confirmed that self-learning files, the session helper and its storage contract are unchanged from the initially reviewed implementation. The correction introduces no new runtime behavior. Whitespace checks passed and the committed checkout was clean.
 
 No additional reviewer or model evaluation was needed for these targeted corrections. Prior limits on live-host and ordinary-use validation remain.
