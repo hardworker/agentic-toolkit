@@ -52,7 +52,7 @@ The rationale is conditional: separate research contexts can compress large sour
 
 The revised scaling study likewise reports task-dependent benefits and coordination costs across 260 configurations and six benchmarks. Applying those results to this planner is a design inference, not direct evidence of savings. The adopted policy favors direct investigation until delegation has a concrete purpose. [Scaling Agent Systems, v3](https://arxiv.org/abs/2512.08296v3).
 
-The complete conditional procedure lives in [scouts.md](../../skills/planning/scouts.md). No new flag, runtime, mandatory model tier, or always-on agent team is introduced.
+The complete conditional procedure lives in [research scouts](../../skills/planning/SKILL.md#research-scouts). No new flag, runtime, mandatory model tier, or always-on agent team is introduced.
 
 ## Storage and use
 
@@ -89,7 +89,7 @@ The skill opens the index and a few relevant records, checks whether their evide
 
 The workflow uses ordinary file tools, with no database, background watcher, scheduled follow-up, or required external provider. A request to update outcomes authorizes recording available results, not inventing evidence or launching new experiments. Private records are not automatically copied into repository documentation.
 
-The executable contract is the prose in [SKILL.md](../../skills/planning/SKILL.md) and [records.md](../../skills/planning/records.md); [review.md](../../skills/planning/review.md) still governs optional critique. Installation follows the existing skill symlinks, so local edits take effect there without a second copied implementation.
+The executable contract is the prose in [SKILL.md](../../skills/planning/SKILL.md) and [records.md](../../skills/planning/records.md); [review procedure](../../skills/planning/SKILL.md#review-procedure) still governs optional critique. Installation follows the existing skill symlinks, so local edits take effect there without a second copied implementation.
 
 ## Validation of the outcome extension
 
@@ -225,3 +225,9 @@ Validation: all 14 session/discovery tests passed from the renamed folder; 98 lo
 - **Delivered:** premise challenge, justified scope, outcome-based acceptance, decision preservation and material closure within the existing workflow. All four instruction files were condensed from 4,942 to 2,884 words; scripts, storage and invocation remain unchanged.
 - **Verification:** three controlled artifact runs across four requests, one instruction critic with a targeted follow-up, 14 existing session/discovery tests and document/package checks. The first candidate's dense paragraphs prompted a clearer grouping instruction; review restored new-session precedence and dated outcomes. [Evidence and limits](refinement-evaluation.md).
 - **Outcome boundary:** instruction reduction and the observed sample structures are established. Better reader comprehension, general planning quality and cost savings remain unmeasured; the baseline already preserved the key requirements in these examples.
+
+## Two instruction files, version 0.9.1
+
+On 2 November, the user approved consolidating planning, scout and review guidance in `SKILL.md`, with `records.md` retained for storage conventions and commands. The existing procedure text, budgets and role boundaries were preserved; `sessions.py`, invocation, storage and installed symlinks are unchanged. Live links now target sections of the main skill. The 0.9.0 evaluation is pinned to its original Git revision so its source hashes and reconstruction patch remain reproducible.
+
+Verification covered preserved procedure text, local links/anchors, metadata, historical snapshot reconstruction and installed symlinks. No new behavioral trial or runtime test was needed for this file reorganization; loading more instructions at once has not been evaluated for cost or output quality.

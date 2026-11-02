@@ -2,6 +2,8 @@
 
 **31 October 2026.** Implemented the authorized idea-shaping changes and shortened all four instruction files. The helper, invocation, storage format and installed symlink targets are unchanged. Readability and cost benefits remain unmeasured.
 
+**2 November follow-up:** version 0.9.1 merges the scout and review text into `SKILL.md`, retaining `records.md` separately. The counts and results below describe 0.9.0; its original source hashes and outputs are preserved. This file reorganization was checked for text preservation and links, without rerunning the output trial.
+
 ## What changed
 
 The main skill now challenges consequential proposed mechanisms before elaborating them, justifies scope without dropping requested breadth, defines acceptance as outcomes, preserves decisions and corrections, and stops intake on material clarity. Output guidance makes each substantial idea separately scannable while retaining rationale, architecture and flexible depth. Existing instructions were consolidated rather than moved into new files.
@@ -35,7 +37,7 @@ The parent inspected the actual outputs against the requests. The baseline was a
 | Already-clear plan | Both preserve the supplied plan verbatim and request no new interview or implementation scope. The final review response is slightly longer; shorter is not the success criterion. | [Baseline](eval-results/refinement-2026-10-31/baseline/case-3.md), [final](eval-results/refinement-2026-10-31/final-candidate/case-3.md) |
 | Early research | Both retain the corrected 30-day question, secondary 7-day view, competing explanations and excluded gamification. Neither turns reminders into a commitment or invents a delivery roadmap. Cohort and consent limits remain explicit. | [Baseline](eval-results/refinement-2026-10-31/baseline/case-4.md), [final](eval-results/refinement-2026-10-31/final-candidate/case-4.md) |
 
-The [initial candidate](eval-results/refinement-2026-10-31/initial-candidate/receipt.md) and all outputs remain available. The [manifest](eval-results/refinement-2026-10-31/manifest.json) records source/output hashes and word counts; [the patch](eval-results/refinement-2026-10-31/initial-to-final.patch) reconstructs the initial candidate by reversing it against the released instructions. Only paths were normalized in saved outputs. Baseline sources are available at the manifest's Git revision.
+The [initial candidate](eval-results/refinement-2026-10-31/initial-candidate/receipt.md) and all outputs remain available. The [manifest](eval-results/refinement-2026-10-31/manifest.json) records source/output hashes and word counts; [the patch](eval-results/refinement-2026-10-31/initial-to-final.patch) reconstructs the initial candidate by reversing it against the instructions at `final_candidate_git_ref` (`ccc2d35`), not the current skill. Only paths were normalized in saved outputs. Baseline sources are available at the manifest's Git revision.
 
 ## Verification and limits
 

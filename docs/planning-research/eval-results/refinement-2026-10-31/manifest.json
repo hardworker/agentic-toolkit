@@ -5,7 +5,7 @@
   "fixture_sha256": "c837cf91df0961e4630d42ae22f3f18d1572e8535f99e4b44923d1a552c4c5f6",
   "method": "Three fresh inherited-model contexts, each handling the same four independent requests once. One fresh instruction critic with one targeted follow-up. Parent source/constraint inspection, not blind grading. No live-library writes or nested agents in artifact runs.",
   "normalization": "Only scratch/home path placeholders and the relative fixture link were normalized in preserved outputs; no content edits.",
-  "initial_candidate_reconstruction": "Reverse initial-to-final.patch against the final released skill to recover the initial candidate.",
+  "initial_candidate_reconstruction": "Reverse initial-to-final.patch against skills/planning at final_candidate_git_ref, not against the current skill, to recover the initial candidate.",
   "snapshots": {
     "baseline": {
       "SKILL.md": {
@@ -144,5 +144,6 @@
         "raw_sha256": "513c87cdaacfe51e7ae25cecac69e969882e0d74c07b077298d8a5c838bd4b76"
       }
     }
-  }
+  },
+  "final_candidate_git_ref": "ccc2d35f7121886f691ae2952e86f5d38c18ff58"
 }

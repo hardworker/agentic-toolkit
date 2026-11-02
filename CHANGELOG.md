@@ -36,6 +36,13 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # planning (formerly grounded-plan)
 
+## [0.9.1] — 2026-11-02
+
+### Changed
+
+- Consolidate planning, optional research scouts and review procedures in `SKILL.md`; keep storage guidance in `records.md`. Preserve procedure text, budgets and role boundaries.
+- Update live documentation links and pin the 0.9.0 evaluation's source revision so its reconstruction patch remains usable after consolidation. Storage, invocation and the helper are unchanged.
+
 ## [0.9.0] — 2026-10-31
 
 ### Changed
