@@ -1,13 +1,12 @@
 # agentic-toolkit — Architecture
 
-Two debate pipelines, a standalone planner, two utility skills, and an automatic learning runtime. The debate pipelines challenge claims before delivery and cap their fan-out. The planner matches scrutiny to the decision's stakes and records evidence limits. Planning and debate decisions are prose run by the host agent; a stdlib helper serializes planning-session registration. Self-learning adds deterministic Python hooks, a queue, and a bounded background worker.
+A debate review pipeline, a standalone planner, two utility skills, and an automatic learning runtime. The review pipeline challenges finished work and caps its fan-out. The planner matches scrutiny to the decision's stakes and records evidence limits. Planning and debate decisions are prose run by the host agent; a stdlib helper serializes planning-session registration. Self-learning adds deterministic Python hooks, a queue, and a bounded background worker.
 
 | Skill | Does | Agents |
 |---|---|---|
 | [self-learning](#self-learning) | automatic cross-session procedural learning and improvement proposals for Claude and Codex | one bounded headless CLI call per eligible reflection |
 | [planning](#planning) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts inferred from the task; optional scouts, two calls by default |
 | [adversarial-review](#adversarial-review) | cross-model debate review of finished work — diff, working tree, or documents | 4 + 2 Codex calls |
-| [crucible](#crucible) | idea → grill → attacked assumptions → plan → code → verify | 6–12, capped |
 | [session-migration](#session-migration) | find any past session, route it to the surface you want | none |
 | [cf-access](#cf-access) | keep CLI tools, Node clients and MCP servers authenticated to Cloudflare Access | none |
 
@@ -148,93 +147,6 @@ Prose to the user, plus one temp file at the end of the run:
 }
 ```
 
-## crucible
-
-Where adversarial-review challenges finished work, crucible challenges work before it exists — the user, then the assumptions, then the plan, then the diff — so bad premises die at the cheapest point.
-
-```
-              ┌─────────┐
-              │  Grill   │  ≤4 design-changing questions per round, ≤2 rounds,
-              └────┬─────┘  no agents yet; answers become user assumptions
-                   ▼
-              ┌─────────┐
-              │  Recon   │  isolated read-only agent: map the repo; distill the
-              └────┬─────┘  idea into a brief of attackable claims
-       ┌───────────┼───────────┬────────────┐
-       ▼           ▼           ▼            ▼
-  feasibility  necessity     scope      adversary      2–4 isolated skeptics —
-       └───────────┴─────┬─────┴────────────┘          no cross-talk, assumptions
-                         ▼                             unattributed
-                  ┌─────────────┐
-                  │ Consolidate  │  main loop merges attacks, verifies contested
-                  └──────┬──────┘  verdicts in the files itself
-                         ▼
-                  ┌─────────────┐  one agent tries to refute each challenge in
-                  │   Defend     │  the files; killed ones never reach the user,
-                  └──────┬──────┘  `needs-user` calls always do
-                         ▼
-                ══ debate gate ══   the main loop argues the survivors with
-                         ▼          the user; rulings become settled
-          ┌──────────┬───┴──────┐
-          ▼          ▼          ▼
-       minimal    robust   refactor-first     2–3 competing drafts,
-          └──────────┼──────────┘             forced-apart angles
-                     ▼
-              ┌─────────────┐
-              │  Plan judge  │  scores drafts, file-verifies their claims,
-              └──────┬──────┘  synthesizes ONE plan (≤ 8 tasks, test-first)
-                     ▼
-               ══ plan gate ══
-                     ▼
-              ┌─────────────┐
-              │   Develop    │  sequential, one task at a time against the whole
-              └──────┬──────┘  plan + prior results; per-task test evidence
-                     ▼
-              ┌─────────────┐   ⟳ suite → fix failures → two fresh reviewers on
-              │    Verify    │   the diff: correctness ∥ simplification → refute
-              └─────────────┘   → fix ⟳ until green and clean; cap + stagnation
-```
-
-### Structure
-
-- No orchestrator. The main loop runs the phases, holds the gates, and spawns isolated agents only where isolation *is* the mechanism: recon, each lens, the defender, each review round.
-- State is four files, in the session scratchpad or `~/.crucible/<repo>/<timestamp>/` — never the working tree the reviewer inspects:
-
-```
-brief.md       goal · non-goals · assumptions (id | claim | source) · unknowns
-               · constraints · acceptance criteria · settled rulings
-challenges.md  verdict per assumption · surviving challenges · open questions
-plan.md        ≤8 tasks (id | files | steps | acceptance | test plan | dependsOn)
-progress.md    per task: files changed, test evidence, deviations · verify rounds
-```
-
-- `--auto` is the no-human mode: no grill, no gates, and a halt (`challenged`) wherever a ruling is needed, never a guess.
-
-### Decisions
-
-- **Debate for critique, refutation for verification, never for accuracy ensembling.** Budget-matched studies favour cheap self-consistency, and most measured debate gains are just voting ([token economies](https://arxiv.org/abs/2406.06461), [debate or vote](https://arxiv.org/abs/2508.17536)). So adversarial agents appear only where dissent is the product.
-- **Grill before spending a token.** The panel can only attack claims the brief contains, so a vague brief buys attacks on nothing.
-- **Recon is delegated; everything downstream is not.** It is the largest read of the run and its output is one page. The main loop then argues the gate on file-cited challenges, opening only the files a ruling turns on.
-- **A defender sits between panel and user.** Skeptics are paid to attack, so some attacks are wrong; without a refuter the user becomes one. Product calls (`needs-user`) are exempt however well argued.
-- **Skeptics are isolated and see unattributed assumptions.** Cross-conditioning collapses diversity ([consensus cost](https://arxiv.org/html/2605.00914v1)), and marking a claim as the user's measurably raises agreement with it ([SycEval](https://arxiv.org/abs/2502.08177)).
-- **Each skeptic's prompt defines success as effective critique.** Self-critique degenerates once a model is confident ([degeneration-of-thought](https://arxiv.org/abs/2305.19118)); uncertainty maps to `shaky`, never `holds`.
-- **Best-of-N plans with a verifying judge.** Candidate generation plus independent selection is the one multi-model pattern with consistent coding wins ([SWE-bench analysis](https://arxiv.org/abs/2506.17208)). A plan naming wrong files is worse than no plan, so the judge opens them.
-- **Sequential develop, no parallel implementers.** Parallel workers make conflicting implicit decisions, and most multi-agent failures are coordination failures ([MAST](https://arxiv.org/abs/2503.13657)). Blocked tasks stop the run.
-- **Fresh-context hostile review, looped to convergence.** Models favour their own output ([self-preference](https://arxiv.org/abs/2404.13076)), so reviewers see only the diff and the plan. One shot was the old weakness: a fix introduces its own defects.
-- **The verify loop is a [Ralph loop](https://ghuntley.com/ralph/) — its state is a file, not memory.** Each pass reads `progress.md`, appends its round record *before* judging anything, then checks three named exits (`clean`, `capped`, `stagnant`). A compacted context resumes mid-loop instead of mistaking round 1 for a finished job.
-- **Simplification is a review angle, not a phase.** Everything upstream pushes toward addition, and nothing else in the pipeline ever removes a line. It runs as its own agent — one reviewer holding both mandates dilutes into neither — at two altitudes: surface waste, and over-built structure walked down a YAGNI ladder. Every finding must name the concrete smaller shape.
-- **Test-first ordering, hollow-test hunting.** Agents left alone write tests that assert whatever the code does.
-- **Caps, not a budget object.** ≤10 assumptions, ≤8 tasks, ≤6 findings per round, one page per artifact. Multi-agent runs cost ~15× chat, so every fan-out is a fixed small number.
-- **Overhead must be earned.** The skill's first rule is when *not* to run it: a one-sentence uncontested change gets built directly.
-
-### Portability
-
-Written to the [Agent Skills standard](https://agentskills.io/specification): no tool names, and a single-loop fallback wherever a fresh agent would be used.
-
-The fallback is worded as a spawn that is *absent or failed*, never as a capability question. Phrased as permission, a host whose own prompt discourages subagents takes it — and the skeptic panel then runs inside the context it exists to be independent of. So invoking crucible **is** the user asking, and the report names any phase that fell back.
-
-Validation is field runs only.
-
 ## session-migration
 
 No subagents, no debate. Two mechanisms hide past work: desktop session records are scoped per account, so an account switch strands everything before it, and terminal sessions get no desktop record at all. Both are invisible to the sidebar and to `list_sessions`.
@@ -329,8 +241,6 @@ agentic-toolkit/
 │   │   └── LICENSE               # MIT, scoped to this skill
 │   ├── adversarial-review/
 │   │   └── SKILL.md              # the whole pipeline: args, stage prompts, guards, report
-│   ├── crucible/
-│   │   └── SKILL.md              # the whole pipeline: phases, gates, caps, report
 │   ├── session-migration/
 │   │   ├── SKILL.md              # store model, the two recovery paths, safety rules
 │   │   └── ccd_sessions.py       # locator + import/move/job (no orchestration)

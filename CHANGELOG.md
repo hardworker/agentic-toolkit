@@ -389,6 +389,13 @@ Initial release: recover Claude Code Desktop sessions stranded in another accoun
 
 # crucible
 
+## [3.0.0] — 2026-11-07
+
+### Removed
+
+- Retired the `crucible` skill and its end-to-end build pipeline. Removed its discoverable entrypoint, usage guide, and architecture section so the toolkit no longer offers this workflow. The plugin version moves to `2.0.0` because removal breaks existing invocations.
+- Existing copies or symlinks installed separately must be removed from the host's skill directory. Historical changelog and research records remain; saved artifacts under `~/.crucible/` are untouched. Use `planning` for plans and `adversarial-review` for reviews of existing work; implementation remains a separate task.
+
 ## [2.1.0] — 2026-08-14
 
 ### Changed

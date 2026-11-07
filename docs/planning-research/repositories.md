@@ -178,11 +178,11 @@ The [README][seq-readme] describes a structured thought process with revision an
 
 Borrow the decision record shape and purpose-based diagram selection. Neither requires adopting a specification framework. A Mermaid sequence/state/dependency diagram plus a few decision rows is often sufficient.
 
-## This toolkit's existing skills
+## This toolkit's skills at the time of research
 
-[`crucible`](../../skills/crucible/SKILL.md) already provides challenged assumptions, competing plans, user rulings, and bounded verification, but its contract continues through implementation. Its multiple skeptic/review contexts are a substantial cost commitment. [`adversarial-review`](../../skills/adversarial-review/SKILL.md) reviews finished code or documents with fresh reviews, evidence-based debate, and a judge.
+`crucible` provided challenged assumptions, competing plans, user rulings, and bounded verification, but its contract continued through implementation. Its multiple skeptic/review contexts were a substantial cost commitment. It was [retired on 2026-11-07](../../CHANGELOG.md#crucible). [`adversarial-review`](../../skills/adversarial-review/SKILL.md) reviews finished code or documents with fresh reviews, evidence-based debate, and a judge.
 
-A new planning skill should stop with a reviewable decision and executable handoff. It should neither silently invoke Crucible's build pipeline nor require the full adversarial-review procedure for every plan. Existing skills remain appropriate when those stronger workflows are explicitly wanted.
+The planning recommendation was to stop with a reviewable decision and executable handoff, without silently invoking Crucible's build pipeline or requiring the full adversarial-review procedure for every plan. The stronger workflows were separate, explicit choices.
 
 ## What would change the recommendation
 

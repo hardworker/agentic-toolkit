@@ -162,6 +162,8 @@ Choose the diagram by the uncertainty: component/context for boundaries, sequenc
 
 ## Reuse versus build: the strongest cases
 
+These alternatives reflect the October 2026 research. Crucible was subsequently [retired on 2026-11-07](../../CHANGELOG.md#crucible).
+
 | Route | Case for it | Case against it | Recommendation |
 |---|---|---|---|
 | Use `ce-plan` | Already combines most requested capabilities and supports non-software work | Supporting procedures, mandatory handoffs, and upgrade drift may be too much | Best ready-made trial |
