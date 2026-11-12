@@ -1,0 +1,168 @@
+{
+  "date": "2026-11-12",
+  "baseline_git_ref": "b60a3d11be6ffc25b9a8baf9bbc6835b15f799e9",
+  "community_repository": "obra/superpowers",
+  "community_git_ref": "22f0b463e7a5e579904dd6211a520321035526f7",
+  "files": {
+    "current/SKILL.md": {
+      "sha256": "f50f5d083370a90169a1b3aa7e3f82c4146849e4ea8109d163da6189631868bf",
+      "words": 1916
+    },
+    "current/records.md": {
+      "sha256": "97e7050a4a434dcba3f4379caf8d197b895f603c2ade3079856619da86fa2949",
+      "words": 997
+    },
+    "candidate/SKILL.md": {
+      "sha256": "ed60fb8856f28e12dccc3b5c7894d712e04b78484808aaacbaf3af5a424b6e12",
+      "words": 2196
+    },
+    "candidate/records.md": {
+      "sha256": "97e7050a4a434dcba3f4379caf8d197b895f603c2ade3079856619da86fa2949",
+      "words": 997
+    },
+    "community/brainstorming.md": {
+      "sha256": "2c9ca71f94886f9ca9f4aef055f7cafb3e1a9bdf3aeebf8f4cb547c69405d207",
+      "words": 2658
+    },
+    "community/writing-plans.md": {
+      "sha256": "a6c67c1900064347c2a329990dd3c555657c51c3ec53b259a08aa01a2c26139a",
+      "words": 1639
+    },
+    "fixtures/concrete-handoffs.md": {
+      "sha256": "4595d6a454417fdacf0165bc7bebd4ebc77369820c2510323ac472122853c9c1",
+      "words": 1138
+    },
+    "fixtures/concrete-handoffs-update.md": {
+      "sha256": "5abe54ea6acd154b63d5fcdaf182e51b18ad9bb6a960ac79eccecbd6dc961a29",
+      "words": 157
+    },
+    "fixtures/concrete-handoffs-grading.md": {
+      "sha256": "d709d70314d5f17459bd79d786979eb66ed5a8b1db703c5e23e9cb884b40255e",
+      "words": 584
+    }
+  },
+  "execution_contract": {
+    "authoring_contexts": "One fresh inherited-model context per method; no parent history. Current/candidate handle four independent requests. Community handles the substantial engineering case only.",
+    "update": "Same new requirement delivered in a later turn to each author after initial outputs are saved.",
+    "common_overrides": [
+      "supplied source packet only",
+      "technical choices delegated",
+      "scratch artifacts only",
+      "no implementation, external actions, live library or nested agents",
+      "no interactive confirmation pause; proposals remain proposals"
+    ],
+    "comparison_scope": "Authoring and revision under shared restrictions, not full upstream workflows or native host integration.",
+    "reader": "Separate fresh context with random method labels, original source packets and prewritten criteria; styles may reveal method.",
+    "iterations": "One initial run and one requirement-update turn per method; rerun only if observed failure or implementation revision warrants it."
+  },
+  "normalization": "Scratch source/output paths replaced with relative links or placeholders; generated prose unchanged. Reader copies additionally mask explicit method names. Raw and archived SHA-256 values retained.",
+  "outputs": {
+    "current": {
+      "case-1-revised.md": {
+        "raw_sha256": "18ebac299261f2ffa1fd15300370b9cc327785475b3babd56c0c1d2068532bc9",
+        "sha256": "1cd979b2d81382f8dc95388d70c4671602efec948908c97a951a8c52c2b24c6f",
+        "words": 3183
+      },
+      "case-1.md": {
+        "raw_sha256": "28a68f325ec6bdfbd4cb9ae42fa42495a8c535924ab3d02326cebed4385ad8a8",
+        "sha256": "4270a4c12aed0dd5616cec1d735f768db6238d40783dde1c5e92061b5a9b61f5",
+        "words": 2111
+      },
+      "case-2.md": {
+        "raw_sha256": "cb955e3eef3a886406bdfed84a88987a8c2244e0faca1fd7a4cd09f181f6b461",
+        "sha256": "cb955e3eef3a886406bdfed84a88987a8c2244e0faca1fd7a4cd09f181f6b461",
+        "words": 99
+      },
+      "case-3.md": {
+        "raw_sha256": "305b7b09263e4cbc6f30b5613aa60f273431aa24bcfc7fc0294a85847ffc96b3",
+        "sha256": "b47f59391abf76e0f7b6b60516fbb3d963285182464b49210c9cf6810a589b82",
+        "words": 1275
+      },
+      "case-4.md": {
+        "raw_sha256": "05afc89c41fca7dfe7f24269c97df0a3cef1d57276ada6e7be45cc7cc7187326",
+        "sha256": "ad36a454c20719d07c20802c9cea4c1f56e9de6ae413f35b1f954a043c7357c0",
+        "words": 612
+      },
+      "receipt.md": {
+        "raw_sha256": "1b8cf9d43480fe15f2425b77fbaece731861ef52fba213367a75ad45b261f27f",
+        "sha256": "a80149c689d24f467fda25afc2fecb73c656fb7324aa5f9d7e32bc6bc0466945",
+        "words": 1178
+      }
+    },
+    "candidate": {
+      "case-1-revised.md": {
+        "raw_sha256": "e91e1b8a021b2cae6acfcfaecae11de64645c972f6bfef4d63591761b1bb386e",
+        "sha256": "e91e1b8a021b2cae6acfcfaecae11de64645c972f6bfef4d63591761b1bb386e",
+        "words": 3716
+      },
+      "case-1.md": {
+        "raw_sha256": "4295e20046a9026af526769c2146b555a78d075580778a46a4c8b3b09adbcf63",
+        "sha256": "4295e20046a9026af526769c2146b555a78d075580778a46a4c8b3b09adbcf63",
+        "words": 2463
+      },
+      "case-2.md": {
+        "raw_sha256": "a62a5a33ad9b4a310d60b813c545ce43af47d2f70bba03e19649f14b778126d7",
+        "sha256": "a62a5a33ad9b4a310d60b813c545ce43af47d2f70bba03e19649f14b778126d7",
+        "words": 130
+      },
+      "case-3.md": {
+        "raw_sha256": "a2a4879dbf6dc40e3b945fabb43c2471d053931824318600e22479e421154606",
+        "sha256": "a2a4879dbf6dc40e3b945fabb43c2471d053931824318600e22479e421154606",
+        "words": 1229
+      },
+      "case-4.md": {
+        "raw_sha256": "629443af956d9649872e8877a3c6da05398c56deb3427029086c4923bcd00e99",
+        "sha256": "629443af956d9649872e8877a3c6da05398c56deb3427029086c4923bcd00e99",
+        "words": 572
+      },
+      "receipt.md": {
+        "raw_sha256": "0b5851d9c21d4807ba8c8224fa203a4c45b556f336835ddc72339d8790ae43f0",
+        "sha256": "4d0a21f474ed2165d13cc2157b671ccc88bdae4222c43fd6009b2b96ac9e5dde",
+        "words": 1118
+      }
+    },
+    "community": {
+      "case-1-design.md": {
+        "raw_sha256": "97f14213eb535e4eb4e630d9e0a7727447ff77a11e1ec1e3e68227475ed6ba38",
+        "sha256": "97f14213eb535e4eb4e630d9e0a7727447ff77a11e1ec1e3e68227475ed6ba38",
+        "words": 2739
+      },
+      "case-1-revised-design.md": {
+        "raw_sha256": "7576b318e8ddf020a5ee9f3f6c7fe1fba30dc852db549fe673be69b30d24996b",
+        "sha256": "7576b318e8ddf020a5ee9f3f6c7fe1fba30dc852db549fe673be69b30d24996b",
+        "words": 3729
+      },
+      "case-1-revised.md": {
+        "raw_sha256": "2f5f79ff519899c5af832b00d1bbe62c1a95fd2821b9cb3f77e19559172e174a",
+        "sha256": "2f5f79ff519899c5af832b00d1bbe62c1a95fd2821b9cb3f77e19559172e174a",
+        "words": 4733
+      },
+      "case-1.md": {
+        "raw_sha256": "543f9b4b81e800225e1439781951bb4a02088c311c785860c4bab94f52c20535",
+        "sha256": "543f9b4b81e800225e1439781951bb4a02088c311c785860c4bab94f52c20535",
+        "words": 3557
+      },
+      "receipt.md": {
+        "raw_sha256": "3cad75cd41db44d191c1935a4b2a3653681271dbaff4c44fe08e5fafd69cb7ae",
+        "sha256": "b772be87015521f08e3aa9c49d98eeb42988e65e0988dd01c754f6d39c4f553b",
+        "words": 1212
+      }
+    }
+  },
+  "reader_labels": {
+    "current": "B",
+    "candidate": "A",
+    "community": "C"
+  },
+  "candidate_reconstruction": "In a checkout of baseline_git_ref, apply candidate-from-current.patch with git apply --unidiff-zero. records.md is unchanged.",
+  "reader_reviews": {
+    "initial-reading.md": {
+      "sha256": "c12f6e34c660d2745e16cc092909b220b85a2b041d8563282c6cf00a8ca8c265",
+      "sealed_before_revision_packet": true
+    },
+    "revision-reading.md": {
+      "sha256": "ebf9ccadb3888d847b5b6218037ced0081d7c41e5fed0007068d1b387df08202",
+      "same_labels_as_initial": true
+    }
+  }
+}

@@ -2,6 +2,8 @@
 
 These are synthetic evaluation inputs, not production code or factual research sources. They deliberately omit information a planner must not invent. No upstream framework needs to be installed.
 
+The [concrete-handoff requests](concrete-handoffs.md), [later requirement update](concrete-handoffs-update.md) and separate [reader criteria](concrete-handoffs-grading.md) support the [November output comparison](../concrete-handoffs-evaluation.md). Keep the update and grading criteria out of the initial authoring input. That comparison uses frozen current/candidate instructions and a pinned community method; the original pilot below retains its historical setup.
+
 ## Repeat the pilot
 
 Use fresh contexts and a separate disposable directory per run. Copy the relevant fixture there. Keep the same host/model settings, task, source access, and tool permissions across compared runs; record any differences. Do not show agents the expected observations below or other outputs before they finish.

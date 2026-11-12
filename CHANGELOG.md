@@ -36,6 +36,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # planning
 
+## [0.10.0] — 2026-11-12
+
+### Changed
+
+- Make substantial plans explain the baseline, chosen solution, consequential contracts and behavior, dependency-ordered delivery, and observable acceptance. Allow compact data/state models while leaving routine coding choices to implementation.
+- Give substantial plans an adaptable default structure and keep current decisions distinct from bulky evidence and superseded history. Preserve lightweight small-task, product and research behavior without new dependencies or required process stages.
+- Judge readiness against the user's requested scope; distinguish an independently ready slice from a complete design and expose central decisions or feasibility gaps. Record an actual current/candidate/community output comparison and its limits.
+
 ## [0.9.2] — 2026-11-02
 
 ### Changed

@@ -23,7 +23,7 @@ Infer scrutiny from uncertainty, consequences, reversibility and dependencies. H
 
 Use [review procedure](#review-procedure) only when fresh scrutiny is warranted. Research directly by default; batch independent tool calls. For bulky sources or separable questions, use the conditional dispatch in [research scouts](#research-scouts). Scouts gather evidence; the planner owns synthesis. Neither agents nor a particular model/provider are required.
 
-- **`--review`:** judge a supplied plan for its intended decision; preserve it unless editing was requested. Reuse valid evidence rather than restarting discovery.
+- **`--review`:** judge a supplied plan against the user's requested outcome and scope; preserve it unless editing was requested. Reuse valid evidence rather than restarting discovery.
 - **`--outcome`:** match the existing record and follow [records.md](records.md). Capture known results and gaps; investigate only disputes that could change the conclusion.
 - **Simple requests:** give the few useful steps; no forced interview, objection or full planning process.
 
@@ -41,25 +41,29 @@ Compare the smallest viable approach, including reuse or no action where credibl
 
 Ask what breaks if proposed work is removed. Include it for an outcome, prerequisite or consequential constraint. Explain material exclusions and when to revisit deferred work. Recommend changes to explicit requirements openly; narrowing one thread must not erase another requested output, a broad survey or a requested roadmap.
 
-Keep the architectural view: components or stages, responsibilities, interactions, ownership, lifecycle and consequential boundaries. Use an editable Mermaid diagram when relationships are clearer visually; distinguish current from proposed behavior. Check it against the prose and evidence, and render/check syntax when a renderer is available; report if unrendered. Leave code layouts, signatures, field schemas and detailed test matrices to the implementer. Return conflicts affecting agreed architecture or acceptance for resolution.
+Establish the relevant current baseline, what can be reused and what changes. Explain how the chosen approach achieves the outcome. For system designs and implementation handoffs, decide the cooperating responsibilities, meaningful inputs and outputs, ownership, interactions and important lifecycle/failure behavior. Define the contracts and rules that make the design work; component names and desired properties alone do not explain a mechanism.
 
-For execution plans, sequence deliverables by dependency and define observable acceptance. An acceptance condition describes a finished result; merge steps that merely serve another outcome into it. Retain required methods as constraints and necessary design choices in the architecture. An example is illustrative unless its exact form is required. Research plans need discriminating observations; product plans need outcome hypotheses and guardrails. Visions need priorities and next validation, without invented delivery certainty.
+Use a compact example, state model or data shape when it expresses a consequential decision more clearly than prose. Use an editable Mermaid diagram when relationships benefit; distinguish current from proposed behavior, check prose agreement and render/check syntax when available, reporting if unrendered. Leave routine file layouts, helper signatures, code bodies and detailed test matrices to implementation unless they determine a consequential contract, requirement or feasibility. An example is illustrative unless its exact form is required.
+
+Derive execution deliverables from the design and its dependencies. Each meaningful increment names its result, prerequisites and observable acceptance; combine setup steps with the outcome they serve. Prefer an early end-to-end slice where it resolves integration risk, while allowing necessary prerequisites and migration work. Keep the overall design distinct from the first implementation slice. Research plans need discriminating observations and decision rules; product plans need intended behavior, outcome hypotheses and guardrails. Visions need priorities and next validation, without invented delivery certainty.
 
 ## Check and resolve
 
 Check requested-outcome coverage, necessary scope, unsupported additions, dependencies, existing contracts, acceptance and diagram/prose agreement. Use the bounded procedure in [review procedure](#review-procedure) if fresh scrutiny is warranted. Never role-play personas as independent reviewers; if unavailable, self-check and disclose the limitation.
 
+For system designs and implementation handoffs, trace representative normal and material failure or ambiguity cases through the chosen mechanisms to their observable results. Check that execution would not require inventing central design decisions. Label reasoned walkthroughs separately from executed checks; keep smaller reviews proportionate.
+
 Resolve findings against sources, preserving material uncertainty and dissent. Changed conclusions need evidence or an identified reasoning error; agreement is not proof. User-value tradeoffs belong in the decision list. Stop when disputes are settled, a round adds no evidence or correction, or the review cap is reached.
 
 ## Deliver the plan
 
-Lead with the recommended direction, why it matters and what changes. For several initiatives, make priority and rationale clear. Keep essential design, serious alternatives, next action and unresolved choices easy to find.
+Lead with the recommended direction, why it matters and what changes. For substantial work, a useful default structure is: intended result and scope, relevant baseline, proposed solution and decisions, delivery sequence, acceptance, and material uncertainty. Merge, reorder or omit parts to fit the subject; do not fill empty sections. For several initiatives, make priority and rationale clear.
 
 - **Make each idea scannable.** For a plan with several substantive parts, use named sections or distinct items. State each idea's purpose, then its decisive details and conditions. Split separately assessable responsibilities, decisions or checks; avoid burying several topics in one paragraph. Use prose for connected reasoning, tables for comparisons and examples for abstract ideas. Establish main behavior before exceptions.
 - **Select detail.** Give central ideas the depth needed to understand or decide; keep smaller changes brief. No word cap, fixed headings, equal-size sections or milestone quota. More scrutiny need not lengthen the plan.
-- **Give each fact one home.** Link interrupting research, detailed cases and verification receipts. Keep consequential caveats beside their claims; do not hide them in links or add a code appendix by default.
+- **Give each fact one home.** Keep the current plan coherent; link bulky research, verification receipts and superseded history. Keep binding decisions, rationale and consequential caveats beside the design they qualify; do not hide them in links or add a code appendix by default.
 
-Give unresolved choices stable IDs (`D1`, `D2`), options, a recommendation and what they block. Preserve decisions, rationale, exclusions and corrections during synthesis. Before handoff, scan headings and blocks for findability, repetition and lost substance; verify moved detail exists at its destination. Leave already-clear content alone.
+Resolve choices that would change the approach, feasibility, compatibility, acceptance or delivery sequence. For genuine blockers, give stable IDs (`D1`, `D2`), options, a recommendation if supportable, the bounded observation and decision criterion needed, and affected work. Naming a preferred option does not settle an unsupported essential capability. State readiness for the requested scope and any independently ready slice separately; routine implementation checks may remain pending. Preserve decisions, exclusions and corrections during synthesis. Before handoff, check that a reader can explain the proposed behavior, find the next useful delivery and judge completion without reconstructing the conversation. Scan for repetition and lost substance; verify moved detail exists at its destination. Leave already-clear content alone.
 
 Save substantive work and reconcile meaningful Q&A using [records.md](records.md), keeping one canonical plan with outcomes initially pending. Report the session/plan link and ID, checks actually performed, limitations and stop reason. Report usage when available; otherwise count scout calls, review calls and checks separately. These are work proxies, not measured savings or enforced billing limits.
 
@@ -97,9 +101,9 @@ Use fresh contexts with the task, constraints, intended decision and evidence po
 
 Freeze the draft and dispatch one critic:
 
-> Assess readiness for the decision this plan supports. Open relevant sources. Check requested outcomes, unnecessary scope, missed reuse, unsupported claims, dependencies, failure paths, existing contracts, acceptance and diagram/prose agreement. Suggest a smaller alternative only when it preserves the goal. Preserve explicit constraints and requested breadth; flag lost decisions or guesses presented as commitments. Distinguish observed behavior from proposals and future checks.
+> Assess readiness for the user's requested outcome and scope, supplied alongside the draft; do not infer a narrower assignment from the draft. Open relevant sources. Check coverage, unnecessary scope, missed reuse, unsupported claims, dependencies, failure paths, existing contracts, acceptance and diagram/prose agreement. Suggest a smaller alternative only when it preserves the goal. Preserve explicit constraints and requested breadth; flag lost decisions or guesses presented as commitments. Distinguish observed behavior from proposals and future checks.
 >
-> Judge architecture and acceptance without requiring code-level choices unless they affect feasibility. An exploration needs priorities and next validation; execution plans need deliverables and acceptance. Flag repetition or overloaded items that obscure the direction, rationale or next step; preserve substance without enforcing headings or length.
+> For system designs and implementation handoffs, distinguish chosen mechanisms from desired properties, trace representative cases and flag central choices left to execution. Separate readiness of the whole requested design from an independently ready slice or feasibility investigation. Require code-level detail only when it determines a consequential contract, requirement or feasibility. An exploration needs priorities and next evidence; execution plans need dependency-ordered results and acceptance. Flag repetition or overloaded items that obscure the design, rationale or next step; preserve substance without enforcing headings or length.
 >
 > Return at most five material findings, each with an affected claim, source, consequence and resolving correction or observation. No finding is required. Label uncertainty and give a short verdict: ready, revise or unresolved. This is advice, not implementation authorization.
 
