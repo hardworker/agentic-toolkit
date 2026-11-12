@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-12",
+  "method": "Primary-source inspection. URLs with commits are pinned; main-branch files are identified by their returned Git blob SHA. Blob identities are not commit identities. Sources inform the design; none is a runtime dependency.",
+  "sources": [
+    {
+      "project": "OpenSpec",
+      "url": "https://github.com/Fission-AI/OpenSpec/blob/main/schemas/spec-driven/schema.yaml",
+      "blob_sha": "feac937f8cb10e7dd5cbbc5d4ed81c71b9df5a1d",
+      "inspected": "Full schema instructions: proposal, behavior specifications, design decisions, tasks and revision boundaries."
+    },
+    {
+      "project": "OpenSpec",
+      "url": "https://github.com/Fission-AI/OpenSpec/blob/main/openspec/changes/archive/2026-10-19-add-update-workflow/design.md",
+      "blob_sha": "f49b105551c31e271a186eaea1fe3bc7a3989269",
+      "inspected": "Full archived update-workflow design, including numbered decision subsections, reuse rationale and rejected heavier machinery."
+    },
+    {
+      "project": "Superpowers",
+      "url": "https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/brainstorming/SKILL.md",
+      "blob_sha": "9eb0edc7fedf26e1d3e2f3f223e5bcc5058aed6a",
+      "inspected": "Full brainstorming/design skill."
+    },
+    {
+      "project": "Superpowers",
+      "url": "https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-plans/SKILL.md",
+      "blob_sha": "4cf0275d88d67aa4ef09f4bbca9970ed6ff74a00",
+      "inspected": "Full writing-plans skill."
+    },
+    {
+      "project": "GitHub Spec Kit",
+      "url": "https://github.com/github/spec-kit/blob/main/templates/plan-template.md",
+      "blob_sha": "36f2eab16880bac670fe43cbe7ef2b9bc8c3aa2f",
+      "inspected": "Full plan template."
+    },
+    {
+      "project": "GitHub Spec Kit",
+      "url": "https://github.com/github/spec-kit/blob/main/templates/commands/plan.md",
+      "blob_sha": "d559e517ae59bb3e664b59b528372444baac4626",
+      "inspected": "Full plan command, research decisions, data models, interface contracts and quickstart validation."
+    },
+    {
+      "project": "Matt Pocock skills",
+      "url": "https://github.com/mattpocock/skills/blob/4ae2317ddb22b046e26455e4f9c9b3aaaf62212d/skills/engineering/to-spec/SKILL.md",
+      "blob_sha": "3f52599ae2a4347aee5a07432c2707518e691a7f",
+      "inspected": "Full to-spec skill."
+    },
+    {
+      "project": "Compound Engineering",
+      "url": "https://github.com/EveryInc/compound-engineering-plugin/blob/4adfcf48ba6279edef75695608b3aa5ed4b6ad58/skills/ce-plan/references/plan-sections.md",
+      "blob_sha": "9a9b9d4c189abf69f702b6489693dd2c3a4f4108",
+      "inspected": "Full plan-sections reference."
+    },
+    {
+      "project": "GSD",
+      "url": "https://github.com/gsd-build/get-shit-done/blob/main/agents/gsd-planner.md",
+      "blob_sha": "d584834618f9dec9fc14a4e493bc1c14884e0225",
+      "inspected": "Section map plus discovery/task structure (159–270), dependency graph (353–381), and goal-backward planning (609–701). Other execution machinery not assessed."
+    },
+    {
+      "project": "Ouroboros",
+      "url": "https://github.com/razzant/ouroboros/blob/main/docs/CHECKLISTS.md",
+      "blob_sha": "f940e6876528aa33e10157769fdf90347a66e749",
+      "inspected": "Plan Review Checklist only (968–1067); other checklist/runtime sections not assessed."
+    }
+  ]
+}

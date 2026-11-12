@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-12",
+  "base_commit": "2bb4a31",
+  "skill_version": "0.11.0",
+  "inputs": {
+    "skill/SKILL.md": {
+      "sha256": "84ddd48b2d763bbed6f613da477481192e23969b2b3dc0747d60cf6b7c721d47",
+      "words": 1287
+    },
+    "skill/plan-template.md": {
+      "sha256": "548042d87ae5f6bbdfd620ab11bd1704650dd11582f3d00e567e983af374b179",
+      "words": 1179
+    },
+    "skill/records.md": {
+      "sha256": "97e7050a4a434dcba3f4379caf8d197b895f603c2ade3079856619da86fa2949",
+      "words": 997
+    },
+    "requests.md": {
+      "sha256": "4595d6a454417fdacf0165bc7bebd4ebc77369820c2510323ac472122853c9c1"
+    },
+    "reader-brief.md": {
+      "sha256": "87e6d87d3e452ebe42e27e7a4b0ea011e6a1594d8f64214b96950af57545b72f",
+      "frozen_before_output_inspection": true
+    },
+    "previous_output": {
+      "repository_path": "docs/planning-research/eval-results/concrete-handoffs-2026-11-12/candidate/case-1.md",
+      "sha256": "4295e20046a9026af526769c2146b555a78d075580778a46a4c8b3b09adbcf63"
+    },
+    "reference": {
+      "description": "Private user-supplied engineering handoff; used only for reader comparison and not archived publicly.",
+      "sha256": "fd80bb3515b705d3586382322cd67c4486234f9d15364b8b59cf92500c40d98d"
+    }
+  },
+  "reader_labels": {
+    "previous": "B",
+    "rebuilt": "A"
+  },
+  "outputs": {
+    "initial/case-1.md": {
+      "raw_sha256": "e6101bbaa565d2279234e4487bacf6a4eec17926c31cb15843e37c9ac7401ecd",
+      "sha256": "207895691a0d2e28ed261d5c2f728169c39eb23da89517017c700187ba90fb99",
+      "words": 3321
+    },
+    "initial/case-2.md": {
+      "raw_sha256": "12b3d2fd28373c788602eae56b58813465eafb19c7b58bfb47f46246806131bd",
+      "sha256": "c5f06836ccb80e03bac2f8281698f82cc5469efe1f07f5498c0d199040cae646",
+      "words": 167
+    },
+    "initial/case-3.md": {
+      "raw_sha256": "448a462f2305970affe264ffd55b016fb4fdd581add80b48b7d993843b634124",
+      "sha256": "c0462555bc450d5364a5af67be050bdefa8e6e10842e963c9e6cf50f728362f1",
+      "words": 1746
+    },
+    "initial/case-4.md": {
+      "raw_sha256": "6287e6abac38c22f28d383b2acfa5aa71de5aa605d0178a2b6a29b3bc4fb8797",
+      "sha256": "6fdc5c0508792fcd3d3adb66f46b731f866ad9eaff1b72f43726ebc12c72e7a3",
+      "words": 838
+    },
+    "initial/receipt.md": {
+      "raw_sha256": "03d057fa7ff1835a343a88fcfc87eefdcd3ff71759aae9fe056cdbbb724129f7",
+      "sha256": "c2fbe7a671a61f1471532fbdbcb1dc72e61cd97bd0f0d4104ef87e2287ecacfe",
+      "words": 550
+    },
+    "reviewed/case-1-reviewed.md": {
+      "raw_sha256": "1b33dee237dd0df959bab457cd70cd7b30c226d3be1886d00f11a6610991f486",
+      "sha256": "cfdd456dc09ecf690cf77e55c05417ad92a389ae8520690a11611b5d506d7ec8",
+      "words": 4318
+    },
+    "reviewed/review-receipt.md": {
+      "raw_sha256": "160653ef5f973ef3999c5f9fc0d66f2c5bb17584b5a820df3465e3cadd6a2643",
+      "sha256": "9c01f6a54c982659292c1bddd04375f6c352e485061aaeff6b090585d3041c83",
+      "words": 720
+    }
+  },
+  "method": "One fresh authoring context with inherited model settings and no parent history received the new skill and the same synthetic four-case packet as 0.10.0. The private reference was withheld from the author and shown to a separate fresh reader. No live library, implementation, web, external writes or nested agents. Prior 0.10.0 output is a historical comparison artifact, not a fresh repeated baseline.",
+  "normalization": "Only scratch paths and request pointers are replaced by placeholders or repository-relative pointers; generated prose is otherwise unchanged.",
+  "reader_criteria_sha256": "87e6d87d3e452ebe42e27e7a4b0ea011e6a1594d8f64214b96950af57545b72f",
+  "reader_report_sha256": "66900e6648da255d26d87f566eeb8aa85cdb79be27f273b26d3bf0b39eac99a9",
+  "reader_method": "Separate fresh context, no parent history or authoring instructions; same private reference and synthetic request, randomized labels A/B. Labels do not assure blinding because style and artifacts can reveal the method. Readability judgments are task-specific.",
+  "review_revision": "One author follow-up corrected the reader-confirmed freshness gap, distinguished historical/current source evidence and added a continuous example. The instruction snapshot and five initial artifacts are unchanged. A targeted reader follow-up checks the correction. No superiority claim compares the reviewed result with an unreviewed historical artifact.",
+  "followup_report_sha256": "1ba45e9e8740c7acf710aa71efce872215482c072ce6013f7299a40f5fa9de25",
+  "checks": [
+    "Frontmatter parsed with Ruby YAML; required fields present.",
+    "Plugin JSON and version entries agree.",
+    "Frozen instruction hashes match the evaluated files.",
+    "Original supplied plan/draft text retained in controls.",
+    "Five initial outputs remain byte-for-byte unchanged after review.",
+    "Archived/raw hashes and normalized references checked.",
+    "Public-artifact privacy, Markdown fences, relative links and whitespace checked."
+  ]
+}

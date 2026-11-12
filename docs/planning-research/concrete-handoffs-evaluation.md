@@ -2,6 +2,8 @@
 
 12 November 2026. The skill now asks substantial plans to explain the baseline, chosen solution, consequential contracts and behavior, delivery dependencies, and observable acceptance. It permits compact data/state models while leaving routine coding choices to implementation. The default document shape adapts to the subject; research and small reviews remain lightweight. This changes instructions, not the storage helper or execution runtime.
 
+Subsequent user feedback: this revision did not provide a visible improvement in plan structure or quality. The comparison below remains evidence of that trial, not proof that the user's goal was achieved. The [0.11.0 rebuild](planning-rebuild.md) replaces this instruction approach.
+
 ## What was compared
 
 | Method | Frozen authoring source | Cases |

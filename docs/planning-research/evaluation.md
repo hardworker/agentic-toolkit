@@ -2,7 +2,7 @@
 
 Historical evaluation of the skill now named `planning`. Frozen fixtures and result manifests retain their original paths and hashes; links below lead to the current skill.
 
-Evaluation date: **12 October 2026** (some run timestamps are 11 October UTC). Candidate: [SKILL.md](../../skills/planning/SKILL.md) and [review procedure](../../skills/planning/SKILL.md#review-procedure). Sources and fixture hashes accompany the [saved results](eval-results/manifest.json).
+Evaluation date: **12 October 2026** (some run timestamps are 11 October UTC). Candidate: the then-current skill and review procedure. The [current skill](../../skills/planning/SKILL.md) was later rebuilt; the original procedure is not its present handoff check. Sources and fixture hashes accompany the [saved results](eval-results/manifest.json).
 
 This report evaluates **0.1.0**, saved in commit `6397676`; the skill links above now open the current version. The original manifest hashes remain historical evidence. Subsequent storage, outcome, and research-scout extensions are documented separately in [research decisions and outcomes](outcomes.md).
 

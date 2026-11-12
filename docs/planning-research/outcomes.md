@@ -52,7 +52,7 @@ The rationale is conditional: separate research contexts can compress large sour
 
 The revised scaling study likewise reports task-dependent benefits and coordination costs across 260 configurations and six benchmarks. Applying those results to this planner is a design inference, not direct evidence of savings. The adopted policy favors direct investigation until delegation has a concrete purpose. [Scaling Agent Systems, v3](https://arxiv.org/abs/2512.08296v3).
 
-The complete conditional procedure lives in [research scouts](../../skills/planning/SKILL.md#research-scouts). No new flag, runtime, mandatory model tier, or always-on agent team is introduced.
+That version embedded the complete conditional scout procedure without a new flag, runtime, mandatory model tier, or always-on agent team. The [0.11.0 rebuild](planning-rebuild.md) later removed this procedure; this section preserves its historical rationale.
 
 ## Storage and use
 
@@ -89,7 +89,7 @@ The skill opens the index and a few relevant records, checks whether their evide
 
 The workflow uses ordinary file tools, with no database, background watcher, scheduled follow-up, or required external provider. A request to update outcomes authorizes recording available results, not inventing evidence or launching new experiments. Private records are not automatically copied into repository documentation.
 
-The executable contract is the prose in [SKILL.md](../../skills/planning/SKILL.md) and [records.md](../../skills/planning/records.md); [review procedure](../../skills/planning/SKILL.md#review-procedure) still governs optional critique. Installation follows the existing skill symlinks, so local edits take effect there without a second copied implementation.
+The current executable contract is the prose in [SKILL.md](../../skills/planning/SKILL.md) and [records.md](../../skills/planning/records.md); [handoff checking](../../skills/planning/SKILL.md#check-it-as-a-handoff) now covers optional fresh review. Installation follows the existing skill symlinks, so edits in their persistent-checkout targets take effect without a second copied implementation.
 
 ## Validation of the outcome extension
 

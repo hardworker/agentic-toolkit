@@ -1,11 +1,11 @@
 # agentic-toolkit — Architecture
 
-A debate review pipeline, a standalone planner, two utility skills, and an automatic learning runtime. The review pipeline challenges finished work and caps its fan-out. The planner matches scrutiny to the decision's stakes and records evidence limits. Planning and debate decisions are prose run by the host agent; a stdlib helper serializes planning-session registration. Self-learning adds deterministic Python hooks, a queue, and a bounded background worker.
+A debate review pipeline, a standalone planner, two utility skills, and an automatic learning runtime. The review pipeline challenges finished work and caps its fan-out. The planner develops a concrete solution and delivery handoff, with evidence limits visible. Planning and debate decisions are prose run by the host agent; a stdlib helper serializes planning-session registration. Self-learning adds deterministic Python hooks, a queue, and a bounded background worker.
 
 | Skill | Does | Agents |
 |---|---|---|
 | [self-learning](#self-learning) | automatic cross-session procedural learning and improvement proposals for Claude and Codex | one bounded headless CLI call per eligible reflection |
-| [planning](#planning) | concise plans with source evidence, diagrams, alternatives, and optional critique | 0 / 1 / 2 fresh review contexts inferred from the task; optional scouts, two calls by default |
+| [planning](#planning) | concrete designs and staged plans for engineering, product and research | optional fresh handoff review; one targeted follow-up when needed |
 | [adversarial-review](#adversarial-review) | cross-model debate review of finished work — diff, working tree, or documents | 4 + 2 Codex calls |
 | [session-migration](#session-migration) | find any past session, route it to the surface you want | none |
 | [cf-access](#cf-access) | keep CLI tools, Node clients and MCP servers authenticated to Cloudflare Access | none |
@@ -43,38 +43,29 @@ Installation merges owned native hooks into both hosts and symlinks the manageme
 
 The skill, default library (`~/.local/share/planning/`), environment override (`PLANNING_HOME`) and session marker (`planning-session`) share the same name. The helper accepts older configuration and markers, and discovers the old default library when the new one is absent. Historical snapshots and stable record IDs retain their original names.
 
-Planning ends with a decision brief and handoff. The planner may inspect code and run permitted checks, but writes only planning artifacts and disposable probes. Product implementation is a separate authorized phase, possibly performed by the same agent. This is a role boundary, not filesystem enforcement.
+Planning produces one canonical plan that explains the recommendation, current foundation, proposed solution, delivery stages, validation and first useful slice. Its substance follows the reader's work: understand the design, assess its decisions, then carry out the next stage. The planner may inspect sources and run permitted checks or disposable probes; product implementation follows the user's separate authorization.
 
 ```mermaid
 flowchart LR
-    B[Brief] --> E[Direct source research]
-    B -. bulky or independent research .-> S[Bounded scouts]
-    S --> E
-    E --> O[Options and decisive tradeoff]
-    O --> P[Plan and useful diagram]
-    P --> C[Scrutiny matched to stakes]
-    C --> R[Resolve findings against evidence]
-    R --> H[Decision brief and verification receipt]
-    H --> L[User-wide record and index]
-    L --> U[Later outcomes and contextual lessons]
-    U -. relevant evidence for future plans .-> B
+    B[Request and existing work] --> E[Ground the current state]
+    E --> D[Choose and design the solution]
+    D --> P[Write the design and delivery plan]
+    P --> C[Check as a new reader]
+    C --> H[Canonical handoff]
+    H --> L[Session record and index]
+    L --> U[Later revisions and outcomes]
+    U -. relevant evidence .-> B
 ```
 
-Two instruction files separate the planning workflow from storage: `SKILL.md` includes intake, grounding, design, output and optional scout/review procedures; `records.md` contains the storage contract and commands. It infers scrutiny from uncertainty, consequences, reversibility, and dependencies, without named effort modes. The embedded review procedure applies only when a fresh critic or blind alternative could change the plan or resolve a consequential gap. A critic may receive one targeted follow-up. Adding a blind alternative permits at most two dispute rounds within six total review calls, including earlier critic calls; escalation never resets the count. Initial judgments remain separate, and settled disputes or no new evidence stop review early. Fresh contexts may share a model; the receipt must say so.
+Three instruction files have distinct purposes. `SKILL.md` defines the planning workflow, proportionality and review/revision modes. For substantial handoffs it loads `plan-template.md`, which provides the document structure and content prompts. `records.md` retains storage and continuation conventions. A small request does not require the template.
 
-Intake distinguishes desired outcomes from suggested mechanisms and challenges only consequential unsupported premises. Scope selection checks necessity without dropping explicit requirements or other requested outputs. Acceptance describes finished outcomes; required methods remain constraints and consequential design choices stay in the architecture. Synthesis preserves decisions, corrections and evidence status. These checks refine existing stages; they add no mandatory interview, panel or schema. Version 0.9.0 condensed the instructions; 0.9.1 consolidates them into two files while preserving the procedures, helper and storage contract; [comparison and limits](docs/planning-research/refinement-evaluation.md).
+The design is written before the delivery breakdown. Major concepts receive named subsections with their purpose, chosen mechanism or method, meaningful contracts, rationale and important failure behavior. Compact semantic records, state models and diagrams are allowed where they communicate decisions. Stages then name results, deliverables, dependencies and observable exit conditions. Necessary foundations can precede an end-to-end slice. Later stages retain the overall direction without speculative code-level prescription.
 
-The embedded scout procedure applies only when research benefits from delegation. Direct research and parallel tool calls are the default. Scouts get bounded, distinct questions and return claims, source/version pointers, counterevidence, and gaps. The default research cap is two scout calls including follow-ups, separately counted from review and adjustable by the user's budget. No recursive delegation is permitted. The planner opens decisive sources and reconciles contradictions; a scout cannot become the fresh critic of its own work. Bulk evidence can stay behind links without losing provenance.
+Product and research plans use the same reasoning at an appropriate level: chosen user behavior and value evidence, or questions, methods, analysis and decision rules. Early exploration can end with the next justified commitment or observation. The plan does not invent numerical thresholds or implementation certainty where the evidence cannot support them.
 
-Substantial artifacts have a default organizing shape: intended result and scope, relevant baseline, proposed solution and decisions, delivery sequence, acceptance, and material uncertainty. Sections can be merged, reordered or omitted; the subject determines the structure. Central concepts receive more depth than smaller proposals. Lists separate meaningful points with their essential conditions; prose explains connections. The current plan retains binding decisions and rationale; bulky research, receipts and superseded history stay linked. Editing checks preservation and findability without imposing a template, paragraph quota or equal-size sections.
+Handoff checking asks whether a new reader can understand the solution, follow representative behavior, start the next work and assess completion. A complex or consequential plan can use a fresh reviewer and one targeted follow-up. The previous scout dispatch, blind-alternative debate, review tiers and call-accounting procedure are removed. No reviewer or external skill is required. Source claims, proposals, executed checks and observed outcomes remain distinct.
 
-System designs and implementation handoffs choose mechanisms: cooperating responsibilities, meaningful inputs/outputs, ownership, interactions and important lifecycle/failure behavior. A compact data shape, state model or example can express a consequential contract; routine file layout, helper signatures and code bodies remain implementation choices. Deliverables derive from the design and dependencies, with observable results; an early end-to-end slice is useful when it reduces integration risk, while prerequisites and migrations remain valid. The overall design and first delivery have distinct scope. Product plans describe intended behavior and outcome hypotheses; research plans define discriminating observations and decision rules.
-
-Self-check and fresh review assess the user's requested outcome and scope, including representative normal and material failure/ambiguity cases for system designs. A reasoned walkthrough is not an executed check. A preferred option does not settle an unsupported essential capability; blockers name the bounded observation, decision criterion and affected work. Readiness of an independent slice does not establish readiness of the whole requested design. Routine implementation checks may remain pending. The [output comparison](docs/planning-research/concrete-handoffs-evaluation.md) records the evaluated instruction snapshots and limits.
-
-Claims carry evidence states rather than confidence percentages. Deterministic checks or disposable probes may help when permitted, but a planned test is not an executed result and model consensus is not proof. Bulky evidence and review receipts stay behind links. The plan's dependencies, acceptance criteria, and diagram must agree before handoff.
-
-`--review` preserves the supplied plan unless edits were requested. A missing reviewer degrades to self-checking with explicit limits. Model selection inherits the host unless a different available model is authorized; the skill has no hardcoded model or required external provider. User time, cost, scope, and delegation limits take precedence over inferred scrutiny. Call caps are instruction-level controls, not enforced monetary budgets.
+`--review` preserves a supplied plan unless edits were requested and judges the user's full intended scope. Revisions update the recommendation, design, stages and acceptance together. `--outcome` compares delivered evidence with original expectations. Safe implementation details can remain open; consequential unknowns identify the decision and stage they affect.
 
 `records.md` defines the user-wide library and its `--store DIR` / `PLANNING_HOME` overrides. New work lives in readable `sessions/<topic>/` folders; a `README.md` entry owns stable session identity, title, project scope, native source references and grouping. Plans retain independent IDs and canonical contents, expectations, decisions and outcomes. Legacy records and explicit destinations remain usable in place.
 
@@ -82,7 +73,7 @@ Claims carry evidence states rather than confidence percentages. Deterministic c
 
 Optional foreground discovery queries self-learning by project and native sources and refreshes a timestamped derived snapshot. Explicit canonical links survive refresh failures or changed matches. The learning runtime never writes planner entries; its database, generated skills, evidence gates and budgets remain unchanged. Planning works without learning. Physical relocation is deferred. [Contract and commands](skills/planning/records.md), [temporary-fixture pilot](docs/session-artifacts.md).
 
-The [research dossier](docs/planning-research/overview.md) explains source selection, tradeoffs, and alternatives. The [evaluation record](docs/planning-research/evaluation.md) distinguishes observed pilot behavior from unmeasured quality/cost claims. [Research decisions and outcomes](docs/planning-research/outcomes.md) connects that evidence to the current skill and documents the storage boundary.
+The [rebuild record](docs/planning-research/planning-rebuild.md) explains the current source-derived design and output check. The historical [research dossier](docs/planning-research/overview.md) explains earlier source selection, tradeoffs, and alternatives. The [evaluation record](docs/planning-research/evaluation.md) distinguishes observed pilot behavior from unmeasured quality/cost claims. [Research decisions and outcomes](docs/planning-research/outcomes.md) connects that evidence to the current skill and documents the storage boundary.
 
 ## adversarial-review
 
@@ -237,7 +228,8 @@ agentic-toolkit/
 │   └── marketplace.json     # ...and as its own marketplace (source "./")
 ├── skills/
 │   ├── planning/
-│   │   ├── SKILL.md              # planning, optional scouts and bounded review
+│   │   ├── SKILL.md              # grounding, design, handoff, review and revision
+│   │   ├── plan-template.md      # substantial-plan structure and content guidance
 │   │   ├── records.md            # session/plan ownership, continuation, outcomes and reuse
 │   │   ├── sessions.py           # locked registration, entries, index and optional discovery
 │   │   └── LICENSE               # MIT, scoped to this skill

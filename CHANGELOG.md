@@ -36,6 +36,14 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # planning
 
+## [0.11.0] — 2026-11-12
+
+### Changed
+
+- Rebuild the planning instructions around designing a solution and writing a readable handoff, after the previous incremental revision failed to meet the user's quality expectation.
+- Add an adaptable substantial-plan outline: recommendation, reusable foundation and gaps, named design concepts, delivery stages and exit conditions, validation, and the first useful slice. Adopt practices from inspected open-source planning approaches without runtime or skill dependencies.
+- Replace the embedded scout/debate machinery with a proportionate handoff check and optional fresh reader. Preserve small-task, product, research, review, revision and outcome use cases, existing arguments, storage and session compatibility.
+
 ## [0.10.0] — 2026-11-12
 
 ### Changed

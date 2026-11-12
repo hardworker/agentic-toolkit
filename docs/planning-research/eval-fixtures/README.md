@@ -4,15 +4,17 @@ These are synthetic evaluation inputs, not production code or factual research s
 
 The [concrete-handoff requests](concrete-handoffs.md), [later requirement update](concrete-handoffs-update.md) and separate [reader criteria](concrete-handoffs-grading.md) support the [November output comparison](../concrete-handoffs-evaluation.md). Keep the update and grading criteria out of the initial authoring input. That comparison uses frozen current/candidate instructions and a pinned community method; the original pilot below retains its historical setup.
 
+The [0.11.0 rebuild trial](../planning-rebuild.md) reuses those initial requests with its own prewritten reader criteria and preserves both the first draft and the example corrected after review.
+
 ## Repeat the pilot
 
-Use fresh contexts and a separate disposable directory per run. Copy the relevant fixture there. Keep the same host/model settings, task, source access, and tool permissions across compared runs; record any differences. Do not show agents the expected observations below or other outputs before they finish.
+This section reproduces the 0.1.0 pilot from commit `6397676`; use that historical instruction version and its effort flags, not the current skill. Use fresh contexts and a separate disposable directory per run. Copy the relevant fixture there. Keep the same host/model settings, task, source access, and tool permissions across compared runs; record any differences. Do not show agents the expected observations below or other outputs before they finish.
 
 1. **Engineering baseline:** supply `engineering/REQUEST.md` and its three supporting files. Ask for the requested plan using ordinary planning, without a planning skill or subagents. Permit existing tests and read-only probes; prohibit network, installation, and source edits.
 2. **Engineering candidate:** give a fresh context the same files plus `skills/grounded-plan/SKILL.md`; request standard effort. Permit the skill's bounded fresh critique, with the same source/tool limits. Freeze the plan before review. Save the plan and a receipt of sources, checks, actual review calls, and limitations.
 3. **Product:** supply `product.md` with the candidate skill at lean effort. No web, users, analytics access, implementation, or additional agents. Save the plan and receipt.
 4. **Research review:** supply `research.md` with the candidate skill and `--review --effort standard`. Enforce the packet's no-web/no-agents constraints. Save a separate review and preserve the original.
-5. **Deep review component:** freeze the completed engineering candidate. Give one fresh critic the task, source files, and fixed plan. Give a different fresh alternative author only the task and source files. Collect both initial answers before sharing either. Follow the [review procedure](../../../skills/planning/SKILL.md#review-procedure) for material disputes; do not force disagreement to exercise the cap. This tests the review component, not a new end-to-end deep planning run.
+5. **Deep review component:** freeze the completed engineering candidate. Give one fresh critic the task, source files, and fixed plan. Give a different fresh alternative author only the task and source files. Collect both initial answers before sharing either. Follow the review procedure from that historical instruction version for material disputes; do not force disagreement to exercise the cap. This tests the review component, not a new end-to-end deep planning run.
 
 Ask each run to record tool commands/results, source access, limitations, and review context/call counts. Record elapsed time only when measured and token/cost data only when the host exposes it. A receipt is an agent's report; corroborate important execution claims with tool results when available. Independent contexts can still share the same model and failure modes.
 
