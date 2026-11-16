@@ -34,7 +34,7 @@ Below, `<helper>` means `python3 <skill-dir>/sessions.py`. Global `--store DIR` 
 
 - Reuse a work-specific creation key for retries; unrelated work needs a new key. The key is project-scoped, not a title heuristic. Concurrent matching creates converge; name collisions receive readable suffixes.
 - Omit unavailable `--source`; continue by explicit session ID/path. Record project/topic and a stable repository/document reference when known; a checkout path is optional because it may disappear.
-- New plan content omits an `ID:` header; the helper assigns one. Explicit destinations are never overwritten. `attach` reads identity without editing contents; known IDs cannot acquire competing paths. Preserve IDs on later edits.
+- New plan content omits its H1 title and any `ID:` header; the helper prepends the title, ID and creation date. Explicit destinations are never overwritten. `attach` reads identity without editing contents; known IDs cannot acquire competing paths. Preserve IDs on later edits.
 - Update deliberately with `--title`, `--reference` or `--source-title` as appropriate. After meaningful Q&A or delivery, reconcile the canonical plan and refresh the entry. Questions about alternatives are not acceptance.
 - Report save failures; do not silently choose another destination. If `indexed: false`, preserve the saved entry, report the partial success and repair with `index`. Do not register disposable pilot artifacts as durable evidence.
 

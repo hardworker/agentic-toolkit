@@ -1,77 +1,135 @@
 # A substantial plan
 
-Use this as a working outline, not a form to fill with generic prose. Keep the main progression: recommendation → present situation → proposed solution → delivery → proof. Rename sections to the subject and combine sections that would repeat one another. Omit a section only when it has no useful content. A small request does not need this outline.
+A skeleton to adapt, not a form to fill. Keep the order: decision → what exists → design → stages → proof → first slice → what is open. Rename sections to the subject, merge ones that would repeat each other, and drop any with nothing to say. A small request does not use this.
 
-The design and the delivery plan belong together by default. Split out large supporting material when necessary, keeping one clear entry point. The reader should not have to join a requirements document, a research transcript, and a task list to discover the chosen solution.
+One document is the entry point. The reader should not have to join a requirements file, a research transcript, and a task list to find the chosen solution. When saving through the records helper, leave out the title line; the helper adds it.
 
-## 1. Recommendation and scope
+````markdown
+# <Subject> — <proposed design | implementation handoff | investigation plan>
 
-Open with the chosen direction and the result it enables. State the decisive reason, the most important boundary, and the recommended first milestone. Give the reader a concrete picture of the outcome before introducing its mechanics.
+**Status:** <what this is; what has not been reviewed, run, or approved>
+**Sources:** <repository at commit or date; documents; what was unavailable>
+**First milestone:** <name>
 
-State what this document covers and what is excluded or deferred. Distinguish the overall goal from the first delivery. Label the document's actual maturity: a proposed design, an implementation handoff, or an investigation plan. Do not claim approval or verification that has not occurred.
+## Decision
 
-## 2. Current foundation and gaps
+<Two or three sentences: the direction, the decisive reason, and what it deliberately is not.>
 
-Explain only the existing behavior and constraints needed to understand the proposal. Cite the sources that establish them.
+<The whole flow in one line or a small diagram.>
 
-A reuse table is useful when several capabilities already exist:
+> <The immediate goal as one sentence a reviewer could check.>
 
-| Capability needed | Existing mechanism or evidence | Required change |
+## Scope
+
+- **Covers:** <…>
+- **Not prescribed yet:** <what must be measured or decided first, and why>
+
+| Non-goal | Reason |
+|---|---|
+| <thing a reader might expect> | <one clause> |
+
+## What exists and what is missing
+
+| Needed capability | Existing mechanism | Reuse, extend, or new |
 |---|---|---|
-| A capability the solution depends on | Its actual owner and current behavior | Reuse as-is, extend, or add the missing part |
+| <capability> | <owner, `path`> | <…> |
 
-Then identify the gaps the design must close. Distinguish missing functionality from functionality that merely needs integration or verification. Keep important existing invariants visible. This section should make the proposed amount of new work understandable.
+Invariants to keep:
 
-## 3. Proposed solution
+- <rule of the current system the change must not break>
 
-Start with an overview of how the whole solution works. A flow or component diagram often helps; use editable Mermaid for relationships when useful. Explain the diagram in the text, keep current and proposed elements distinguishable, and check that they agree. Render or syntax-check diagrams when available; disclose when only text was checked.
+Missing:
 
-Give each major design idea its own named subsection. Organize around the subject's concepts: a record with meaningful semantics, a processing stage, a user interaction, a decision policy, or an experimental method. Avoid a flat list of requirements or a paragraph for each implementation file.
+1. **<Name>** — <one clause on what is absent and why it matters>
 
-Within each subsection, establish:
+## Design
 
-- **Decision and purpose:** what is being chosen and which problem it solves.
-- **Contract or method:** what it receives, produces, owns, and relies on; the rules needed for other parts to use it correctly.
-- **Rationale:** why this approach fits, the serious alternative rejected, and the tradeoff accepted. Explain a shared choice once rather than repeating it everywhere.
-- **Behavior:** how it participates in the normal flow and what happens in the failures or exceptions that could change the design.
+<Overview diagram or ordered flow. Mark what exists and what is proposed.>
 
-These are content prompts, not four labels to repeat mechanically. Use short explanatory paragraphs, lists of rules, or tables as appropriate.
+### <Concept, named as the project would name it>
 
-Define important concepts precisely enough that later stages can refer to them. Use compact record/interface examples when fields, states, or distinctions carry the decision. For instance, an execution result and an assessment of its quality may need separate meanings; merely naming a “result object” would leave that choice to implementation. Explain the semantics around the example rather than treating a code block as the design.
+<One to three sentences: what is decided and which problem it solves.>
 
-Make interactions concrete. Identify what initiates a flow, which component or person decides, what evidence or state it uses, and where the result goes. For a system, resolve applicable runtime, persistence, lifecycle, authority, and integration choices. For research, resolve sampling, measurement, comparison, and analysis choices. Include only boundaries that matter to this work; do not add a generic safety or reliability catalog.
+```ts
+// only the fields or states that carry a decision
+```
 
-## 4. Delivery stages
+Rules:
 
-Sequence work by its dependencies and the results it produces. Use a subsection per stage when it needs explanation; a compact table is enough for a short sequence.
+- <what a value means and does not mean>
+- <who may write it; what must never be inferred from it>
 
-Each stage needs:
+Rejected: <the serious alternative> — <why it loses here; the limitation accepted>.
 
-- **Result:** what becomes possible or known after it.
-- **Deliverables:** the concrete changes or artifacts, including their integration with existing work.
-- **Dependencies and limits:** what must exist or be decided first, and what this stage does not yet enable.
-- **Exit condition:** the behavior, evidence, or artifact that demonstrates the result.
+## Stages
 
-Use responsibility or owner roles when coordination matters, without inventing people's availability or commitments. Put a prerequisite before the work that uses it. A stage that builds records or measurement before a new capability can be valid; say why it is necessary and which later result it enables.
+### Stage 0 — <result, not activity>
 
-Specify the near-term work deeply enough to start. Later stages retain their intended results and major decisions without speculative coding detail. If the brief asks for implementation tasks, decompose the first stage into bounded work with inputs, outputs, and verification; do not substitute the task list for the design.
+Deliverables:
 
-## 5. Validation and rollout
+1. <concrete change or artifact>
 
-Define how the intended result will be judged. Connect claims to representative scenarios, measurements, or inspectable artifacts. Include the consequential failure cases and regressions implied by the design. Name real test facilities and commands when known; do not invent existing tests.
+Depends on: <…>. Does not yet allow: <…>.
 
-Separate correctness from usefulness and operational readiness when they require different evidence. Establish a baseline before inventing performance, quality, or business thresholds. If a threshold is a requirement, preserve it and explain how to measure it. If selecting it is future work, name the measurement and decision that will set it.
+**Exit condition:** <behavior, evidence, or artifact that shows the result>
 
-When the change needs staged adoption, explain enablement, observation, and the conditions for continuing, adjusting, stopping, or rolling back. Describe what rollback must restore when state or behavior changes; a generic “revert” is insufficient if it leaves consequential effects behind. Omit rollout machinery when the work does not need it.
+## Validation and rollout
 
-## 6. Recommended first slice
+- <claim> → <scenario, measurement, or artifact that would show it>
+- Baselines to measure before any threshold is set: <…>
+- Rollback restores: <state and behavior, not only source>
 
-Make the immediate commitment easy to find. Name its exact boundary, refer to the stages it includes, and give one concrete demonstration of success. State what remains outside it and why. This is especially useful when the complete design spans several releases or initiatives; merge it into the delivery section when a separate section would repeat the same material.
+## First slice
 
-An acceptance example should identify the starting situation, what is done, the observable result, and any important condition that must remain true. It should prove the slice's value, not merely the existence of a component.
+<Exact boundary, the stages it includes, what stays outside and why.>
 
-## 7. Open questions, risks, and evidence
+> Given <starting situation>, when <what is done>, then <observable result>, while <condition that must stay true>.
 
-Keep unresolved matters specific. For each material question, state what is unknown, which decision or stage it affects, and how to resolve it. Distinguish a blocker from a safe implementation detail or later empirical question. If the current evidence cannot support a required guarantee, say so and give the next investigation; do not silently weaken the requirement.
+## Deferred
 
-Explain the important risks and the response to them. Do not repeat every exception already handled in the design. Keep sources near the claims they support; a final evidence section may collect repository anchors and longer research. Close with the concrete next action and any remaining limit on the handoff.
+| Left open | Needed by | Settled by |
+|---|---|---|
+| <decision or value> | <stage> | <measurement, probe, or owner's ruling> |
+
+## Open questions
+
+1. <what is unknown> — affects <stage or decision>; resolve by <…>; blocking: <yes | no>
+
+## Risks
+
+- <risk> — <response>
+
+## Evidence
+
+- **Read in code:** <areas opened, at which commit>
+- **Documented only:** <claims that rest on documentation>
+- **Not verified or absent:** <what could not be checked, and what would check it>
+
+## Status and next action
+
+<What was read, what was run, who reviewed it and what they changed, what remains unverified. Then the single next action.>
+````
+
+## Using the skeleton
+
+**Decision.** Lead with the choice and the picture of the outcome. If the request's literal goal is not the right first goal, say so and restate it.
+
+**Scope.** Non-goals are things a reasonable reader would otherwise expect. "Not prescribed yet" protects against inventing numbers: establish a baseline before a threshold.
+
+**What exists.** Only the behavior and constraints needed to understand the proposal. Distinguish missing functionality from functionality that needs integration or verification. This section should make the amount of new work understandable.
+
+**Design.** One subsection per concept the design turns on: a record with meaningful semantics, a processing stage, a decision policy, a user interaction, an experimental method. Usually three to six. A concept earns a subsection by passing the inclusion test in [SKILL.md](SKILL.md#decide-at-the-right-height); a mechanism that does not pass becomes a row under Deferred. Explain the semantics around a shape instead of treating a code block as the design. For research, the concepts are sampling, measurement, comparison, and analysis choices.
+
+**Stages.** Order by dependency. Near stages are deep enough to start; later stages keep their result, dependencies, and exit condition without internal design. Add owner roles only when coordination matters, without inventing people or commitments. If the brief asks for implementation tasks, decompose the first stage only.
+
+**Validation and rollout.** Separate correctness, usefulness, and operational readiness when they need different evidence. Name real test facilities and commands when known; do not invent existing tests. Omit rollout machinery the work does not need.
+
+**First slice.** The acceptance example should prove the slice's value, not the existence of a component.
+
+**Deferred, open questions, risks.** Deferred items are chosen postponements with a way to settle them. Open questions are unknowns someone must answer. Risks get one line and a response; do not repeat exceptions the design already handles.
+
+**Evidence.** Anchors sit inline, as `path:line`, where the claim is made. This section does not repeat them; it states the reading limits. A long annotated anchor list belongs in a linked evidence file. Re-open each anchor after drafting.
+
+**Sections the request needs.** If the request asks something the skeleton has no slot for, such as a comparison, an inventory, or a what-to-adopt list, give it its own section right after Decision, with each row a decision. The request outranks the skeleton.
+
+**Diagrams.** Use editable Mermaid when relationships are clearer drawn than listed. Keep text and diagram in agreement, and say when a diagram was checked only as text.

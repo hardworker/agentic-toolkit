@@ -36,6 +36,18 @@ Per-skill changelogs; each skill follows Keep a Changelog / SemVer independently
 
 # planning
 
+## [0.13.0] — 2026-11-16
+
+### Changed
+
+- Decide at a deliberate height. A decision is settled in the plan only when a wrong choice would invalidate the first stage, when people building different parts could choose incompatibly, or when the user asked. Everything else is listed as deferred, with the stage that needs it and what will settle it. Later stages keep their result, dependencies and exit condition without internal design.
+- Require auditable evidence: `path:line` in code for current-state statements a decision rests on, documentation treated as intent, explicit *not verified* labels, universals checked, and every anchor re-opened before handoff.
+- Replace the prose outline with a compact skeleton, and write plans in short checkable units that normally fit in 2,500–4,000 words.
+- Narrow the fresh reviewer to two questions: is anything stated about the current system false, and can the first stage start safely. Findings are answered by correcting, deciding, deferring or removing, so review does not grow the plan.
+- State that saved plan content omits its title line, which the records helper adds.
+
+Why: on a matched real-repository task, the 0.11.0 plan ran to 9,026 words against a preferred reference of about 3,600, carried no line anchors, and grew 27% through review. Three runs of this version produced 3,855–4,284 words with 61–68 distinct line anchors each; the one run that completed review grew 2%. Sampled current-state precision was 26 of 30 before and 28 and 30 of 30 after, which is within noise at that sample size. Reader preference is not established. Version 0.12.0 was an unpublished candidate and is skipped.
+
 ## [0.11.0] — 2026-11-12
 
 ### Changed
